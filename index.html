@@ -9,7 +9,7 @@
 <link rel="canonical" href="https://projeto2050.com/">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://projeto2050.com/">
-<meta property="og:title" content="O câmbio não diz quanto custa viver · Projeto 2050">
+<meta property="og:title" content="Planeje sua vida global · Projeto 2050">
 <meta property="og:description" content="Faça a sua conta: sete perguntas para saber quanto custa a sua vida em dólar e quanto guardar por mês para chegar lá.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -67,13 +67,12 @@ button{cursor:pointer}
 .hero-foto{position:relative;height:32svh;min-height:220px;max-height:440px;background:linear-gradient(135deg,#1e1e1e,#0d0d0d);overflow:hidden}
 .hero-foto img{width:100%;height:100%;object-fit:cover;object-position:50% 22%}
 .hero-foto::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(9,9,9,0) 40%,rgba(9,9,9,.92) 100%)}
-.hero-t{position:relative;z-index:2;margin-top:-.62em;padding:0 var(--gut);font-family:var(--display);font-weight:400;font-size:clamp(46px,calc(18.2vw - 8px),132px);line-height:.95;letter-spacing:.005em;text-transform:uppercase}
+.hero-t{position:relative;z-index:2;margin-top:-.62em;padding:0 var(--gut);font-family:var(--display);font-weight:400;font-size:clamp(46px,calc(19.2vw - 8px),132px);line-height:.95;letter-spacing:.005em;text-transform:uppercase}
 .hero-oferta{position:relative;margin-top:22px;padding:26px var(--gut) 30px;background:var(--blue);color:#fff;display:flex;flex-direction:column;gap:14px;align-items:flex-start}
 .olho{font-size:12px;font-weight:700;letter-spacing:.09em;text-transform:uppercase}
 .hero-def{font-size:19px;line-height:1.35;font-weight:600;text-wrap:balance}
 .hero-meta{font-size:13px;color:rgba(255,255,255,.86)}
 .hero-fonte{font-size:12px;line-height:1.45;color:rgba(255,255,255,.84)}
-.q-desk{display:none}   /* quebras de linha do título: três linhas no celular, duas no desktop */
 
 /* ---------- seções ---------- */
 .bloco{max-width:var(--max);margin:0 auto;padding:64px var(--gut)}
@@ -513,8 +512,6 @@ html:not(.mov) .btn,html:not(.mov) .btn .bola,html:not(.mov) .fixo{transition:no
 .mov .hero-foto img{animation:recua 1s cubic-bezier(.2,.7,.2,1) backwards}
 .mov .hero-t .l > span{animation:sobe-linha .55s cubic-bezier(.2,.8,.2,1) backwards}
 .mov .hero-t .l:nth-of-type(2) > span{animation-delay:.06s}
-.mov .hero-t .l:nth-of-type(3) > span{animation-delay:.12s}
-.mov .hero-t .l:nth-of-type(4) > span{animation-delay:.18s}
 .mov .hero-oferta{animation:painel-sobe .45s cubic-bezier(.2,.8,.2,1) backwards}
 .mov .hero-oferta > *{animation:surge .32s ease backwards}
 .mov .hero-oferta > :nth-child(1){animation-delay:.15s}
@@ -572,12 +569,9 @@ html:not(.mov) .btn,html:not(.mov) .btn .bola,html:not(.mov) .fixo{transition:no
   .hero{grid-template-columns:minmax(0,1.85fr) minmax(340px,1fr);min-height:calc(100svh - var(--topo))}
   .hero-foto{grid-column:1;grid-row:1;height:auto;max-height:none;min-height:560px}
   .hero-foto::after{background:linear-gradient(180deg,rgba(9,9,9,0) 45%,rgba(9,9,9,.8) 100%)}
-  .hero-oferta{grid-column:2;grid-row:1;margin:0;padding:32px 40px calc(18vw + 44px);gap:14px;justify-content:center}
+  .hero-oferta{grid-column:2;grid-row:1;margin:0;padding:48px 40px;gap:16px;justify-content:center}
   .hero-def{font-size:24px}
-  .hero-t{position:absolute;left:0;bottom:22px;margin:0;padding:0 0 0 var(--gut);font-size:clamp(84px,9.4vw,190px);white-space:nowrap;pointer-events:none}
-  .q-cel{display:none}
-  .q-desk{display:inline}
-  .hero-t .ast{color:var(--bg)}   /* nesta largura o asterisco cai sobre o painel azul */
+  .hero-t{position:absolute;left:0;bottom:22px;margin:0;padding:0 0 0 var(--gut);font-size:clamp(84px,11.4vw,200px);white-space:nowrap;pointer-events:none}   /* o título cabe inteiro sobre a foto, sem invadir o painel azul */
   .intro{grid-template-columns:minmax(0,1fr) minmax(0,2.2fr);gap:28px 56px}
   .intro .frase{grid-column:1 / -1;max-width:27ch}
   .intro .tag{align-self:start;padding-top:4px}
@@ -619,7 +613,7 @@ d.classList.add("js");if(!r)d.classList.add("mov");if(!t)d.classList.add("transp
   <section class="hero" id="inicio">
     <!-- Fotos: ficam na pasta img/, junto da página. Para trocar uma foto, substitua o arquivo mantendo o nome. -->
     <div class="hero-foto"><img src="img/tiago-topo.jpg" alt="Tiago Piassum sentado à mesa, olhando para a câmera" fetchpriority="high" onerror="this.remove()"></div>
-    <h1 class="hero-t"><span class="l"><span>O câmbio não</span></span> <br class="q-cel"><span class="l"><span>diz</span></span> <br class="q-desk"><span class="l"><span>quanto</span></span> <br class="q-cel"><span class="l"><span>custa viver<span class="ast" aria-hidden="true">*</span></span></span></h1>
+    <h1 class="hero-t"><span class="l"><span>Planeje sua</span></span> <br><span class="l"><span>vida global<span class="ast" aria-hidden="true">*</span></span></span></h1>
     <div class="hero-oferta">
       <p class="olho">Projeto 2050 · Simulador gratuito</p>
       <p class="hero-def">Pelo câmbio, <span class="num" data-ex="custo">R$ 20.000</span> por mês são <span class="num" data-ex="cambio">US$ 3.704</span>. Para viver igual nos Estados Unidos, você precisa de <span class="num" data-ex="ppcEUA">US$ 8.032</span>.*</p>
@@ -806,7 +800,7 @@ d.classList.add("js");if(!r)d.classList.add("mov");if(!t)d.classList.add("transp
   <section class="bloco" id="sobre" aria-labelledby="sobre-titulo">
     <div class="rotulo"><span>Sobre</span><span>04</span></div>
     <div class="duo alto">
-      <figure class="duo-foto rev"><img src="img/tiago-retrato.png" alt="Retrato de Tiago Piassum" loading="lazy" onerror="this.remove()"></figure>
+      <figure class="duo-foto rev"><img src="img/tiago-palestra.jpg" alt="Tiago Piassum fala ao microfone durante uma palestra, apontando para a plateia" loading="lazy" onerror="this.remove()"></figure>
       <div class="duo-c rev">
         <h2 class="titulo" id="sobre-titulo">Quem faz a conta com você</h2>
         <div>
@@ -1687,7 +1681,7 @@ async function compartilhar(){
   const url = urlBase() + "?utm_source=indicacao&utm_medium=compartilhar" + (leadId ? "&ref_lead=" + encodeURIComponent(leadId) : "");
   const texto = `Pelo câmbio, ${brl(20000)} por mês são ${usd(20000 / CONFIG.CAMBIO)}. Para viver igual nos Estados Unidos, são ${usd(20000 / CONFIG.PPC)}. Faça a sua conta, leva 2 minutos:`;
   evento("Compartilhar", {}, true);
-  try{ if (navigator.share){ await navigator.share({ title:"O câmbio não diz quanto custa viver", text:texto, url }); return; } }
+  try{ if (navigator.share){ await navigator.share({ title:"Planeje sua vida global", text:texto, url }); return; } }
   catch(e){ if (e && e.name === "AbortError") return; }
   try{ await navigator.clipboard.writeText(texto + " " + url); aviso("Link copiado. Cole numa conversa."); }
   catch(e){ aviso("Copie e envie: " + url); }
