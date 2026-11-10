@@ -1033,10 +1033,12 @@ function payload(modo, textoAceite){
     const k = calcular(s), op = opcoesChute();
     Object.assign(p, {
       estado_brasil: NOME_BR[s.uf], custo_mensal_brl: s.custo, chute_usd: op[s.chute].v, acertou_chute: s.chute === 2 ? "sim" : "não",
-      destino: PAISES[s.pais][0], estado_eua: s.pais === "USA" ? NOME_US[s.st] : "", nivel_preco: Math.round(PAISES[s.pais][2]*100), usd_mes: Math.round(k.mes), idade: s.age, idade_renda: s.ret, anos: k.anos,
+      destino: PAISES[s.pais][0], destino_em: lugarEm(s.pais, s.st), estado_eua: s.pais === "USA" ? NOME_US[s.st] : "", nivel_preco: Math.round(PAISES[s.pais][2]*100), usd_mes: Math.round(k.mes), idade: s.age, idade_renda: s.ret, anos: k.anos,
       investido_brl: s.investido, pct_dolar: s.investido ? s.dolar : 0, aporte_brl: s.aporte,
       vida_global_usd: Math.round(k.numero), vida_global_brl: Math.round(k.numero * CONFIG.CAMBIO), projecao_usd: Math.round(k.proj),
-      ritmo_pct: Math.round(k.ritmo*100), aporte_extra_brl: k.extraBRL, vida_global_brasil_usd: Math.round(k.numeroBrasil)
+      ritmo_pct: Math.round(k.ritmo*100), aporte_extra_brl: k.extraBRL, vida_global_brasil_usd: Math.round(k.numeroBrasil),
+      // premissas da conta: o e-mail do plano cita estes números em vez de repeti-los à mão
+      cambio: CONFIG.CAMBIO, retorno_real_pct: Math.round(CONFIG.RETORNO_REAL_ANO * 1e4) / 100, retirada_mes_pct: Math.round(CONFIG.RETIRADA_MES * 1e4) / 100
     });
   }
   return p;
