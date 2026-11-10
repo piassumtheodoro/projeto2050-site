@@ -878,6 +878,7 @@ const CONFIG = {
   NEWSLETTER_URL: "",      // link da newsletter. Vazio = a linha não aparece no rodapé.
   POLITICA_URL: "",        // política de privacidade (recomendado pela LGPD)
   SITE_NOME: "projeto2050.com", // endereço escrito no rodapé do relatório em PDF
+  CONTA_GLOBAL_URL: "",    // para onde vai o botão "Abra sua conta global" do PDF. Vazio = leva ao site acima.
   META_PIXEL_ID: "",       // Pixel da Meta (opcional)
   FONTES_ESTADOS: "",      // PREENCHA ANTES DE DIVULGAR: fonte dos índices de custo de vida por estado (Brasil e EUA)
   CAMBIO: 5.40,            // R$ por US$
@@ -1573,7 +1574,7 @@ function dadosRelatorio(){
     lugarEm: lugarEm(s.pais, s.st), estadoEm: emBR(s.uf),
     custo: s.custo, usdMes: k.mes, cambioMes: k.cambioMes, numero: k.numero, numeroBRL: brlCurto(k.numero * CONFIG.CAMBIO),
     age: s.age, ret: s.ret, anos: k.anos, anoRenda: k.anoRenda, inv: k.inv, proj: k.proj, falta: k.falta, ritmo: k.ritmo, chegou: k.ritmo >= 0.995, extraBRL: k.extraBRL,
-    serie, alavancas: al.lista.map(a => ({ t: a.t, r: a.r })), lugares, site: CONFIG.SITE_NOME,
+    serie, alavancas: al.lista.map(a => ({ t: a.t, r: a.r })), lugares, site: CONFIG.SITE_NOME, ctaTexto: "Abra sua conta global", ctaUrl: CONFIG.CONTA_GLOBAL_URL || "https://" + CONFIG.SITE_NOME,
     legal: `Simulação educativa, com hipóteses de retorno real de ${pctCfg(CONFIG.RETORNO_REAL_ANO)} ao ano em dólar, retirada de ${pctCfg(CONFIG.RETIRADA_MES)} ao mês e câmbio de ${cambioTxt()}. Rendimento variável, não garantido. Não é recomendação de investimento. Nível de preços e poder de compra: Banco Mundial, Programa de Comparação Internacional (2024); médias nacionais.`
   };
 }
@@ -1661,7 +1662,7 @@ function desenharRelatorio(doc, d){
   leg.forEach((l, i) => { const ly = ly0 + i * 10.5; fundo(l[0]); doc.rect(x2 + 40, ly - 2.3, 2.6, 2.6, "F"); txt(l[1], x2 + 44.5, ly, { s:7, c:C.apagado }); txt(l[2], x2 + 44.5, ly + 4.6, { s:9.5, b:true }); });
 
   /* gráfico 3: patrimônio ano a ano */
-  const y3 = 166, h3 = 57;
+  const y3 = 166, h3 = 51;
   cartao(M, y3, CW, h3); rotulo("Seu patrimônio ano a ano · US$", M + 4, y3 + 6.5);
   let lx = M + CW - 4;
   [["Rendimento", C.azul2], ["Seus aportes", C.azul], ["Já investido", C.tinta]].forEach(l => {
@@ -1669,7 +1670,7 @@ function desenharRelatorio(doc, d){
     doc.setFont("helvetica", "normal"); doc.setFontSize(7); const w = doc.getTextWidth(l[0]);
     txt(l[0], lx, y3 + 6.5, { s:7, a:"right", c:C.apagado }); fundo(l[1]); doc.rect(lx - w - 3.6, y3 + 4.3, 2.4, 2.4, "F"); lx -= w + 8;
   });
-  const gx0 = M + 6, gx1 = M + CW - 6, gTopo = y3 + 15, gBase = y3 + 49, gh = gBase - gTopo;
+  const gx0 = M + 6, gx1 = M + CW - 6, gTopo = y3 + 15, gBase = y3 + h3 - 8, gh = gBase - gTopo;
   const teto = Math.max(d.numero, d.proj) * 1.06, sy = v => gBase - gh * v / teto;
   const passo = (gx1 - gx0) / d.serie.length, bw = passo * (d.serie.length > 40 ? 0.8 : 0.7);
   d.serie.forEach((p, i) => {
@@ -1685,7 +1686,7 @@ function desenharRelatorio(doc, d){
   d.serie.forEach((p, i) => { if (i === 0 || i === d.serie.length - 1 || (p.idade % cada === 0 && i > 1 && i < d.serie.length - 2)) txt(p.idade + (i === 0 || i === d.serie.length - 1 ? " anos" : ""), gx0 + i * passo + passo / 2, gBase + 4.3, { s:6.5, c:C.apagado, a: i === 0 ? "left" : i === d.serie.length - 1 ? "right" : "center" }); });
 
   /* gráfico 4: alavancas */
-  const y4 = 228, h4 = 43;
+  const y4 = 222, h4 = 43;
   cartao(M, y4, cw2, h4); rotulo(d.chegou ? "Alavancas que aceleram a conta" : "Alavancas que fecham a conta", M + 4, y4 + 6.5);
   const aw = cw2 - 22, tetoA = Math.max(1, ...d.alavancas.map(a => a.r), d.ritmo), xh = M + 4 + aw * Math.min(d.ritmo, tetoA) / tetoA;
   const lista = d.alavancas.slice(0, 3);
@@ -1708,10 +1709,22 @@ function desenharRelatorio(doc, d){
     txt(usd(l.usd), x2 + cw2 - 4, yl + 1.1, { s:8, b:l.sel, a:"right" });
   });
 
-  /* fecho */
-  txt(d.chegou ? "No ritmo de hoje, você passa da sua vida global." : "Com " + brl(d.extraBRL) + " a mais por mês, você chega a 100% aos " + d.ret + ".", M, 279, { s:11, b:true });
-  txt("Refaça a conta, ajuste as alavancas ou fale com a gente em " + d.site, M, 284.2, { s:8.5, c:C.azul });
-  txt(d.legal, M, 288.6, { s:5.6, c:C.apagado, w:CW });
+  /* premissas, em letra pequena, acima da faixa final */
+  txt(d.legal, M, 269.4, { s:5.6, c:C.apagado, w:CW });
+
+  /* faixa final: a conclusão e o convite para abrir a conta, com área clicável */
+  fundo(C.tinta); doc.rect(0, 275, W, 22, "F");
+  const bL = 66, bX = W - M - bL, bY = 279.5, bA = 13, larguraFrase = bX - M - 6;
+  const frase = d.chegou ? "No ritmo de hoje, você passa da sua vida global." : "Com " + brl(d.extraBRL) + " a mais por mês, você chega a 100% aos " + d.ret + ".";
+  doc.setFont("helvetica", "bold"); doc.setFontSize(10.5);
+  txt(frase, M, 284.6, { s: doc.getTextWidth(frase) > larguraFrase ? 9 : 10.5, b:true, c:C.branco });
+  txt("Refaça a conta em " + d.site, M, 290.6, { s:8, c:C.claro });
+  fundo(C.azul); doc.roundedRect(bX, bY, bL, bA, 6.5, 6.5, "F");
+  txt(d.ctaTexto, bX + 9, bY + 8.1, { s:10.5, b:true, c:C.branco });
+  const sX = bX + bL - 13, sY = bY + bA / 2;
+  traco(C.branco); doc.setLineWidth(0.55); doc.setLineCap("round");
+  doc.line(sX, sY, sX + 5.5, sY); doc.line(sX + 3.3, sY - 2.1, sX + 5.5, sY); doc.line(sX + 3.3, sY + 2.1, sX + 5.5, sY);
+  doc.link(bX, bY, bL, bA, { url: d.ctaUrl });
 }
 /* PDF-FIM */
 
