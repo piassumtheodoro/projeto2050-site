@@ -11,12 +11,15 @@
 <meta property="og:url" content="https://projeto2050.com/">
 <meta property="og:title" content="Planeje sua vida global · Projeto 2050">
 <meta property="og:description" content="Faça a sua conta: sete perguntas para saber quanto custa a sua vida em dólar e quanto guardar por mês para chegar lá.">
-<meta property="og:image" content="https://projeto2050.com/img/tiago-topo.jpg">
-<meta property="og:image:width" content="1024">
-<meta property="og:image:height" content="683">
+<!-- prévia do link (WhatsApp, Instagram, LinkedIn): img/previa.jpg, 1200 x 630, feita com o topo desta página. O endereço precisa ser completo e sem redirecionamento. -->
+<meta property="og:image" content="https://www.projeto2050.com/img/previa.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Planeje sua vida global: quanto você precisa poupar ao mês para atingir sua independência em dólar? Projeto 2050, por Tiago Piassum.">
 <meta property="og:locale" content="pt_BR">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23090909'/%3E%3Cpath d='M16 7v18M8.2 11.5l15.6 9M23.8 11.5l-15.6 9' stroke='%230541fe' stroke-width='3.4'/%3E%3C/svg%3E">
+<link rel="icon" type="image/png" href="img/icone.png">
+<link rel="apple-touch-icon" href="img/icone-180.png">
 <link rel="preload" href="fontes/figtree.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fontes/hedvig-letters-serif.woff2" as="font" type="font/woff2" crossorigin>
 <style>
@@ -237,7 +240,7 @@ section{position:relative}
   .hero-meta{grid-row:6;max-width:46ch;margin:14px 0 0;align-self:start}
   .hero-foto{grid-column:2;grid-row:1 / -1;align-self:stretch;min-height:0}
   .hero-foto img{right:0;height:86%;max-height:720px}
-  .hero .fio{bottom:48px}
+  .hero .fio{bottom:48px;bottom:clamp(0px,calc((100svh - 664px) / 2),48px)}   /* em tela baixa (notebook de 768px de altura) o fio desce para não passar por cima do botão e da linha de apoio */
 }
 @media (max-width:759px){ .hero-meta{font-size:13px} }
 /* celular alto: o texto sobe para baixo do botão e a foto não passa de 80% da largura */
@@ -315,8 +318,9 @@ section{position:relative}
 .produtos-topo .sub{margin-top:8px}
 .grade{display:grid;gap:40px;grid-template-columns:minmax(0,1fr)}
 .cartao{position:relative;display:flex;flex-direction:column;gap:16px;color:var(--texto)}
-.cartao-v{position:relative;aspect-ratio:4/3;overflow:hidden;border-radius:var(--r-m);background-image:radial-gradient(ellipse 80% 90% at 30% 25%,#23272D 0%,#14171B 50%,#0B0D0E 100%);background-size:100% 100%;background-repeat:no-repeat;background-position:0 0}
-.cartao-v b{position:absolute;left:16px;bottom:12px;z-index:2;font-family:var(--serifa);font-weight:400;font-size:clamp(56px,17vw,96px);line-height:.95;letter-spacing:-.03em;color:var(--texto)}
+.cartao-v{position:relative;aspect-ratio:4/3;overflow:hidden;border-radius:var(--r-m);background-image:radial-gradient(ellipse 80% 90% at 30% 25%,#23272D 0%,#14171B 50%,#0B0D0E 100%);background-size:100% 100%;background-repeat:no-repeat;background-position:0 0;container-type:inline-size}
+/* a palavra grande acompanha a largura do cartão (cqi), não a da tela: com dois cartões lado a lado em tablet, ela passava por cima da colagem. A primeira medida fica para navegador sem cqi. */
+.cartao-v b{position:absolute;left:16px;bottom:12px;z-index:2;font-family:var(--serifa);font-weight:400;font-size:clamp(56px,17vw,96px);font-size:clamp(56px,19.1cqi,96px);line-height:.95;letter-spacing:-.03em;color:var(--texto)}
 .cartao-v b span{color:var(--azul-tinta)}
 .cartao-v .colagem{position:absolute;right:-4%;top:18%;height:64%;width:auto}
 .cartao-v .col-obj{height:100%;width:auto}
@@ -347,7 +351,7 @@ section{position:relative}
 
 /* ---------- projeto 2050 (tinta) ---------- */
 .duo{display:grid;gap:var(--e6);grid-template-columns:minmax(0,1fr)}
-.duo-c{position:relative;z-index:1;display:grid;gap:var(--e5);justify-items:start;min-width:0}
+.duo-c{position:relative;z-index:1;display:grid;grid-template-columns:minmax(0,1fr);gap:var(--e5);justify-items:start;min-width:0}   /* coluna de largura fixa: uma palavra larga demais não empurra o texto para fora da tela */
 @media (max-width:979px){ #sobre .duo-c{margin-top:16px} }
 .metodo{display:grid;gap:var(--e5);min-width:0}
 .metodo-c{display:grid;gap:12px;padding-top:var(--e4);border-top:1px solid var(--filete)}
@@ -414,6 +418,9 @@ section{position:relative}
 #fontes{margin-top:var(--e5);padding-top:12px;border-top:1px solid var(--filete)}
 @media (min-width:760px){
   .tres{grid-template-columns:repeat(3,minmax(0,1fr));gap:32px}
+}
+/* a colagem só vai para o lado do título a partir de 980px: entre 760 e 900px a coluna ficava estreita e o título partia em quatro linhas */
+@media (min-width:980px){
   .conta-topo{grid-template-columns:minmax(0,1fr) 280px;align-items:end}
   .conta-topo .titulo,.conta-topo .sub{grid-column:1}
   .conta-col{grid-column:2;grid-row:1 / span 2;width:280px;margin:0}
@@ -453,8 +460,18 @@ section{position:relative}
 @media (min-width:760px){ .fecho .btn{justify-self:start} .fecho .sub{font-size:22px} }
 @media (min-width:980px){
   .fecho{grid-template-columns:minmax(0,7fr) minmax(0,5fr);column-gap:48px;align-items:center}
-  .fecho > :not(.fecho-col){grid-column:1}
+  .fecho > :not(.fecho-col):not(.fio){grid-column:1}   /* o fio fica fora da grade: preso à coluna 1, ele começava com a margem lateral contada duas vezes */
   .fecho-col{grid-column:2;grid-row:1 / span 4;width:100%;max-width:440px;margin:0;justify-self:end}
+}
+
+/* ---------- telas de 980 a ~1280px: a palavra grande acompanha a coluna ----------
+   Com duas colunas, a coluna do título fica mais estreita que a palavra no tamanho máximo (notebook pequeno, tablet deitado).
+   Cada medida é a largura da coluna dividida pela largura da palavra, com folga. De ~1280px em diante vale o tamanho de sempre. */
+@media (min-width:980px){
+  .hero-t .l.virada{font-size:min(var(--t-heroi-virada),calc((100vw - 128px) * .118))}              /* "vida global" numa linha só */
+  #consultoria .titulo .t-virada{font-size:min(var(--t-virada-g),calc((100vw - 168px) * .1668))}   /* "Global" dentro da coluna */
+  #sobre-titulo .t-virada{font-size:min(var(--t-virada),calc((100vw - 168px) * .1142))}            /* "com você" numa linha só */
+  .fecho .titulo .t-virada.g{font-size:min(var(--t-virada-g),calc((100vw - 144px) * .148))}        /* "número?" sem entrar na colagem */
 }
 
 /* ---------- rodapé (tinta) ---------- */
@@ -1161,12 +1178,12 @@ d.classList.add("js");if(!r)d.classList.add("mov");})();
   <section class="bloco" id="faq" aria-labelledby="faq-titulo" data-fundo="tinta">
     <div class="faq-topo"><h2 class="titulo rev" id="faq-titulo"><span class="t-forte">Perguntas</span> <span class="t-virada">frequentes</span></h2></div>
     <div class="faq rev">
-      <details open><summary>O simulador é gratuito mesmo?</summary><p>Sim. Você responde sete perguntas e vê a sua vida global na hora. Para liberar o relatório completo, com o plano mensal e as alavancas, pedimos seu nome e e-mail. O WhatsApp é opcional.</p></details>
+      <details open><summary>O simulador é gratuito mesmo?</summary><p>Sim. Você responde sete perguntas e vê a sua vida global na hora. Para liberar o relatório completo, com o plano mensal e as alavancas, pedimos seu nome e <span class="nq">e-mail</span>. O WhatsApp é opcional.</p></details>
       <details><summary>Preciso me mudar para outro país?</summary><p>Não. O lugar serve para medir a sua vida em dólar. Muita gente usa o número para decidir quanto do patrimônio manter em moeda forte, mesmo ficando no Brasil. O relatório mostra os dois valores.</p></details>
       <details><summary>De onde vêm os dados?</summary><p>O nível de preços dos 66 países e a paridade de poder de compra do Brasil vêm do Banco Mundial, Programa de Comparação Internacional (2024), via Our World in Data. O câmbio de referência e as demais premissas aparecem no relatório.</p></details>
       <details><summary>Isso é recomendação de investimento?</summary><p>Não. É uma simulação educativa, com hipóteses de retorno e de retirada que ficam à vista. O Projeto 2050 não faz custódia, não executa ordens e não dá recomendação individual de investimento.</p></details>
       <details><summary>O que é o Projeto 2050?</summary><p>Uma comunidade por assinatura com 20 trilhas de formação, o Plano de Voo até 2050, orçamento, patrimônio consolidado e comunidade. Abre em breve. Quem faz a simulação entra na lista de espera e recebe o aviso primeiro.</p></details>
-      <details><summary>O que acontece com os meus dados?</summary><p>Usamos seu nome, e-mail e WhatsApp para enviar seu plano, avisar sobre o lançamento do Projeto 2050 e mandar conteúdos. Não vendemos nem compartilhamos seus dados. Para sair ou pedir a exclusão, responda qualquer mensagem nossa.</p></details>
+      <details><summary>O que acontece com os meus dados?</summary><p>Usamos seu nome, <span class="nq">e-mail</span> e WhatsApp para enviar seu plano, avisar sobre o lançamento do Projeto 2050 e mandar conteúdos. Não vendemos nem compartilhamos seus dados. Para sair ou pedir a exclusão, responda qualquer mensagem nossa.</p></details>
     </div>
     <div class="fio rev" data-fio="corre" data-onda="b" aria-hidden="true"><svg viewBox="0 0 1000 40" preserveAspectRatio="none"><path pathLength="1" d="M0,20 C333,36 667,4 1000,20"/></svg></div>
   </section>
@@ -1293,6 +1310,7 @@ const cambioTxt = () => "R$\u00a0" + CONFIG.CAMBIO.toLocaleString("pt-BR",{minim
 const arred = (v, passo) => Math.round(v/passo)*passo;
 const esc = t => String(t).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const digitos = t => String(t || "").replace(/\D/g, "");
+const nq = t => String(t).replace(/e-mail/g, '<span class="nq">e-mail</span>');   // na tela, "e-mail" não parte no hífen; o texto enviado com o lead segue puro
 const SETA = '<svg class="seta" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
 const SETA16 = SETA.replace('width="18" height="18"', 'width="16" height="16"');
 const FECHAR = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>';
@@ -1518,7 +1536,7 @@ const TELAS = {
 
   custo(){
     const tem = () => s.custo !== null && s.custo >= 1000;
-    const anual = () => { const a = s.custo * 12; return a >= 1e6 ? "R$ " + (a/1e6).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2}) + " mi" : "R$ " + fmt(a/1e3) + " mil"; };
+    const anual = () => { const a = s.custo * 12; return a >= 1e6 ? "R$\u00a0" + (a/1e6).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2}) + " mi" : "R$\u00a0" + fmt(a/1e3) + " mil"; };
     const pinta = () => {
       $("#v-custo").innerHTML = `<span class="${tem() ? "" : "vazio"}">${tem() ? brl(s.custo) : "R$ ?"}</span> <small>por mês</small>`;
       $("#n-custo").hidden = !tem();
@@ -1792,11 +1810,11 @@ const TELAS = {
       html: `
         <div class="resumo"><span class="olho">Sua vida global</span><b class="num">${usd(k.numero)}</b><span class="num">${esc(lugarNome(s.pais, s.st))} · ${k.anos} anos de estrada · ${brl(s.aporte)} por mês</span></div>
         <h3 class="sim-t" tabindex="-1">${CONFIG.ENVIA_EMAIL ? "Para onde mandamos o seu relatório?" : "Seu relatório está pronto."}</h3>
-        <p class="sim-s">${CONFIG.ENVIA_EMAIL ? "Você vê o relatório agora e recebe uma cópia no e-mail. Sem senha." : "Deixe seu contato para ver o relatório. Sem senha."}</p>
+        <p class="sim-s">${CONFIG.ENVIA_EMAIL ? nq("Você vê o relatório agora e recebe uma cópia no e-mail. Sem senha.") : "Deixe seu contato para ver o relatório. Sem senha."}</p>
         <form id="f-contato" novalidate style="display:grid;gap:16px">
           ${camposContato("c-", { whatsOpcional:true })}
           ${campoAceite("c-", TEXTO_ACEITE)}
-          <details class="dados"><summary>Como usamos seus dados</summary><p>${TEXTO_DADOS}${CONFIG.POLITICA_URL ? ` <a href="${esc(CONFIG.POLITICA_URL)}" target="_blank" rel="noopener">Política de privacidade</a>.` : ""}</p></details>
+          <details class="dados"><summary>Como usamos seus dados</summary><p>${nq(TEXTO_DADOS)}${CONFIG.POLITICA_URL ? ` <a href="${esc(CONFIG.POLITICA_URL)}" target="_blank" rel="noopener">Política de privacidade</a>.` : ""}</p></details>
         </form>`,
       acao: `<button type="submit" form="f-contato" class="sim-btn" id="c-enviar">Ver meu relatório</button>`,
       montar(){
@@ -2193,7 +2211,7 @@ function camposContato(pre, o){
     <div class="pote" aria-hidden="true"><label for="${pre}empresa">Empresa</label><input id="${pre}empresa" type="text" tabindex="-1" autocomplete="off"></div>`;
 }
 function campoAceite(pre, texto){
-  return `<div><label class="check" for="${pre}aceite"><input id="${pre}aceite" type="checkbox" aria-describedby="${pre}aceite-erro"><span class="cx" aria-hidden="true">${VISTO}</span><span>${texto}</span></label><span class="erro" id="${pre}aceite-erro" role="alert"></span></div>`;
+  return `<div><label class="check" for="${pre}aceite"><input id="${pre}aceite" type="checkbox" aria-describedby="${pre}aceite-erro"><span class="cx" aria-hidden="true">${VISTO}</span><span>${nq(texto)}</span></label><span class="erro" id="${pre}aceite-erro" role="alert"></span></div>`;
 }
 function ligarForm(pre, o, depois){
   const g = id => document.getElementById(pre + id);
@@ -2312,7 +2330,7 @@ function abrirConsultoria(){
       ${dlgTopo("Consultoria Global")}
       <h3 id="dlg-t">Aplicação recebida, ${esc(contato.nome.split(" ")[0])}.</h3>
       <div class="fio vis" data-fio="fim" aria-hidden="true"><svg viewBox="0 0 1000 40" preserveAspectRatio="none"><path pathLength="1" d="M0,20 C333,4 667,36 1000,20"/></svg></div>
-      <p>O próximo passo é a entrevista individual. Entramos em contato pelo WhatsApp ou pelo e-mail que você informou.</p>
+      <p>O próximo passo é a entrevista individual. Entramos em contato pelo WhatsApp ou pelo <span class="nq">e-mail</span> que você informou.</p>
       ${avisoEnvio(r)}
       <button type="button" class="sim-btn" data-fechar>Fechar</button>`);
   });
