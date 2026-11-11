@@ -348,7 +348,7 @@ section{position:relative}
 
 /* ---------- projeto 2050 (tinta) ---------- */
 .duo{display:grid;gap:var(--e6);grid-template-columns:minmax(0,1fr)}
-.duo-c{position:relative;z-index:1;display:grid;gap:var(--e5);justify-items:start;min-width:0}
+.duo-c{position:relative;z-index:1;display:grid;grid-template-columns:minmax(0,1fr);gap:var(--e5);justify-items:start;min-width:0}   /* coluna de largura fixa: uma palavra larga demais não empurra o texto para fora da tela */
 @media (max-width:979px){ #sobre .duo-c{margin-top:16px} }
 .metodo{display:grid;gap:var(--e5);min-width:0}
 .metodo-c{display:grid;gap:12px;padding-top:var(--e4);border-top:1px solid var(--filete)}
@@ -459,6 +459,16 @@ section{position:relative}
   .fecho{grid-template-columns:minmax(0,7fr) minmax(0,5fr);column-gap:48px;align-items:center}
   .fecho > :not(.fecho-col):not(.fio){grid-column:1}   /* o fio fica fora da grade: preso à coluna 1, ele começava com a margem lateral contada duas vezes */
   .fecho-col{grid-column:2;grid-row:1 / span 4;width:100%;max-width:440px;margin:0;justify-self:end}
+}
+
+/* ---------- telas de 980 a ~1280px: a palavra grande acompanha a coluna ----------
+   Com duas colunas, a coluna do título fica mais estreita que a palavra no tamanho máximo (notebook pequeno, tablet deitado).
+   Cada medida é a largura da coluna dividida pela largura da palavra, com folga. De ~1280px em diante vale o tamanho de sempre. */
+@media (min-width:980px){
+  .hero-t .l.virada{font-size:min(var(--t-heroi-virada),calc((100vw - 128px) * .118))}              /* "vida global" numa linha só */
+  #consultoria .titulo .t-virada{font-size:min(var(--t-virada-g),calc((100vw - 168px) * .1668))}   /* "Global" dentro da coluna */
+  #sobre-titulo .t-virada{font-size:min(var(--t-virada),calc((100vw - 168px) * .1142))}            /* "com você" numa linha só */
+  .fecho .titulo .t-virada.g{font-size:min(var(--t-virada-g),calc((100vw - 144px) * .148))}        /* "número?" sem entrar na colagem */
 }
 
 /* ---------- rodapé (tinta) ---------- */
