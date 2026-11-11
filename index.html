@@ -1175,12 +1175,12 @@ d.classList.add("js");if(!r)d.classList.add("mov");})();
   <section class="bloco" id="faq" aria-labelledby="faq-titulo" data-fundo="tinta">
     <div class="faq-topo"><h2 class="titulo rev" id="faq-titulo"><span class="t-forte">Perguntas</span> <span class="t-virada">frequentes</span></h2></div>
     <div class="faq rev">
-      <details open><summary>O simulador é gratuito mesmo?</summary><p>Sim. Você responde sete perguntas e vê a sua vida global na hora. Para liberar o relatório completo, com o plano mensal e as alavancas, pedimos seu nome e e-mail. O WhatsApp é opcional.</p></details>
+      <details open><summary>O simulador é gratuito mesmo?</summary><p>Sim. Você responde sete perguntas e vê a sua vida global na hora. Para liberar o relatório completo, com o plano mensal e as alavancas, pedimos seu nome e <span class="nq">e-mail</span>. O WhatsApp é opcional.</p></details>
       <details><summary>Preciso me mudar para outro país?</summary><p>Não. O lugar serve para medir a sua vida em dólar. Muita gente usa o número para decidir quanto do patrimônio manter em moeda forte, mesmo ficando no Brasil. O relatório mostra os dois valores.</p></details>
       <details><summary>De onde vêm os dados?</summary><p>O nível de preços dos 66 países e a paridade de poder de compra do Brasil vêm do Banco Mundial, Programa de Comparação Internacional (2024), via Our World in Data. O câmbio de referência e as demais premissas aparecem no relatório.</p></details>
       <details><summary>Isso é recomendação de investimento?</summary><p>Não. É uma simulação educativa, com hipóteses de retorno e de retirada que ficam à vista. O Projeto 2050 não faz custódia, não executa ordens e não dá recomendação individual de investimento.</p></details>
       <details><summary>O que é o Projeto 2050?</summary><p>Uma comunidade por assinatura com 20 trilhas de formação, o Plano de Voo até 2050, orçamento, patrimônio consolidado e comunidade. Abre em breve. Quem faz a simulação entra na lista de espera e recebe o aviso primeiro.</p></details>
-      <details><summary>O que acontece com os meus dados?</summary><p>Usamos seu nome, e-mail e WhatsApp para enviar seu plano, avisar sobre o lançamento do Projeto 2050 e mandar conteúdos. Não vendemos nem compartilhamos seus dados. Para sair ou pedir a exclusão, responda qualquer mensagem nossa.</p></details>
+      <details><summary>O que acontece com os meus dados?</summary><p>Usamos seu nome, <span class="nq">e-mail</span> e WhatsApp para enviar seu plano, avisar sobre o lançamento do Projeto 2050 e mandar conteúdos. Não vendemos nem compartilhamos seus dados. Para sair ou pedir a exclusão, responda qualquer mensagem nossa.</p></details>
     </div>
     <div class="fio rev" data-fio="corre" data-onda="b" aria-hidden="true"><svg viewBox="0 0 1000 40" preserveAspectRatio="none"><path pathLength="1" d="M0,20 C333,36 667,4 1000,20"/></svg></div>
   </section>
@@ -1307,6 +1307,7 @@ const cambioTxt = () => "R$\u00a0" + CONFIG.CAMBIO.toLocaleString("pt-BR",{minim
 const arred = (v, passo) => Math.round(v/passo)*passo;
 const esc = t => String(t).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const digitos = t => String(t || "").replace(/\D/g, "");
+const nq = t => String(t).replace(/e-mail/g, '<span class="nq">e-mail</span>');   // na tela, "e-mail" não parte no hífen; o texto enviado com o lead segue puro
 const SETA = '<svg class="seta" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
 const SETA16 = SETA.replace('width="18" height="18"', 'width="16" height="16"');
 const FECHAR = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>';
@@ -1806,11 +1807,11 @@ const TELAS = {
       html: `
         <div class="resumo"><span class="olho">Sua vida global</span><b class="num">${usd(k.numero)}</b><span class="num">${esc(lugarNome(s.pais, s.st))} · ${k.anos} anos de estrada · ${brl(s.aporte)} por mês</span></div>
         <h3 class="sim-t" tabindex="-1">${CONFIG.ENVIA_EMAIL ? "Para onde mandamos o seu relatório?" : "Seu relatório está pronto."}</h3>
-        <p class="sim-s">${CONFIG.ENVIA_EMAIL ? "Você vê o relatório agora e recebe uma cópia no e-mail. Sem senha." : "Deixe seu contato para ver o relatório. Sem senha."}</p>
+        <p class="sim-s">${CONFIG.ENVIA_EMAIL ? nq("Você vê o relatório agora e recebe uma cópia no e-mail. Sem senha.") : "Deixe seu contato para ver o relatório. Sem senha."}</p>
         <form id="f-contato" novalidate style="display:grid;gap:16px">
           ${camposContato("c-", { whatsOpcional:true })}
           ${campoAceite("c-", TEXTO_ACEITE)}
-          <details class="dados"><summary>Como usamos seus dados</summary><p>${TEXTO_DADOS}${CONFIG.POLITICA_URL ? ` <a href="${esc(CONFIG.POLITICA_URL)}" target="_blank" rel="noopener">Política de privacidade</a>.` : ""}</p></details>
+          <details class="dados"><summary>Como usamos seus dados</summary><p>${nq(TEXTO_DADOS)}${CONFIG.POLITICA_URL ? ` <a href="${esc(CONFIG.POLITICA_URL)}" target="_blank" rel="noopener">Política de privacidade</a>.` : ""}</p></details>
         </form>`,
       acao: `<button type="submit" form="f-contato" class="sim-btn" id="c-enviar">Ver meu relatório</button>`,
       montar(){
@@ -2207,7 +2208,7 @@ function camposContato(pre, o){
     <div class="pote" aria-hidden="true"><label for="${pre}empresa">Empresa</label><input id="${pre}empresa" type="text" tabindex="-1" autocomplete="off"></div>`;
 }
 function campoAceite(pre, texto){
-  return `<div><label class="check" for="${pre}aceite"><input id="${pre}aceite" type="checkbox" aria-describedby="${pre}aceite-erro"><span class="cx" aria-hidden="true">${VISTO}</span><span>${texto}</span></label><span class="erro" id="${pre}aceite-erro" role="alert"></span></div>`;
+  return `<div><label class="check" for="${pre}aceite"><input id="${pre}aceite" type="checkbox" aria-describedby="${pre}aceite-erro"><span class="cx" aria-hidden="true">${VISTO}</span><span>${nq(texto)}</span></label><span class="erro" id="${pre}aceite-erro" role="alert"></span></div>`;
 }
 function ligarForm(pre, o, depois){
   const g = id => document.getElementById(pre + id);
@@ -2326,7 +2327,7 @@ function abrirConsultoria(){
       ${dlgTopo("Consultoria Global")}
       <h3 id="dlg-t">Aplicação recebida, ${esc(contato.nome.split(" ")[0])}.</h3>
       <div class="fio vis" data-fio="fim" aria-hidden="true"><svg viewBox="0 0 1000 40" preserveAspectRatio="none"><path pathLength="1" d="M0,20 C333,4 667,36 1000,20"/></svg></div>
-      <p>O próximo passo é a entrevista individual. Entramos em contato pelo WhatsApp ou pelo e-mail que você informou.</p>
+      <p>O próximo passo é a entrevista individual. Entramos em contato pelo WhatsApp ou pelo <span class="nq">e-mail</span> que você informou.</p>
       ${avisoEnvio(r)}
       <button type="button" class="sim-btn" data-fechar>Fechar</button>`);
   });
