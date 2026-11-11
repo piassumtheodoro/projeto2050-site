@@ -11,6 +11,12 @@
 <meta property="og:url" content="https://projeto2050.com/">
 <meta property="og:title" content="Planeje sua vida global · Projeto 2050">
 <meta property="og:description" content="Faça a sua conta: sete perguntas para saber quanto custa a sua vida em dólar e quanto guardar por mês para chegar lá.">
+<meta property="og:image" content="https://projeto2050.com/img/tiago-topo.jpg">
+<meta property="og:image:width" content="1024">
+<meta property="og:image:height" content="683">
+<meta property="og:locale" content="pt_BR">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23090909'/%3E%3Cpath d='M16 7v18M8.2 11.5l15.6 9M23.8 11.5l-15.6 9' stroke='%230541fe' stroke-width='3.4'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -25,7 +31,22 @@
   --display:"Anton","Impact","Haettenschweiler","Arial Narrow Bold",sans-serif;
   --body:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   --gut:20px; --max:1320px; --r:16px; --topo:60px;
+  --tit2:#8a8a8a;   /* linhas seguintes dos títulos grandes, como no rodapé */
+  /* movimento: uma curva para tudo, durações de 400 a 700 ms, 70 ms entre itens em sequência */
+  --ease:cubic-bezier(0.22,1,0.36,1); --dur-c:400ms; --dur:600ms; --dur-l:700ms; --passo:70ms;
+  --dur-num:900ms; --desfoque:8px;   /* a contagem desfocada: o número fica nítido em menos de 1 s */
+  --dur-tema:600ms;
+  --ink2:#cfcfcf; --code:#0d0d0d; --banda:rgba(9,9,9,0);   /* texto secundário dos cartões, fundo do código e fundo da faixa de tema */
 }
+/* As cores que mudam com o tema são registradas para a troca de fundo poder ser animada */
+@property --banda{syntax:"<color>";inherits:true;initial-value:rgba(9,9,9,0)}
+@property --ink{syntax:"<color>";inherits:true;initial-value:#f9f9f9}
+@property --muted{syntax:"<color>";inherits:true;initial-value:#a6a6a6}
+@property --line{syntax:"<color>";inherits:true;initial-value:rgba(249,249,249,.16)}
+@property --card{syntax:"<color>";inherits:true;initial-value:#1e1e1e}
+@property --tit2{syntax:"<color>";inherits:true;initial-value:#8a8a8a}
+@property --ink2{syntax:"<color>";inherits:true;initial-value:#cfcfcf}
+@property --code{syntax:"<color>";inherits:true;initial-value:#0d0d0d}
 *,*::before,*::after{box-sizing:border-box}
 [hidden]{display:none!important}
 html{scroll-behavior:smooth;scroll-padding-top:calc(var(--topo) + 12px);-webkit-text-size-adjust:100%}
@@ -38,6 +59,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
 :focus-visible{outline:3px solid var(--blue2);outline-offset:3px;border-radius:4px}
 .num{font-variant-numeric:tabular-nums}
+.nq{white-space:nowrap}
 .so-leitor{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
 /* ---------- botões ---------- */
@@ -57,7 +79,15 @@ button{cursor:pointer}
 .marca span,.hero-t .ast,.rodape-nome span{color:var(--blue)}
 .hero-t .l{display:inline-block;overflow:hidden;vertical-align:bottom;padding-top:.1em;margin-top:-.1em}   /* cada linha do título é uma máscara: o texto sobe de dentro dela */
 .hero-t .l > span{display:inline-block}
-.menu{display:none;gap:28px}
+.ast-svg{display:inline-block;width:.42em;height:.42em;margin:.04em 0 0 .06em;vertical-align:top;overflow:visible}
+.ast-svg path{fill:none;stroke:currentColor;stroke-width:3.4}
+.marca .ast-svg{width:.5em;height:.5em}
+.titulo .tl{display:block;overflow:hidden;padding-top:.14em;margin-top:-.14em}   /* cada linha do título é uma máscara (montada pelo script) */
+.titulo .tl > span{display:inline-block}
+.titulo .tl + .tl{color:var(--tit2)}
+.menu{position:relative;display:none;gap:28px}
+.menu-marca{position:absolute;left:0;bottom:4px;width:1px;height:2px;background:var(--blue);transform-origin:left;opacity:0;pointer-events:none}
+.menu a[aria-current]{color:var(--ink)}
 .menu a{display:inline-flex;align-items:center;min-height:44px;font-size:15px;font-weight:500;text-decoration:none;color:var(--ink)}
 .menu a:hover{color:var(--blue2)}
 .menu sup{margin-left:4px;font-size:10px;font-weight:700;color:var(--muted)}
@@ -73,14 +103,44 @@ button{cursor:pointer}
 .hero-def{font-size:19px;line-height:1.35;font-weight:600;text-wrap:balance}
 .hero-meta{font-size:13px;color:rgba(255,255,255,.86)}
 .hero-fonte{font-size:12px;line-height:1.45;color:rgba(255,255,255,.84)}
+.giro{display:grid;gap:6px;width:100%;padding-top:14px;border-top:1px solid rgba(255,255,255,.32)}
+.giro-l{font-size:14px;line-height:1.4;color:rgba(255,255,255,.9)}
+.giro-v{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:12px;row-gap:4px}
+.giro-v b{font-family:var(--display);font-weight:400;font-size:clamp(40px,11vw,56px);line-height:1;font-variant-numeric:tabular-nums}
+.giro-p{grid-column:1;display:block;overflow:hidden;font-size:17px;font-weight:600;line-height:1.3}
+.giro-p > span{display:inline-block}
+.giro-anel{grid-column:2;grid-row:1;width:22px;height:22px;transform:rotate(-90deg)}
+.giro-anel circle{fill:none;stroke:rgba(255,255,255,.3);stroke-width:2.5}
+.giro-anel .giro-t{stroke:#fff;stroke-dasharray:1;stroke-dashoffset:1}
+html:not(.mov) .giro-anel{display:none}
+
+/* faixa de países */
+.paises{display:flex;align-items:stretch;height:56px;border-bottom:1px solid var(--line);overflow:hidden}
+.paises-rot{flex:none;position:relative;z-index:1;display:flex;align-items:center;padding:0 14px 0 var(--gut);background:var(--bg);box-shadow:14px 0 18px var(--bg);font-size:12px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--blue2);white-space:nowrap}
+.paises-janela{flex:1;min-width:0;overflow:hidden}
+.paises-trilho{display:flex;width:max-content;height:100%}
+.paises ul{display:flex;align-items:center;height:100%}
+.paises li{position:relative;display:flex;align-items:baseline;gap:8px;padding:0 22px;white-space:nowrap;font-size:15px;color:var(--muted)}
+.paises li b{font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+.paises li::after{content:"";position:absolute;right:-2px;top:50%;width:4px;height:4px;margin-top:-2px;border-radius:50%;background:var(--blue)}
+html:not(.mov) .paises-janela{overflow-x:auto;scrollbar-width:none}   /* parada: dá para arrastar com o dedo */
+html:not(.mov) .paises-janela::-webkit-scrollbar{display:none}
+html:not(.mov) .paises ul + ul{display:none}
+
+/* barras da frase de abertura */
+.ibarras{display:grid;gap:14px;width:100%;max-width:760px}
+.ibarras li{display:grid;grid-template-columns:1fr auto;gap:6px 12px;align-items:baseline;font-size:15px;color:var(--muted)}
+.ibarras b{font-family:var(--display);font-weight:400;font-size:26px;line-height:1;color:var(--ink)}
+.ibarras i{grid-column:1 / -1;height:12px;border-radius:3px;background:var(--blue);transform-origin:left;transform:scaleX(var(--w,1))}
+.ibarras li:first-child i{background:#4a4a4a}
 
 /* ---------- seções ---------- */
 .bloco{max-width:var(--max);margin:0 auto;padding:64px var(--gut)}
-.rotulo{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-bottom:18px;margin-bottom:28px;border-bottom:1px solid var(--blue);font-size:14px;font-weight:600}
+.rotulo{position:relative;display:flex;align-items:center;justify-content:space-between;gap:16px;padding-bottom:18px;margin-bottom:28px;border-bottom:1px solid var(--blue);font-size:14px;font-weight:600}
 .rotulo span:first-child{display:inline-flex;align-items:center;gap:10px}
 .rotulo span:first-child::before{content:"";width:9px;height:9px;background:var(--blue)}
 .rotulo span:last-child{color:var(--muted);font-variant-numeric:tabular-nums}
-.titulo{font-family:var(--display);font-weight:400;font-size:clamp(36px,11.5vw,112px);line-height:1.04;letter-spacing:.005em;text-transform:uppercase;text-wrap:balance}
+.titulo{font-family:var(--display);font-weight:400;font-size:clamp(36px,11.5vw,112px);line-height:1.14;letter-spacing:.005em;text-transform:uppercase;text-wrap:balance}
 .sub{font-size:18px;line-height:1.5;color:var(--muted);text-wrap:pretty}
 .txt{font-size:17px;line-height:1.55;color:var(--ink);text-wrap:pretty}
 .txt + .txt{margin-top:14px}
@@ -138,6 +198,10 @@ button{cursor:pointer}
 .chip{min-height:46px;padding:6px 6px;border:1px solid var(--pline);border-radius:999px;background:transparent;font-size:clamp(13.5px,4.4cqi,15px);font-weight:600;line-height:1.15;color:var(--pink);transition:background .15s ease,color .15s ease}
 .chip:hover{border-color:var(--pink)}
 .chip[aria-pressed="true"]{background:var(--pink);border-color:var(--pink);color:#fff}
+.chips{position:relative}
+.chips-marca{position:absolute;top:0;left:0;border-radius:999px;background:var(--pink);pointer-events:none}
+.chips.com-marca .chip{position:relative}
+.chips.com-marca .chip[aria-pressed="true"]{background:transparent;border-color:transparent}
 .campo{display:grid;gap:6px}
 .campo label{font-size:14px;font-weight:600}
 .campo input,.campo select,.campo textarea{width:100%;min-height:52px;padding:0 16px;border:1px solid var(--pline);border-radius:12px;background:#fff;color:var(--pink);font-size:16px}
@@ -177,7 +241,7 @@ button{cursor:pointer}
 .regua em{position:absolute;top:-5px;bottom:-5px;width:3px;margin-left:-1px;background:var(--pink)}
 .regua-n{display:flex;justify-content:space-between;font-size:12px;font-weight:600;color:var(--pmuted)}
 .faixa{display:grid;gap:5px}
-.faixa-l{display:flex;justify-content:space-between;gap:12px;font-size:14px}
+.faixa-l{display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 12px;font-size:14px}
 .faixa-l b{font-weight:700}
 .faixa-l span{color:var(--pmuted)}
 .faixa-b{display:flex;gap:2px;height:12px}
@@ -194,6 +258,15 @@ button{cursor:pointer}
 .calc li.on{color:var(--pink)}
 .calc li::before{content:"";flex:none;width:9px;height:9px;border-radius:50%;background:currentColor}
 .vida-n{font-family:var(--display);font-weight:400;font-size:clamp(40px,15cqi,92px);line-height:.95;letter-spacing:.005em;white-space:nowrap}
+.vbarras{display:grid;gap:14px}
+.vbar{height:22px;border-radius:4px;background:rgba(255,255,255,.4);transform-origin:left}
+.vbar.forte{background:#fff}
+.mapa{margin:0;padding:10px;border-radius:16px;background:#090909}
+.mapa svg{display:block;width:100%;height:auto}
+.mapa-pts{fill:none;stroke:#3b3b3b;stroke-width:.62;stroke-linecap:round}
+.mapa-arco{fill:none;stroke:#4d7bff;stroke-width:.7;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:0}
+.mapa-o,.mapa-d{fill:#4d7bff}
+.mapa-d{transform-box:fill-box;transform-origin:center}
 .vida-l{display:grid;border-bottom:1px solid rgba(255,255,255,.34)}
 .vida-l div{display:grid;gap:3px;padding:13px 0;border-top:1px solid rgba(255,255,255,.34)}
 .vida-l p{font-size:15px;line-height:1.45}
@@ -265,6 +338,7 @@ button{cursor:pointer}
 .vidro .grande .vazio{color:rgba(255,255,255,.3)}
 .vidro .chip{background:rgba(255,255,255,.05)}
 .vidro .chip[aria-pressed="true"]{background:#f9f9f9;border-color:#f9f9f9;color:#090909}
+.vidro .chips-marca{background:#f9f9f9}
 .vidro .campo input,.vidro .campo select,.vidro .campo textarea{background-color:rgba(255,255,255,.08);color:#f9f9f9}
 .vidro .campo input::placeholder,.vidro .campo textarea::placeholder{color:rgba(255,255,255,.45)}
 .vidro .campo select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%23f9f9f9' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")}
@@ -340,7 +414,7 @@ html:not(.transp) .vidro .sim[data-tom="azul"]{background:var(--blue)}
 .metodo{display:grid;gap:12px;padding:12px;border-radius:var(--r);background:var(--card)}
 .metodo-c{display:grid;gap:12px;padding:20px;border-radius:10px;background:#0d0d0d}
 .metodo-c .n{font-family:var(--display);font-size:72px;line-height:.9}
-.metodo-c .n span{font-family:var(--body);font-size:13px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--blue2);margin-left:10px}
+.metodo-c .n .rot{font-family:var(--body);font-size:13px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--blue2);margin-left:10px}
 .metodo-c p{font-size:15px;color:#d0d0d0}
 .seg{display:grid;grid-template-columns:repeat(20,1fr);gap:3px}
 .seg i{height:14px;border-radius:2px;background:rgba(255,255,255,.16)}
@@ -367,12 +441,13 @@ html:not(.transp) .vidro .sim[data-tom="azul"]{background:var(--blue)}
 .passo{display:grid;gap:12px;align-content:start;padding:22px;border-radius:var(--r);background:var(--card)}
 .passo .n{font-family:var(--display);font-size:54px;line-height:.9;color:var(--blue)}
 .passo h3{font-size:20px;line-height:1.2;letter-spacing:-.01em}
-.passo p{font-size:15px;color:#cfcfcf}
-.passo code{display:block;padding:12px 14px;border-radius:10px;background:#0d0d0d;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;line-height:1.5;color:var(--ink);white-space:normal}
+.passo p{font-size:15px;color:var(--ink2)}
+.passo code{display:block;padding:12px 14px;border-radius:10px;background:var(--code);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;line-height:1.5;color:var(--ink);white-space:normal}
 
 /* ---------- sobre ---------- */
 .fatos{display:grid;width:100%;border-top:1px solid var(--line)}
 .fatos li{display:grid;gap:2px;padding:15px 0;border-bottom:1px solid var(--line)}
+.cn{display:inline-block;text-align:right}
 .fatos b{font-family:var(--display);font-weight:400;font-size:34px;line-height:1;text-transform:uppercase}
 .fatos span{font-size:15px;color:var(--muted)}
 
@@ -381,14 +456,24 @@ html:not(.transp) .vidro .sim[data-tom="azul"]{background:var(--blue)}
 .faq details{border-bottom:1px solid var(--line)}
 .faq summary{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:64px;padding:12px 0;cursor:pointer;font-size:18px;font-weight:600;list-style:none}
 .faq summary::-webkit-details-marker{display:none}
-.faq summary::after{content:"+";flex:none;display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--card);font-size:20px;font-weight:400}
-.faq details[open] summary::after{content:"–";background:var(--blue)}
+.faq summary::after{content:"";flex:none;width:34px;height:34px;border-radius:50%;background-color:var(--card);background-image:linear-gradient(currentColor,currentColor),linear-gradient(currentColor,currentColor);background-size:14px 2px,2px 14px;background-position:center;background-repeat:no-repeat}
+.faq details[open]:not(.fechando) summary::after{background-color:var(--blue);transform:rotate(45deg)}   /* o + gira e vira × */
 .faq p{padding:0 0 20px;max-width:70ch;color:#cfcfcf}
 
 /* ---------- fecho ---------- */
 .fecho{display:grid;gap:20px;justify-items:center;text-align:center}
 .fecho .sub{max-width:46ch;color:var(--ink)}
 .fecho .titulo{line-height:1.12}
+
+/* ---------- troca de fundo: "Como a conta é feita" em tema claro, "Qual é o seu número?" em azul ----------
+   Contraste conferido (WCAG): claro (#f5f4f3): texto 18,1:1, cinza #5c5c5c 6,1:1, linhas seguintes do título #6b6b6b 4,9:1, número azul nos cartões brancos 6,6:1.
+   Azul (#0541fe): branco 6,6:1, texto secundário 5,2:1, linhas seguintes do título 4,0:1 (só em letra grande). */
+.banda{position:relative;isolation:isolate;color:var(--ink)}
+.banda::before{content:"";position:absolute;inset:0 calc(50% - 50vw);z-index:-1;background:var(--banda)}
+html:not(.mov) .banda[data-tema="claro"],.banda[data-tema="claro"].ativa{--banda:#f5f4f3;--ink:#090909;--muted:#5c5c5c;--line:rgba(9,9,9,.16);--card:#ffffff;--tit2:#6b6b6b;--ink2:#2c2c2c;--code:#ecebe9}
+html:not(.mov) .banda[data-tema="azul"],.banda[data-tema="azul"].ativa{--banda:#0541fe;--ink:#ffffff;--muted:rgba(255,255,255,.86);--line:rgba(255,255,255,.3);--tit2:rgba(255,255,255,.72)}
+html:not(.mov) .banda[data-tema="azul"] .btn.azul,.banda[data-tema="azul"].ativa .btn.azul{background:var(--paper);color:#090909}
+html:not(.mov) .banda[data-tema="azul"] .btn.azul .bola,.banda[data-tema="azul"].ativa .btn.azul .bola{background:var(--blue);color:#fff}
 
 /* ---------- rodapé ---------- */
 .rodape{margin:24px 8px 8px;padding:28px 20px 20px;border-radius:22px;background:var(--paper);color:var(--pink);overflow:hidden;container-type:inline-size}
@@ -423,7 +508,7 @@ html:not(.transp) .vidro .sim[data-tom="azul"]{background:var(--blue)}
 .toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));z-index:60;transform:translateX(-50%);max-width:calc(100vw - 32px);padding:12px 18px;border-radius:999px;background:#fff;color:#090909;font-size:14px;font-weight:600;box-shadow:0 10px 40px rgba(0,0,0,.5)}
 
 /* ---------- entrada suave ---------- */
-.mov .rev{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease}
+.mov .rev{opacity:0;transform:translateY(18px);transition:opacity var(--dur) var(--ease),transform var(--dur) var(--ease)}
 .mov .rev.vis{opacity:1;transform:none}
 html:not(.mov){scroll-behavior:auto}
 html:not(.mov) .btn,html:not(.mov) .btn .bola,html:not(.mov) .fixo{transition:none}
@@ -436,6 +521,21 @@ html:not(.mov) .btn,html:not(.mov) .btn .bola,html:not(.mov) .fixo{transition:no
 }
 
 /* ---------- movimento: só vale para quem não pediu "reduzir movimento" no aparelho ---------- */
+/* títulos: cada linha sobe de dentro da sua máscara ao entrar na tela */
+.mov .titulo .tl > span{transform:translateY(100%);transition:transform var(--dur-l) var(--ease);transition-delay:calc(var(--i,0) * var(--passo))}
+.mov .titulo.vis .tl > span{transform:none}
+/* asterisco: os três traços se desenham uma vez; no logo, gira no hover */
+.mov .marca .ast-svg path,.mov .rodape-nome .ast-svg path{stroke-dasharray:1;stroke-dashoffset:1}
+.mov .marca .ast-svg path,.mov .rodape-nome.vis .ast-svg path{animation:traco var(--dur) var(--ease) forwards}
+.mov .marca .ast-svg path{animation-delay:.2s}
+.mov .marca .ast-svg path:nth-child(2),.mov .rodape-nome.vis .ast-svg path:nth-child(2){animation-delay:calc(.2s + var(--passo))}
+.mov .marca .ast-svg path:nth-child(3),.mov .rodape-nome.vis .ast-svg path:nth-child(3){animation-delay:calc(.2s + 2 * var(--passo))}
+.mov .rodape-nome.vis .ast-svg path:nth-child(1){animation-delay:.2s}
+.mov .marca .ast-svg{transition:transform var(--dur) var(--ease)}
+@media (hover:hover){ .mov .marca:hover .ast-svg{transform:rotate(180deg)} }
+/* números que contam: começam desfocados; o script tira o desfoque enquanto conta */
+.mov [data-conta]:not(.contou){filter:blur(var(--desfoque))}
+
 @keyframes entra{from{opacity:0;transform:translateX(26px)}}
 @keyframes entra-volta{from{opacity:0;transform:translateX(-26px)}}
 @keyframes enche{from{transform:scaleX(0)}}
@@ -448,31 +548,39 @@ html:not(.mov) .btn,html:not(.mov) .btn .bola,html:not(.mov) .fixo{transition:no
 @keyframes dlg-sai{to{opacity:0;transform:translateY(16px) scale(.98)}}
 @keyframes folha-entra{from{transform:translateY(100%)}}
 @keyframes folha-sai{to{transform:translateY(100%)}}
-@keyframes sobe-linha{from{transform:translateY(112%)}}
-@keyframes recua{from{transform:scale(1.07)}}
+@keyframes sobe-linha{from{transform:translateY(100%)}}
+@keyframes recua{from{transform:scale(1.06)}}
+@keyframes traco{to{stroke-dashoffset:0}}
 @keyframes pulso{50%{transform:scale(1.07)}}
 @keyframes painel-sobe{from{clip-path:inset(100% 0 0 0)}to{clip-path:inset(0)}}
 @keyframes painel-lado{from{clip-path:inset(0 0 0 100%)}to{clip-path:inset(0)}}
 /* a classe .mov é posta no <html> pelo script do início do <body>, só quando o aparelho não pede menos movimento */
 /* simulador: troca de pergunta, progresso, barras e resultado */
 .mov .sim{transition:background-color .3s ease,color .3s ease}
-.mov .sim.ajusta{overflow:hidden;transition:height .32s cubic-bezier(.2,.7,.2,1),background-color .3s ease,color .3s ease}
-.mov .entra{animation:entra .28s cubic-bezier(.2,.7,.2,1) backwards}
-.mov .entra-volta{animation:entra-volta .28s cubic-bezier(.2,.7,.2,1) backwards}
+.mov .sim.ajusta{overflow:hidden;transition:height .32s var(--ease),background-color .3s ease,color .3s ease}
+.mov .entra{animation:entra var(--dur-c) var(--ease) backwards}
+.mov .entra-volta{animation:entra-volta var(--dur-c) var(--ease) backwards}
 .mov .prog i.on.novo{position:relative;overflow:hidden;background:var(--pline)}
-.mov .prog i.on.novo::after{content:"";position:absolute;inset:0;background:var(--blue);transform-origin:left;animation:enche .45s cubic-bezier(.2,.7,.2,1) .1s backwards}
-.mov .barra{transform-origin:left;animation:enche .55s cubic-bezier(.2,.7,.2,1) .2s backwards}
+.mov .prog i.on.novo::after{content:"";position:absolute;inset:0;background:var(--blue);transform-origin:left;animation:enche .45s var(--ease) .1s backwards}
+.mov .barra{transform-origin:left;animation:enche .55s var(--ease) .2s backwards}
 .mov .barra.forte{animation-duration:.8s;animation-delay:.55s}
-.mov .revela > :nth-child(n+3){animation:surge .4s ease backwards}
-.mov .revela > :nth-child(3){animation-delay:.55s}
-.mov .revela > :nth-child(4){animation-delay:.7s}
-.mov .revela > :nth-child(5){animation-delay:.85s}
-.mov .revela > :nth-child(6){animation-delay:1s}
-.mov .primeira .pilha i{transform-origin:left;animation:enche .6s cubic-bezier(.2,.7,.2,1) .15s backwards}
+/* resultado: depois do número, cada bloco e cada linha do cálculo entram um a um (o atraso --d vem do script) */
+.mov .revela > :not(.olho):not(.vida-n):not(.vida-l),.mov .revela .vida-l > div{animation:surge var(--dur-c) var(--ease) var(--d,0s) backwards}
+.mov .revela .vbar{animation:enche var(--dur-l) var(--ease) calc(var(--d,0s) + 150ms) backwards}
+.mov .revela .vbarras > div:nth-child(2) .vbar{animation-delay:calc(var(--d,0s) + 150ms + var(--passo))}
+@keyframes arco{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+@keyframes ponto{from{transform:scale(0)}}
+.mov .revela .mapa-arco{animation:arco var(--dur-l) var(--ease) calc(var(--d,0s) + 200ms) both}
+.mov .revela .mapa-d{animation:ponto var(--dur-c) var(--ease) calc(var(--d,0s) + 800ms) backwards}
+/* opções que funcionam como abas: um marcador desliza até a escolhida */
+.mov .chips-marca.anda{transition:transform var(--dur-c) var(--ease)}
+.mov .chips.com-marca .chip{transition:color var(--dur-c) var(--ease),border-color .15s ease,transform .1s ease}
+.mov .chips.com-marca .chip.espera[aria-pressed="true"]{color:var(--pink)}
+.mov .primeira .pilha i{transform-origin:left;animation:enche .6s var(--ease) .15s backwards}
 .mov .primeira .pilha i:nth-child(2){animation-delay:.35s}
 .mov .primeira .pilha i:nth-child(3){animation-delay:.55s}
 .mov .ok.nova{animation:surge .3s ease backwards}
-.mov .ok-barra i{transition:width .5s cubic-bezier(.2,.7,.2,1)}
+.mov .ok-barra i{transition:width .5s var(--ease)}
 /* resposta ao toque, aceite desenhado e erro */
 .mov .chip, .mov .opcao, .mov .sim-btn, .mov .alav button, .mov .passo-num button{transition:background-color .15s ease,color .15s ease,border-color .15s ease,transform .1s ease}
 .mov .chip:active, .mov .opcao:active, .mov .sim-btn:not(:disabled):active, .mov .alav button:active, .mov .passo-num button:active, .mov .btn:active{transform:scale(.97)}
@@ -481,21 +589,65 @@ html:not(.mov) .btn,html:not(.mov) .btn .bola,html:not(.mov) .fixo{transition:no
 .mov .alav button.recem[aria-pressed="true"] .cx svg path{animation:desenha .28s ease .05s backwards}
 .mov .treme{animation:treme .32s ease}
 /* janelas: lista de espera e consultoria */
-.mov .dlg[open]{animation:dlg-entra .26s cubic-bezier(.2,.8,.2,1)}
+.mov .dlg[open]{animation:dlg-entra .26s var(--ease)}
 .mov .dlg[open]::backdrop{animation:some .26s ease}
 .mov .dlg.saindo{animation:dlg-sai .2s ease forwards}
 .mov .dlg.saindo::backdrop{animation:fundo-some .2s ease forwards}
 /* página: frase do dólar, cartões, degraus, Método 20/50 e cabeçalho */
-.mov .frase s{color:var(--ink);transition:color .4s ease 1.4s}
-.mov .frase s::after{transform:scaleX(0);transition:transform .5s cubic-bezier(.2,.7,.2,1) 1.05s}
-.mov .frase.vis s{color:var(--muted)}
-.mov .frase.vis s::after{transform:scaleX(1)}
-.mov .frase b{color:var(--ink);transition:color .5s ease .45s}
-.mov .frase.vis b{color:var(--blue2);animation:pulso .5s ease .45s backwards}
-.mov .cartao{transition:opacity .6s ease,transform .6s ease,translate .25s ease}
-.mov .cartao-v b{transition:transform .4s cubic-bezier(.2,.7,.2,1)}
+/* frase de abertura: as palavras vão do cinza ao branco conforme a rolagem; no fim, os valores ficam azuis e o câmbio é riscado.
+   Com animation-timeline, o próprio CSS acompanha a rolagem; sem ele, o script acende palavra por palavra (classe .acesa e .fim). */
+.mov .frase .pw{color:#6b6b6b;transition:color var(--dur-c) var(--ease)}
+.mov .frase .pw.acesa{color:var(--ink)}
+.mov .frase s::after{transform:scaleX(0);transition:transform var(--dur) var(--ease)}
+.mov .frase.fim s.pw{color:var(--muted)}
+.mov .frase.fim s::after{transform:scaleX(1)}
+.mov .frase.fim b.pw{color:var(--blue2)}
+@keyframes acende{from{color:#6b6b6b}to{color:var(--ink)}}
+@keyframes azula{to{color:var(--blue2)}}
+@keyframes apaga{to{color:var(--muted)}}
+@keyframes risca{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@supports (animation-timeline: view()){
+  .mov .frase{view-timeline-name:--frase}
+  .mov .frase .pw{transition:none;animation:acende linear both;animation-timeline:--frase;animation-range:cover calc(18% + var(--a) * 30%) cover calc(22% + var(--a) * 30%)}
+  .mov .frase b.pw{animation:acende linear both,azula linear both;animation-timeline:--frase,--frase;animation-range:cover calc(18% + var(--a) * 30%) cover calc(22% + var(--a) * 30%),cover 50% cover 55%}
+  .mov .frase s.pw{animation:acende linear both,apaga linear both;animation-timeline:--frase,--frase;animation-range:cover calc(18% + var(--a) * 30%) cover calc(22% + var(--a) * 30%),cover 52% cover 56%}
+  .mov .frase s::after{transition:none;animation:risca linear both;animation-timeline:--frase;animation-range:cover 50% cover 56%}
+}
+/* barras da frase: crescem em sequência ao aparecer */
+.mov .ibarras i{transform:scaleX(0);transition:transform var(--dur-l) var(--ease)}
+.mov .ibarras li:nth-child(2) i{transition-delay:var(--passo)}
+.mov .ibarras li:nth-child(3) i{transition-delay:calc(2 * var(--passo))}
+.mov .ibarras.vis i{transform:scaleX(var(--w,1))}
+/* hero: o valor do painel alterna entre países; o anel marca os 4 s de cada um */
+@keyframes anel{to{stroke-dashoffset:0}}
+.mov .giro-t{animation:anel 4s linear .4s forwards}
+.mov .giro.pausa .giro-t{animation-play-state:paused}
+.mov #giro-v:not(.contou){filter:blur(var(--desfoque))}
+.mov .giro-p > span.troca{animation:sobe-linha var(--dur) var(--ease)}
+/* faixa de países: rolagem contínua, conteúdo duplicado para o laço não ter emenda */
+@keyframes faixa{to{transform:translateX(-50%)}}
+.mov .paises-trilho{animation:faixa var(--dur-faixa,240s) linear infinite}
+.mov .paises.pausa .paises-trilho{animation-play-state:paused}
+.mov .cartao{transition:opacity var(--dur) var(--ease),transform var(--dur) var(--ease),translate var(--dur-c) var(--ease)}
+.mov .cartao-v b{transition:transform .4s var(--ease)}
 .mov .cartao .link span[aria-hidden]{transition:transform .2s ease}
-.mov .degraus i{transform-origin:bottom;transform:scaleY(clamp(0,calc(var(--p,1) * 1.5 - var(--d,0)),1))}
+/* degraus: sobem um a um ao entrar na tela */
+.mov .degraus i{transform-origin:bottom;transform:scaleY(0);transition:transform var(--dur) var(--ease)}
+.mov .degraus i:nth-child(2){transition-delay:var(--passo)}
+.mov .degraus i:nth-child(3){transition-delay:calc(2 * var(--passo))}
+.mov .degraus i:nth-child(4){transition-delay:calc(3 * var(--passo))}
+.mov .degraus i:nth-child(5){transition-delay:calc(4 * var(--passo))}
+.mov .degraus.vis i{transform:none}
+/* cabeçalhos 01 a 04: a linha azul se desenha da esquerda para a direita */
+.mov .rotulo{border-bottom-color:transparent}
+.mov .rotulo::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:1px;background:var(--blue);transform:scaleX(0);transform-origin:left;transition:transform var(--dur-l) var(--ease)}
+.mov .rotulo.vis::after{transform:none}
+/* troca de fundo das seções */
+.mov .banda{transition:--banda var(--dur-tema) var(--ease),--ink var(--dur-tema) var(--ease),--muted var(--dur-tema) var(--ease),--line var(--dur-tema) var(--ease),--card var(--dur-tema) var(--ease),--tit2 var(--dur-tema) var(--ease),--ink2 var(--dur-tema) var(--ease),--code var(--dur-tema) var(--ease)}
+.mov .banda .btn.azul,.mov .banda .btn.azul .bola{transition:background-color var(--dur-tema) var(--ease),color var(--dur-tema) var(--ease),transform .25s ease}
+/* perguntas frequentes e menu */
+.mov .faq summary::after{transition:transform var(--dur-c) var(--ease),background-color var(--dur-c) var(--ease)}
+.mov .menu-marca{transition:transform var(--dur) var(--ease),opacity var(--dur-c) var(--ease)}
 .mov .metodo .seg i.on{background:rgba(255,255,255,.16);transition:background-color .25s ease}
 .mov .metodo.vis .seg i.on{background:var(--blue)}
 .mov .metodo .seg i:nth-child(1){transition-delay:.35s}
@@ -505,23 +657,24 @@ html:not(.mov) .btn,html:not(.mov) .btn .bola,html:not(.mov) .fixo{transition:no
 .mov .metodo .seg i:nth-child(5){transition-delay:.63s}
 .mov .metodo .seg i:nth-child(6){transition-delay:.7s}
 .mov .metodo .seg i:nth-child(7){transition-delay:.77s}
-.mov .metodo .trilho i{transform:scaleX(0);transform-origin:left;transition:transform .7s cubic-bezier(.2,.7,.2,1) .95s}
+.mov .metodo .trilho i{transform:scaleX(0);transform-origin:left;transition:transform .7s var(--ease) .95s}
 .mov .metodo.vis .trilho i{transform:scaleX(1)}
 .mov .topo{transition:transform .3s ease}
 /* topo: título sobe por linha, foto recua e o painel azul entra */
-.mov .hero-foto img{animation:recua 1s cubic-bezier(.2,.7,.2,1) backwards}
-.mov .hero-t .l > span{animation:sobe-linha .55s cubic-bezier(.2,.8,.2,1) backwards}
-.mov .hero-t .l:nth-of-type(2) > span{animation-delay:.06s}
-.mov .hero-oferta{animation:painel-sobe .45s cubic-bezier(.2,.8,.2,1) backwards}
-.mov .hero-oferta > *{animation:surge .32s ease backwards}
+.mov .hero-foto img{animation:recua var(--dur-l) var(--ease) backwards}
+.mov .hero-t .l > span{animation:sobe-linha var(--dur) var(--ease) backwards}   /* termina em 670 ms, sem esperar nada */
+.mov .hero-t .l:nth-of-type(2) > span{animation-delay:var(--passo)}
+.mov .hero-oferta{animation:painel-sobe .45s var(--ease) backwards}
+.mov .hero-oferta > *{animation:surge var(--dur-c) var(--ease) backwards}
 .mov .hero-oferta > :nth-child(1){animation-delay:.15s}
 .mov .hero-oferta > :nth-child(2){animation-delay:.19s}
 .mov .hero-oferta > :nth-child(3){animation-delay:.23s}
 .mov .hero-oferta > :nth-child(4){animation-delay:.27s}
 .mov .hero-oferta > :nth-child(5){animation-delay:.31s}
+.mov .hero-oferta > :nth-child(6){animation-delay:.35s}
 @media (max-width:759px){
   .mov.sem-topo .topo:not(:focus-within){transform:translateY(-100%)}   /* some ao rolar para baixo, volta ao rolar para cima */
-  .mov .dlg[open]{animation:folha-entra .34s cubic-bezier(.2,.8,.2,1)}
+  .mov .dlg[open]{animation:folha-entra .34s var(--ease)}
   .mov .dlg.saindo{animation:folha-sai .2s ease-in forwards}
 }
 @media (min-width:980px){
@@ -532,8 +685,12 @@ html:not(.mov) .btn,html:not(.mov) .btn .bola,html:not(.mov) .fixo{transition:no
   .mov .tres .passo:nth-child(2){transition-delay:.08s}
   .mov .tres .passo:nth-child(3){transition-delay:.16s}
 }
+@media (hover:hover) and (min-width:760px){
+  /* cartões de produto: o que está sob o mouse sobe, os outros escurecem; no celular, nada muda */
+  .mov .grade .cartao:hover{translate:0 -6px}
+  .mov .grade:has(.cartao:hover) .cartao:not(:hover){opacity:.5}
+}
 @media (hover:hover){
-  .mov .cartao.clicavel:hover{translate:0 -6px}
   .mov .cartao.clicavel:hover .cartao-v b{transform:scale(1.06)}
   .mov .cartao.clicavel:hover .link span[aria-hidden]{transform:translateX(4px)}
 }
@@ -574,6 +731,7 @@ html:not(.mov) .btn,html:not(.mov) .btn .bola,html:not(.mov) .fixo{transition:no
   .hero-t{position:absolute;left:0;bottom:22px;margin:0;padding:0 0 0 var(--gut);font-size:clamp(84px,11.4vw,200px);white-space:nowrap;pointer-events:none}   /* o título cabe inteiro sobre a foto, sem invadir o painel azul */
   .intro{grid-template-columns:minmax(0,1fr) minmax(0,2.2fr);gap:28px 56px}
   .intro .frase{grid-column:1 / -1;max-width:27ch}
+  .intro .ibarras{grid-column:1 / -1}
   .intro .tag{align-self:start;padding-top:4px}
   .intro-txt{grid-column:2;max-width:60ch}
   .sim-grid{grid-template-columns:minmax(0,1fr) minmax(0,560px);gap:64px;align-items:start}
@@ -599,7 +757,7 @@ d.classList.add("js");if(!r)d.classList.add("mov");if(!t)d.classList.add("transp
 </script>
 
 <header class="topo">
-  <a class="marca" href="#inicio" aria-label="Tiago Piassum, início da página">Tiago Piassum<span aria-hidden="true">*</span></a>
+  <a class="marca" href="#inicio" aria-label="Tiago Piassum, início da página">Tiago Piassum<span aria-hidden="true"><svg class="ast-svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path pathLength="1" d="M12 1v22"/><path pathLength="1" d="M2.47 6.5l19.06 11"/><path pathLength="1" d="M2.47 17.5l19.06-11"/></svg></span></a>
   <nav class="menu" aria-label="Seções da página">
     <a href="#simulador">Simulador<sup>01</sup></a>
     <a href="#produtos">Produtos<sup>02</sup></a>
@@ -613,26 +771,42 @@ d.classList.add("js");if(!r)d.classList.add("mov");if(!t)d.classList.add("transp
   <!-- HERO -->
   <section class="hero" id="inicio">
     <!-- Fotos: ficam na pasta img/, junto da página. Para trocar uma foto, substitua o arquivo mantendo o nome. -->
-    <div class="hero-foto"><img src="img/tiago-topo.jpg" alt="Tiago Piassum sentado à mesa, olhando para a câmera" fetchpriority="high" onerror="this.remove()"></div>
-    <h1 class="hero-t"><span class="l"><span>Planeje sua</span></span> <br><span class="l"><span>vida global<span class="ast" aria-hidden="true">*</span></span></span></h1>
+    <div class="hero-foto"><img src="img/tiago-topo.jpg" alt="Retrato de Tiago Piassum, de terno, sorrindo para a câmera" fetchpriority="high" onerror="this.remove()"></div>
+    <h1 class="hero-t"><span class="l"><span>Planeje sua</span></span> <br><span class="l"><span>vida global<span class="ast" aria-hidden="true"><svg class="ast-svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path pathLength="1" d="M12 1v22"/><path pathLength="1" d="M2.47 6.5l19.06 11"/><path pathLength="1" d="M2.47 17.5l19.06-11"/></svg></span></span></span></h1>
     <div class="hero-oferta">
       <p class="olho">Entenda como planejar sua liberdade financeira de forma Global.</p>
       <p class="hero-def">Quanto você precisa poupar ao mês para atingir sua independência em dólar?</p>
+      <div class="giro" id="giro">
+        <p class="giro-l">A vida de <span class="num" data-ex="custo">R$&nbsp;20.000</span> por mês no Brasil custa</p>
+        <p class="giro-v"><b class="num" id="giro-v">US$&nbsp;8.032</b><span class="giro-p" id="giro-p"><span>nos Estados Unidos</span></span><svg class="giro-anel" viewBox="0 0 20 20" aria-hidden="true" focusable="false"><circle cx="10" cy="10" r="8"/><circle class="giro-t" cx="10" cy="10" r="8" pathLength="1"/></svg></p>
+      </div>
       <a class="btn" href="#sim" id="cta-hero"><span class="bola" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>Fazer a minha conta</a>
-      <p class="hero-meta" id="hero-meta">Sete perguntas · 2 minutos · relatório completo no seu e-mail</p>
+      <p class="hero-meta" id="hero-meta">Sete perguntas · 2 minutos · relatório completo no seu <span class="nq">e-mail</span></p>
+      <p class="hero-fonte">Poder de compra: Banco Mundial, Programa de Comparação Internacional, 2024. Média nacional de cada país.</p>
     </div>
+  </section>
+
+  <!-- FAIXA DE PAÍSES: preenchida pelo script com a mesma conta do simulador -->
+  <section class="paises" id="paises" aria-label="Quanto custa, em dólar, a vida de R$&nbsp;20.000 por mês no Brasil em cada país">
+    <p class="paises-rot"><span class="num" data-ex="custo">R$&nbsp;20.000</span>/mês</p>
+    <div class="paises-janela"><div class="paises-trilho" id="paises-trilho"></div></div>
   </section>
 
   <!-- INTRO -->
   <section class="bloco intro">
-    <p class="frase rev">A vida que custa <span class="num" data-ex="custo">R$ 20.000</span> por mês no Brasil custa <b class="num" data-ex="ppcPT">US$ 4.486</b> em Portugal e <b class="num" data-ex="ppcEUA">US$ 8.032</b> nos Estados Unidos. O câmbio diria <s class="num" data-ex="cambio">US$ 3.704</s> nos dois.</p>
+    <p class="frase" id="frase">A vida que custa <span class="num" data-ex="custo">R$&nbsp;20.000</span> por mês no Brasil custa <b class="num" data-ex="ppcPT">US$&nbsp;4.486</b> em Portugal e <b class="num" data-ex="ppcEUA">US$&nbsp;8.032</b> nos Estados Unidos. O câmbio diria <s class="num" data-ex="cambio">US$&nbsp;3.704</s> nos dois.</p>
+    <ul class="ibarras" id="ibarras">
+      <li><span>Câmbio</span><b class="num" data-ex="cambio">US$&nbsp;3.704</b><i data-v="cambio"></i></li>
+      <li><span>Portugal</span><b class="num" data-ex="ppcPT">US$&nbsp;4.486</b><i data-v="ppcPT"></i></li>
+      <li><span>Estados Unidos</span><b class="num" data-ex="ppcEUA">US$&nbsp;8.032</b><i data-v="ppcEUA"></i></li>
+    </ul>
     <p class="tag rev">O dólar de verdade</p>
     <div class="intro-txt rev">
       <p class="txt">Trocar dinheiro é uma coisa. Encher o mesmo carrinho de supermercado é outra. O câmbio só responde à primeira.</p>
       <p class="txt">Para planejar a sua liberdade até 2050, a régua é o que o dinheiro compra em cada lugar. O simulador faz essa conta para 66 países e devolve três coisas: um número, uma data e o caminho até eles.</p>
       <p class="txt forte">Faça a conta.</p>
       <a class="btn azul" href="#sim"><span class="bola" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>Fazer meu planejamento global</a>
-      <p class="legal">Poder de compra: Banco Mundial, Programa de Comparação Internacional, 2024, via Our World in Data. Média nacional de cada país; capitais costumam custar mais. Câmbio de referência: <span data-ex="fx">R$ 5,40</span>.</p>
+      <p class="legal">Poder de compra: Banco Mundial, Programa de Comparação Internacional, 2024, via Our World in Data. Média nacional de cada país; capitais costumam custar mais. Câmbio de referência: <span data-ex="fx">R$&nbsp;5,40</span>.</p>
     </div>
   </section>
 
@@ -645,7 +819,7 @@ d.classList.add("js");if(!r)d.classList.add("mov");if(!t)d.classList.add("transp
         <ol class="passos">
           <li><span class="n">01</span><b>Onde você quer viver</b><span>No mundo todo: 66 países e os estados americanos.</span></li>
           <li><span class="n">02</span><b>Sua vida global em dólar</b><span>O patrimônio que paga a sua vida onde você escolher.</span></li>
-          <li><span class="n">03</span><b>Um plano mensal</b><span>Quanto guardar e o que muda o resultado. Vai completo para o seu e-mail.</span></li>
+          <li><span class="n">03</span><b>Um plano mensal</b><span>Quanto guardar e o que muda o resultado. Vai completo para o seu <span class="nq">e-mail</span>.</span></li>
         </ol>
         <p class="legal">Simulação educativa do Projeto 2050. Não é recomendação de investimento.</p>
       </div>
@@ -664,9 +838,9 @@ d.classList.add("js");if(!r)d.classList.add("mov");if(!t)d.classList.add("transp
 
   <!-- PRODUTOS -->
   <section class="bloco" id="produtos" aria-labelledby="prod-titulo">
-    <div class="centro rev">
+    <div class="centro">
       <h2 class="titulo" id="prod-titulo">Do primeiro número ao plano inteiro</h2>
-      <p class="sub">O que você encontra aqui, do gratuito ao acompanhamento individual.</p>
+      <p class="sub rev">O que você encontra aqui, do gratuito ao acompanhamento individual.</p>
     </div>
     <div class="grade">
       <article class="cartao clicavel rev">
@@ -678,7 +852,7 @@ d.classList.add("js");if(!r)d.classList.add("mov");if(!t)d.classList.add("transp
         </div>
       </article>
       <article class="cartao clicavel rev">
-        <div class="cartao-v"><span class="selo">Assinatura · R$ 149/mês</span><b>20<span>/</span>50</b></div>
+        <div class="cartao-v"><span class="selo">Assinatura · R$&nbsp;149/mês</span><b>20<span>/</span>50</b></div>
         <div class="cartao-c">
           <h3>Projeto 2050</h3>
           <p>20 trilhas de formação, o Plano de Voo até 2050, orçamento e patrimônio num só lugar e uma comunidade sem saldos à mostra.</p>
@@ -689,7 +863,7 @@ d.classList.add("js");if(!r)d.classList.add("mov");if(!t)d.classList.add("transp
         <div class="cartao-v"><span class="selo">Por aplicação</span><b>Global<span>.</span></b></div>
         <div class="cartao-c">
           <h3>Consultoria Global</h3>
-          <p>Para empresários e investidores com patrimônio a partir de R$ 1 milhão que querem organizar a vida e o patrimônio em mais de uma moeda.</p>
+          <p>Para empresários e investidores com patrimônio a partir de R$&nbsp;1 milhão que querem organizar a vida e o patrimônio em mais de uma moeda.</p>
           <div class="acao"><button type="button" class="link" data-abrir="consultoria">Quero aplicar<span aria-hidden="true">→</span></button></div>
         </div>
       </article>
@@ -718,29 +892,29 @@ d.classList.add("js");if(!r)d.classList.add("mov");if(!t)d.classList.add("transp
     <div class="duo alto">
       <div class="metodo rev" aria-label="Método 20/50, com valores de exemplo">
         <div class="metodo-c">
-          <div class="n">20<span>Formação</span></div>
+          <div class="n"><span class="cn" data-conta="20">20</span><span class="rot">Formação</span></div>
           <div class="seg" role="img" aria-label="Exemplo: 7 de 20 trilhas concluídas"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
           <p>Trilhas concluídas de 20. Mede o que você aprendeu e praticou.</p>
         </div>
         <div class="metodo-c">
-          <div class="n">50<span>Patrimônio</span></div>
+          <div class="n"><span class="cn" data-conta="50">50</span><span class="rot">Patrimônio</span></div>
           <div class="trilho" role="img" aria-label="Exemplo: 21% da meta"><i></i></div>
           <p>Patrimônio atual comparado à sua meta para 2050, em valores de hoje.</p>
         </div>
         <p class="exemplo">Valores de exemplo. As duas medidas são independentes: concluir as 20 trilhas não significa atingir a liberdade financeira.</p>
       </div>
-      <div class="duo-c rev">
+      <div class="duo-c">
         <h2 class="titulo" id="proj-titulo">20 trilhas. Um plano até 2050.</h2>
-        <p class="txt">Uma comunidade por assinatura que junta educação, um Plano de Voo de longo prazo, o seu patrimônio consolidado e os gastos do dia a dia. O resultado do simulador é o começo desse plano.</p>
-        <ul class="pilares">
+        <p class="txt rev">Uma comunidade por assinatura que junta educação, um Plano de Voo de longo prazo, o seu patrimônio consolidado e os gastos do dia a dia. O resultado do simulador é o começo desse plano.</p>
+        <ul class="pilares rev">
           <li><span class="k">Aprender</span><span><b>Academia 2050</b><span>20 trilhas com aulas curtas, quizzes, desafios e certificados.</span></span></li>
           <li><span class="k">Planejar</span><span><b>Plano de Voo</b><span>Meta para 2050 em valores de hoje, aportes, três cenários e revisão mensal.</span></span></li>
           <li><span class="k">Organizar</span><span><b>Orçamento e patrimônio</b><span>O orçamento do mês e o patrimônio consolidado, com Open Finance ou à mão.</span></span></li>
           <li><span class="k">Evoluir junto</span><span><b>Comunidade</b><span>Grupos, eventos ao vivo e desafios, sem nenhum saldo à mostra.</span></span></li>
         </ul>
-        <div class="preco"><b class="num">R$ 149</b><span>por mês · assinatura única · abre em breve</span></div>
-        <button type="button" class="btn azul" data-abrir="lista"><span class="bola" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>Entrar na lista de espera</button>
-        <p class="legal">O Projeto 2050 é educação e acompanhamento: não faz custódia, não executa ordens e não dá recomendação individual de investimento.</p>
+        <div class="preco rev"><b class="num">R$&nbsp;149</b><span>por mês · assinatura única · abre em breve</span></div>
+        <button type="button" class="btn azul rev" data-abrir="lista"><span class="bola" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>Entrar na lista de espera</button>
+        <p class="legal rev">O Projeto 2050 é educação e acompanhamento: não faz custódia, não executa ordens e não dá recomendação individual de investimento.</p>
       </div>
     </div>
   </section>
@@ -750,28 +924,28 @@ d.classList.add("js");if(!r)d.classList.add("mov");if(!t)d.classList.add("transp
     <div class="rotulo"><span>Consultoria Global</span><span>03</span></div>
     <div class="duo inv alto">
       <figure class="duo-foto rev"><img src="img/tiago-reuniao.jpg" alt="Tiago Piassum apresenta em uma sala de reunião" loading="lazy" onerror="this.remove()"></figure>
-      <div class="duo-c rev">
+      <div class="duo-c">
         <h2 class="titulo" id="cons-titulo">Consultoria Global</h2>
-        <p class="sub2">Do número ao plano de vida</p>
-        <div>
-          <p class="txt">Para empresários e investidores com patrimônio a partir de R$ 1 milhão que buscam clareza, estrutura e decisões alinhadas aos seus projetos de vida, dentro e fora do Brasil.</p>
+        <p class="sub2 rev">Do número ao plano de vida</p>
+        <div class="rev">
+          <p class="txt">Para empresários e investidores com patrimônio a partir de R$&nbsp;1 milhão que buscam clareza, estrutura e decisões alinhadas aos seus projetos de vida, dentro e fora do Brasil.</p>
           <p class="txt">O simulador dá o número. A consultoria trata do que vem depois: onde viver, em que moeda manter o patrimônio e como organizar tudo até 2050.</p>
         </div>
-        <ol class="etapas">
+        <ol class="etapas rev">
           <li><span class="n">01</span><b>Aplicação</b><span>Um formulário curto sobre o seu momento e o que você quer resolver.</span></li>
           <li><span class="n">02</span><b>Entrevista</b><span>Uma conversa individual com o Tiago para avaliar perfil, desafios e encaixe.</span></li>
           <li><span class="n">03</span><b>Encontros</b><span>Encontros estratégicos e personalizados, com foco em planejamento patrimonial, organização financeira e decisões de alto impacto.</span></li>
         </ol>
-        <button type="button" class="btn" data-abrir="consultoria"><span class="bola" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>Quero aplicar</button>
+        <button type="button" class="btn rev" data-abrir="consultoria"><span class="bola" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>Quero aplicar</button>
       </div>
     </div>
   </section>
 
   <!-- COMO A CONTA É FEITA -->
-  <section class="bloco" id="conta" aria-labelledby="conta-titulo">
-    <div class="centro rev">
+  <section class="bloco banda" id="conta" data-tema="claro" aria-labelledby="conta-titulo">
+    <div class="centro">
       <h2 class="titulo" id="conta-titulo">Como a conta é feita</h2>
-      <p class="sub">As premissas ficam à vista. É uma simulação educativa, não uma promessa de retorno.</p>
+      <p class="sub rev">As premissas ficam à vista. É uma simulação educativa, não uma promessa de retorno.</p>
     </div>
     <div class="tres">
       <article class="passo rev">
@@ -790,7 +964,7 @@ d.classList.add("js");if(!r)d.classList.add("mov");if(!t)d.classList.add("transp
         <div class="n">03</div>
         <h3>O tempo de estrada</h3>
         <p>O que você já tem e o que guarda por mês são projetados até a idade em que quer viver de renda.</p>
-        <code>hipótese: <span data-ex="retorno">4%</span> ao ano acima da inflação, em dólar · câmbio de <span data-ex="fx">R$ 5,40</span></code>
+        <code>hipótese: <span data-ex="retorno">4%</span> ao ano acima da inflação, em dólar · câmbio de <span data-ex="fx">R$&nbsp;5,40</span></code>
       </article>
     </div>
     <p class="legal rev" style="margin-top:22px;max-width:90ch" id="fontes">Nível de preços e paridade de poder de compra: Banco Mundial, Programa de Comparação Internacional (2024), via Our World in Data. O nível de preços é a média nacional de cada país; capitais costumam custar mais.</p>
@@ -801,15 +975,15 @@ d.classList.add("js");if(!r)d.classList.add("mov");if(!t)d.classList.add("transp
     <div class="rotulo"><span>Sobre</span><span>04</span></div>
     <div class="duo alto">
       <figure class="duo-foto rev"><img src="img/tiago-palestra.jpg" alt="Tiago Piassum fala ao microfone durante uma palestra, apontando para a plateia" loading="lazy" onerror="this.remove()"></figure>
-      <div class="duo-c rev">
+      <div class="duo-c">
         <h2 class="titulo" id="sobre-titulo">Quem faz a conta com você</h2>
-        <div>
-          <p class="txt">Tiago Piassum é economista, empreendedor e especialista financeiro. Fundou a Marco Investimentos, assessoria que saiu do zero ao bilhão de custódia em três anos, e hoje está à frente da Rivool, fintech global de crédito agrícola que já financiou centenas de produtores no Brasil.</p>
+        <div class="rev">
+          <p class="txt">Tiago Piassum é economista, empreendedor e especialista financeiro. Fundou a Marco Investimentos, assessoria que saiu do zero ao bilhão de custódia em três anos, e hoje está à frente da Rivool, fintech global de investimentos globais em dólar.</p>
           <p class="txt">É autor do livro “Declare Independência” e criou o Projeto 2050 para dar método a quem quer construir liberdade real: um número, uma data e o caminho até eles.</p>
         </div>
-        <ul class="fatos">
-          <li><b>R$ 1 bilhão</b><span>sob custódia em três anos, na Marco Investimentos</span></li>
-          <li><b>Rivool</b><span>crédito agrícola para centenas de produtores rurais</span></li>
+        <ul class="fatos rev">
+          <li><b data-conta="1000000000" data-formato="bilhao">R$&nbsp;1 bilhão</b><span>sob custódia em três anos, na Marco Investimentos</span></li>
+          <li><b>Rivool</b><span>investimentos globais em dólar</span></li>
           <li><b>Declare Independência</b><span>livro sobre como a matemática muda vidas no Brasil</span></li>
         </ul>
       </div>
@@ -818,7 +992,7 @@ d.classList.add("js");if(!r)d.classList.add("mov");if(!t)d.classList.add("transp
 
   <!-- FAQ -->
   <section class="bloco" id="faq" aria-labelledby="faq-titulo">
-    <div class="centro rev"><h2 class="titulo" id="faq-titulo">Perguntas frequentes</h2></div>
+    <div class="centro"><h2 class="titulo" id="faq-titulo">Perguntas frequentes</h2></div>
     <div class="faq">
       <details open><summary>O simulador é gratuito mesmo?</summary><p>Sim. Você responde sete perguntas e vê a sua vida global na hora. Para liberar o relatório completo, com o plano mensal e as alavancas, pedimos seu nome e e-mail. O WhatsApp é opcional.</p></details>
       <details><summary>Preciso me mudar para outro país?</summary><p>Não. O lugar serve para medir a sua vida em dólar. Muita gente usa o número para decidir quanto do patrimônio manter em moeda forte, mesmo ficando no Brasil. O relatório mostra os dois valores.</p></details>
@@ -830,8 +1004,8 @@ d.classList.add("js");if(!r)d.classList.add("mov");if(!t)d.classList.add("transp
   </section>
 
   <!-- FECHO: volta ao gancho e leva ao simulador -->
-  <section class="bloco fecho" id="fecho" aria-labelledby="fecho-titulo">
-    <h2 class="titulo rev" id="fecho-titulo">Qual é o seu número?</h2>
+  <section class="bloco fecho banda" id="fecho" data-tema="azul" aria-labelledby="fecho-titulo">
+    <h2 class="titulo" id="fecho-titulo">Qual é o seu número?</h2>
     <p class="sub rev">Pelo câmbio, a resposta é a mesma em qualquer país. Na vida real, não é. A régua certa muda o plano inteiro.</p>
     <a class="btn azul rev" href="#sim"><span class="bola" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>Fazer a minha conta</a>
     <p class="legal rev">Sete perguntas · 2 minutos · gratuito</p>
@@ -848,7 +1022,7 @@ d.classList.add("js");if(!r)d.classList.add("mov");if(!t)d.classList.add("transp
       <a href="#" id="news-link" target="_blank" rel="noopener" hidden><span><small>04 /</small>Acompanhe a Newsletter</span><span aria-hidden="true">→</span></a>
     </nav>
   </div>
-  <p class="rodape-nome" aria-hidden="true">Projeto 2050<span>*</span></p>
+  <p class="rodape-nome" aria-hidden="true">Projeto 2050<span><svg class="ast-svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path pathLength="1" d="M12 1v22"/><path pathLength="1" d="M2.47 6.5l19.06 11"/><path pathLength="1" d="M2.47 17.5l19.06-11"/></svg></span></p>
   <div class="rodape-fim">
     <span>© <span id="ano">2026</span> Tiago Piassum · Projeto 2050</span>
     <a href="#" id="politica-link" target="_blank" rel="noopener" hidden>Política de privacidade</a>
@@ -877,7 +1051,7 @@ const CONFIG = {
   NEWSLETTER_URL: "",      // link da newsletter. Vazio = a linha não aparece no rodapé.
   POLITICA_URL: "",        // política de privacidade (recomendado pela LGPD)
   SITE_NOME: "projeto2050.com", // endereço escrito no rodapé do relatório em PDF
-  CONTA_GLOBAL_URL: "",    // para onde vai o botão "Abra sua conta global" do PDF. Vazio = leva ao site acima.
+  CONTA_GLOBAL_URL: "https://rivool.finance/app/link-advisor/tiago-piassum",    // para onde vai o botão "Abra sua conta global" do PDF. Vazio = leva ao site acima.
   META_PIXEL_ID: "",       // Pixel da Meta (opcional)
   FONTES_ESTADOS: "",      // PREENCHA ANTES DE DIVULGAR: fonte dos índices de custo de vida por estado (Brasil e EUA)
   CAMBIO: 5.40,            // R$ por US$
@@ -902,6 +1076,18 @@ const PAISES = {
   AUS:["Austrália","na",0.8959,"oceania"], NZL:["Nova Zelândia","na",0.8860,"oceania"],
   ZAF:["África do Sul","na",0.4055,"africa"], MAR:["Marrocos","no",0.3988,"africa"], EGY:["Egito","no",0.1748,"africa"], KEN:["Quênia","no",0.3210,"africa"], AGO:["Angola","em",0.2635,"africa"], MOZ:["Moçambique","em",0.3851,"africa"], CPV:["Cabo Verde","em",0.4638,"africa"], MUS:["Maurício","em",0.3766,"africa"]
 };
+/* Latitude e longitude aproximadas de cada país (centro ou capital), para o mapa do resultado. Estados americanos usam o ponto dos EUA. */
+const COORD = {
+  USA:[39,-98], CAN:[56,-106], MEX:[23,-102], PAN:[9,-80], CRI:[10,-84], DOM:[18.8,-70.5],
+  ARG:[-34,-64], CHL:[-33.5,-70.7], URY:[-33,-56], PRY:[-23.4,-58.4], COL:[4.6,-74], PER:[-12,-77], ECU:[-1.8,-78.2], BOL:[-16.5,-68],
+  PRT:[39.5,-8], ESP:[40.4,-3.7], ITA:[42,12.5], FRA:[46.6,2.3], DEU:[51,10.4], GBR:[52.5,-1.5], IRL:[53.3,-8], NLD:[52.2,5.3], BEL:[50.6,4.5], CHE:[46.8,8.2], AUT:[47.5,14.5], SWE:[62,15], NOR:[61,9], DNK:[56,10], FIN:[62,26], GRC:[39,22], POL:[52,19], CZE:[49.8,15.5], HUN:[47.2,19.5], HRV:[45.1,15.2], ROU:[45.9,25], LUX:[49.8,6.1], ISL:[64.9,-18.6], EST:[58.6,25], SVN:[46.1,14.9], MLT:[35.9,14.4],
+  JPN:[36,138], KOR:[36.5,127.8], CHN:[35,103], SGP:[1.35,103.8], THA:[15,101], VNM:[16,107.8], IDN:[-2.5,118], MYS:[4.2,102], PHL:[12.9,122], IND:[21,78], ARE:[24,54], ISR:[31.5,34.9], TUR:[39,35], QAT:[25.3,51.2], SAU:[24,45],
+  AUS:[-25,134], NZL:[-41.5,172.5],
+  ZAF:[-29,24], MAR:[31.8,-7], EGY:[26.8,30.8], KEN:[0,37.9], AGO:[-12.3,17.5], MOZ:[-18.7,35.5], CPV:[15.1,-23.6], MUS:[-20.3,57.6]
+};
+const COORD_BR = [-15.8,-47.9];
+/* Terra firme numa grade de 3 graus (120 × 45, de 78°N a 54°S), um bit por ponto. Gerada do contorno de terra do Natural Earth 1:110m (domínio público). */
+const MAPA_TERRA = "AAACMc//+ADQAAAEAAAAAAADj4B/+AAAAQB/wDQAAAA/s+A/8AAABhf//jwAB/37Rbgf4AA/ANf////37////ho/DgD/P///////F////AgcAAPf////////D+f/8DoAAAPD//////8wAYD//D8AACCf/////8DAAAB//7+AAFH///////CAAAB///8AADf///////AAAAA///zAAB////////AAAAAf//4AAA999////9AAAAAf//AAAHi5N////gAAAAAf/+AAAHBX8///4gAAAAAf/+AAAA8A////8mAAAAAH/8AAAH8A////8QAAAAAH/YAAAH//9///+AAAAAAD8AAAAf/++///8AAAAAAA4AAAAf//fj//6AAAAAAAciAAA///fx+fAAAAAAAAPiAAAf//vg8eCAAAAAAABwAAA///uAYHCAAAAAAAAQAAAf//wAYDAAAAAAAAAN8AAP//+AAAAAAAAAAAAD+AAPP/8AAEAAAAAAAAAD/gAAH/8AAIYAAAAAAAAH/gAAH/wAAG4AAAAAAAAH/+AAH/gAACaOIAAAAAAH//AAD/gAABADgAAAAAAD//AAD/gAAAABQAAAAAAD/+AAB/gAAAANAAAAAAAB/+AAD/yAAAA5AAAAAAAA/+AAD/EAAAB/gBAAAAAAf8AAD/EAAAH/wAAAAAAAf4AAB/EAAAP/4AAAAAAA/wAAB+AAAAP/4AAAAAAA/gAAA8AAAAP/4AAAAAAA/AAAA4AAAAGH4AAAAAAA+AAAAAAAAAADwAAAAAAA4AAAAAAAAAAAACAAAAABwAAAAAAAAAAAgEAAAAABwAAAAAAAAAAAAIAAAAABwAAAAAAAAAAAAAAAAAABgAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAA";
 const CONTINENTES = [["norte","América do Norte"],["sul","América do Sul"],["europa","Europa"],["asia","Ásia"],["oceania","Oceania"],["africa","África"]];
 const EM_CONT = { norte:"Na América do Norte", sul:"Na América do Sul", europa:"Na Europa", asia:"Na Ásia", oceania:"Na Oceania", africa:"Na África" };
 const DESTINOS_RAPIDOS = ["USA","PRT","ESP","ITA","CAN","URY"];
@@ -929,17 +1115,17 @@ const TEXTO_DADOS = "Usamos seu nome, e-mail e WhatsApp para enviar seu plano, a
 const $ = (q, el) => (el || document).querySelector(q);
 const $$ = (q, el) => Array.from((el || document).querySelectorAll(q));
 const fmt = v => Math.round(v).toLocaleString("pt-BR");
-const usd = v => "US$ " + fmt(v);
-const brl = v => "R$ " + fmt(v);
+const usd = v => "US$\u00a0" + fmt(v);
+const brl = v => "R$\u00a0" + fmt(v);
 function brlCurto(v){
-  if (v >= 1e6){ const m = Math.round(v/1e5)/10; return "R$ " + m.toLocaleString("pt-BR",{maximumFractionDigits:1}) + (m < 2 ? " milhão" : " milhões"); }
-  if (v >= 1e3) return "R$ " + fmt(v/1e3) + " mil";
+  if (v >= 1e6){ const m = Math.round(v/1e5)/10; return "R$\u00a0" + m.toLocaleString("pt-BR",{maximumFractionDigits:1}) + (m < 2 ? " milhão" : " milhões"); }
+  if (v >= 1e3) return "R$\u00a0" + fmt(v/1e3) + " mil";
   return brl(v);
 }
 const idx = v => v.toLocaleString("pt-BR",{minimumFractionDigits:1,maximumFractionDigits:1});
 const pct = v => Math.round(v*100) + "%";
 const pctCfg = v => (v*100).toLocaleString("pt-BR") + "%";
-const cambioTxt = () => "R$ " + CONFIG.CAMBIO.toLocaleString("pt-BR",{minimumFractionDigits:2});
+const cambioTxt = () => "R$\u00a0" + CONFIG.CAMBIO.toLocaleString("pt-BR",{minimumFractionDigits:2});
 const arred = (v, passo) => Math.round(v/passo)*passo;
 const esc = t => String(t).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const digitos = t => String(t || "").replace(/\D/g, "");
@@ -952,6 +1138,8 @@ const reduz = !document.documentElement.classList.contains("mov");   // decidido
 const iMes = Math.pow(1 + CONFIG.RETORNO_REAL_ANO, 1/12) - 1;
 const fatorAporte = anos => (Math.pow(1 + iMes, 12*anos) - 1) / iMes;
 const fatorCapital = anos => Math.pow(1 + iMes, 12*anos);
+// O exemplo da página (topo, faixa e frase): a média do Brasil contra a média de cada país. É a conta de usdMes com índice 100 nos dois lados.
+const usdMedia = (custo, pais) => custo / CONFIG.PPC * PAISES[pais][2];
 function usdMes(custo, uf, pais, st){ return custo / CONFIG.PPC / (IDX_BR[uf]/100) * PAISES[pais][2] * (pais === "USA" ? IDX_US[st]/100 : 1); }
 function calcular(x){
   const anos = x.ret - x.age;
@@ -1044,12 +1232,32 @@ function payload(modo, textoAceite){
   return p;
 }
 
+/* ---------- mapa-múndi de pontos: Brasil → destino ---------- */
+let mapaPontos = null;
+function pontosDoMapa(){
+  if (mapaPontos) return mapaPontos;
+  const bin = atob(MAPA_TERRA); let d = "";
+  for (let i = 0; i < 120 * 45; i++) if (bin.charCodeAt(i >> 3) & (128 >> (i & 7))) d += `M${i % 120 + .5} ${Math.floor(i / 120) + .5}h0`;
+  return (mapaPontos = d);
+}
+const noMapa = ([lat, lon]) => [(lon + 180) / 3, (78 - lat) / 3 + .5];
+function mapaSvg(pais){
+  const [x1, y1] = noMapa(COORD_BR), [x2, y2] = noMapa(COORD[pais] || COORD.USA);
+  const dist = Math.hypot(x2 - x1, y2 - y1), cx = (x1 + x2) / 2, cy = Math.max(1, (y1 + y2) / 2 - dist * .35);
+  const f = v => v.toFixed(2);
+  return `<figure class="mapa" aria-hidden="true"><svg viewBox="0 0 120 45" focusable="false">
+    <path class="mapa-pts" d="${pontosDoMapa()}"/>
+    <path class="mapa-arco" pathLength="1" d="M${f(x1)} ${f(y1)}Q${f(cx)} ${f(cy)} ${f(x2)} ${f(y2)}"/>
+    <circle class="mapa-o" cx="${f(x1)}" cy="${f(y1)}" r=".9"/><circle class="mapa-d" cx="${f(x2)}" cy="${f(y2)}" r="1.1"/>
+  </svg></figure>`;
+}
+
 /* ---------- simulador: navegação ---------- */
 const raiz = $("#sim"), topo = $("#sim-top"), corpo = $("#sim-corpo"), acao = $("#sim-acao");
 const PROG = { onde:1, custo:2, chute:3, resposta:3, destino:4, estrada:5, partida:6, aporte:7 };
 const ANTERIOR = { custo:"onde", chute:"custo", resposta:"chute", destino:"resposta", estrada:"destino", partida:"estrada", aporte:"partida", vida:"aporte", contato:"vida", plano:"vida" };
 const AZUL = { resposta:true, vida:true };
-let atual = "onde";
+let atual = "onde", telaDesenhada = null;
 function faltando(passo){
   const precisa = ["onde","custo","chute","resposta","destino","estrada","partida","aporte","calculando","vida","contato","plano"];
   const pos = precisa.indexOf(passo); if (pos < 0) return null;
@@ -1065,17 +1273,43 @@ function faltando(passo){
 /* ---------- movimento (tudo aqui é desligado quando o aparelho pede "reduzir movimento") ---------- */
 const ORDEM = ["onde","custo","chute","resposta","destino","estrada","partida","aporte","calculando","vida","contato","plano"];
 let animarVida = false, animarPlano = false, tAltura = null, alavRecente = null, combAnterior = null;
+// A mesma curva do CSS (--ease), para o que o script anima quadro a quadro.
+const curva = (function(x1, y1, x2, y2){
+  const A = (a, b) => 1 - 3*b + 3*a, B = (a, b) => 3*b - 6*a, C = a => 3*a;
+  const f = (t, a, b) => ((A(a, b)*t + B(a, b))*t + C(a))*t, df = (t, a, b) => 3*A(a, b)*t*t + 2*B(a, b)*t + C(a);
+  return x => {
+    if (x <= 0) return 0; if (x >= 1) return 1;
+    let t = x;
+    for (let i = 0; i < 8; i++){ const e = f(t, x1, x2) - x, d = df(t, x1, x2); if (Math.abs(e) < 1e-5 || !d) break; t = Math.min(1, Math.max(0, t - e/d)); }
+    return f(t, y1, y2);
+  };
+})(0.22, 1, 0.36, 1);
+const DUR_NUM = 900, DESFOQUE = 8;   // os mesmos --dur-num e --desfoque do CSS
 // Faz um número subir de um valor a outro; sem movimento, mostra o valor final direto.
-function contar(el, de, ate, ms, formato){
+// Com desfoca, é a assinatura da página: o número começa borrado e fica nítido ao chegar no valor.
+function contar(el, de, ate, ms, formato, desfoca){
   if (!el) return;
-  if (reduz){ el.textContent = formato(ate); return; }
+  if (reduz){ el.textContent = formato(ate); el.classList.add("contou"); return; }
   const ini = performance.now();
+  if (desfoca) el.classList.add("contou");   // a partir daqui o desfoque é controlado aqui, quadro a quadro
   (function passo(t){
     if (!el.isConnected) return;
-    const p = Math.min(1, Math.max(0, (t - ini) / ms)), suave = 1 - Math.pow(1 - p, 3);
+    const p = Math.min(1, Math.max(0, (t - ini) / ms)), suave = curva(p);
     el.textContent = formato(de + (ate - de) * suave);
+    if (desfoca) el.style.filter = p < 1 ? "blur(" + (DESFOQUE * (1 - suave)).toFixed(2) + "px)" : "";
     if (p < 1) requestAnimationFrame(passo);
   })(ini);
+}
+const revelaNumero = (el, ate, formato, de) => contar(el, de || 0, ate, DUR_NUM, formato, true);
+const FORMATOS = { bilhao: v => v >= 999.5e6 ? "R$ 1 bilhão" : "R$ " + fmt(v / 1e6) + (Math.round(v / 1e6) < 2 ? " milhão" : " milhões") };
+
+// Corta um título grande nas linhas em que ele quebra de fato, cada uma dentro de uma máscara.
+function partirLinhas(h){
+  const texto = h.dataset.texto || (h.dataset.texto = h.textContent.trim().replace(/\s+/g, " "));
+  h.innerHTML = texto.split(" ").map(w => `<span class="tp">${esc(w)}</span>`).join(" ");
+  const linhas = []; let y = null;
+  $$(".tp", h).forEach(w => { const t = w.offsetTop; if (y === null || Math.abs(t - y) > 4){ linhas.push([]); y = t; } linhas[linhas.length - 1].push(w.textContent); });
+  h.innerHTML = linhas.map((l, i) => `<span class="tl" style="--i:${i}"><span>${esc(l.join(" "))}</span></span>`).join(" ");
 }
 
 function ir(passo){
@@ -1088,6 +1322,9 @@ function ir(passo){
 function render(mover, sentido){
   const hAntes = raiz.getBoundingClientRect().height, nAntes = Number(raiz.dataset.n || 0);
   clearTimeout(tAltura); raiz.classList.remove("ajusta"); raiz.style.height = "";
+  // onde estava o marcador de cada grupo de opções, para ele deslizar até a nova escolha
+  const marcasAntes = telaDesenhada === atual ? $$(".chips", corpo).map(c => { const b = $('.chip[aria-pressed="true"]', c); return b ? [b.offsetLeft, b.offsetTop] : null; }) : [];
+  telaDesenhada = atual;
   corpo.className = "sim-corpo"; acao.className = "sim-acao";
   const tela = TELAS[atual]();
   raiz.dataset.tom = AZUL[atual] ? "azul" : "papel";
@@ -1101,6 +1338,7 @@ function render(mover, sentido){
   acao.innerHTML = tela.acao || "";
   acao.hidden = !tela.acao;
   if (tela.montar) tela.montar();
+  marcadores(marcasAntes);
   if (!reduz){
     // o cartão muda de altura aos poucos, e a pergunta nova entra pelo lado para onde a pessoa está indo
     const hDepois = raiz.getBoundingClientRect().height;
@@ -1116,6 +1354,24 @@ function render(mover, sentido){
     if (r.top < alturaTopo || r.top > window.innerHeight * 0.45) window.scrollTo({ top: window.scrollY + r.top - alturaTopo - 12, behavior: reduz ? "auto" : "smooth" });
     const h = $(".sim-t", corpo); if (h) h.focus({ preventScroll:true });
   }
+}
+// Opções que funcionam como abas (um valor por grupo): um marcador fica atrás da escolhida e desliza quando ela muda.
+function marcadores(antes){
+  if (reduz) return;
+  $$(".chips", corpo).forEach((c, i) => {
+    const b = $('.chip[aria-pressed="true"]', c);
+    if (!b) return;
+    const m = document.createElement("span");
+    m.className = "chips-marca"; m.setAttribute("aria-hidden", "true");
+    m.style.width = b.offsetWidth + "px"; m.style.height = b.offsetHeight + "px";
+    c.classList.add("com-marca"); c.prepend(m);
+    const de = antes[i], vai = `translate(${b.offsetLeft}px,${b.offsetTop}px)`;
+    if (de && (de[0] !== b.offsetLeft || de[1] !== b.offsetTop)){
+      m.style.transform = `translate(${de[0]}px,${de[1]}px)`; b.classList.add("espera");
+      void m.offsetWidth; m.classList.add("anda");
+      requestAnimationFrame(() => { m.style.transform = vai; b.classList.remove("espera"); });
+    } else m.style.transform = vai;
+  });
 }
 const btnSeguir = (ok, rotulo, destino) => `<button type="button" class="sim-btn" id="btn-seguir" data-ir="${destino}" ${ok ? "" : "disabled"}>${rotulo || "Continuar"}</button>`;
 function chips(opcoes, valor, outro, extra){
@@ -1414,6 +1670,11 @@ const TELAS = {
         <h3 class="sim-t vida-n num" tabindex="-1" aria-label="${usd(k.numero)}">${usd(k.numero)}</h3>
         <p class="sim-s num">Cerca de ${brlCurto(k.numero * CONFIG.CAMBIO)} no câmbio de hoje.</p>
         <p class="sim-s" style="font-size:19px;font-weight:600;line-height:1.35">É o patrimônio em dólar que paga a sua vida ${esc(lugarEm(s.pais, s.st))}, para viver de renda aos ${s.ret}, em ${k.anoRenda}.</p>
+        <div class="vbarras" aria-hidden="true">
+          <div><div class="barra-l"><span>${esc(lugarNome(s.pais, s.st))}</span><b class="num">${usd(k.numero)}</b></div><div class="vbar forte" style="width:${(k.numero / Math.max(k.numero, k.numeroBrasil) * 100).toFixed(1)}%"></div></div>
+          <div><div class="barra-l"><span>Se você ficar no Brasil</span><b class="num">${usd(k.numeroBrasil)}</b></div><div class="vbar" style="width:${(k.numeroBrasil / Math.max(k.numero, k.numeroBrasil) * 100).toFixed(1)}%"></div></div>
+        </div>
+        ${mapaSvg(s.pais)}
         <div class="vida-l">
           <div><span class="olho">Poder de compra</span><p class="num">${brl(s.custo)} ${esc(emBR(s.uf))} equivalem a ${usd(k.mes)} por mês ${esc(lugarEm(s.pais, s.st))}.</p></div>
           <div><span class="olho">Regra de retirada</span><p class="num">${usd(k.mes)} ÷ ${pctCfg(CONFIG.RETIRADA_MES)} ao mês = ${usd(k.numero)}.</p></div>
@@ -1426,7 +1687,12 @@ const TELAS = {
         animarVida = false;
         if (reduz) return;
         corpo.classList.add("revela");
-        contar($(".vida-n", corpo), 0, k.numero, 1100, usd);
+        revelaNumero($(".vida-n", corpo), k.numero, usd);
+        let d = 450;   // o resto entra em sequência, 70 ms entre um e outro
+        Array.from(corpo.children).forEach(el => {
+          if (el.matches(".olho, .vida-n")) return;
+          (el.classList.contains("vida-l") ? Array.from(el.children) : [el]).forEach(x => { x.style.setProperty("--d", d + "ms"); d += 70; });
+        });
       }
     };
   },
@@ -1711,7 +1977,7 @@ function desenharRelatorio(doc, d){
   });
 
   /* premissas, em letra pequena, acima da faixa final */
-  txt(d.legal, M, 269.4, { s:5.6, c:C.apagado, w:CW });
+  txt(d.legal, M, 269.4, { s:5.6, c:C.apagado, w:CW - 4 });
 
   /* faixa final: a conclusão e o convite para abrir a conta, com área clicável */
   fundo(C.tinta); doc.rect(0, 275, W, 22, "F");
@@ -1720,6 +1986,7 @@ function desenharRelatorio(doc, d){
   doc.setFont("helvetica", "bold"); doc.setFontSize(10.5);
   txt(frase, M, 284.6, { s: doc.getTextWidth(frase) > larguraFrase ? 9 : 10.5, b:true, c:C.branco });
   txt("Refaça a conta em " + d.site, M, 290.6, { s:8, c:C.claro });
+  doc.link(M, 287.2, doc.getTextWidth("Refaça a conta em " + d.site), 4.6, { url: "https://" + d.site });
   fundo(C.azul); doc.roundedRect(bX, bY, bL, bA, 6.5, 6.5, "F");
   txt(d.ctaTexto, bX + 9, bY + 8.1, { s:10.5, b:true, c:C.branco });
   const sX = bX + bL - 13, sY = bY + bA / 2;
@@ -1928,10 +2195,90 @@ document.addEventListener("click", e => {
 (function pagina(){
   const ex = { custo: 20000 };   // exemplo do topo: média do Brasil contra a média de cada país, só com dados do Banco Mundial
   const mapa = {
-    custo: brl(ex.custo), cambio: usd(ex.custo / CONFIG.CAMBIO), ppcEUA: usd(ex.custo / CONFIG.PPC), ppcPT: usd(ex.custo / CONFIG.PPC * PAISES.PRT[2]),
+    custo: brl(ex.custo), cambio: usd(ex.custo / CONFIG.CAMBIO), ppcEUA: usd(usdMedia(ex.custo, "USA")), ppcPT: usd(usdMedia(ex.custo, "PRT")),
     retirada: pctCfg(CONFIG.RETIRADA_MES), retorno: pctCfg(CONFIG.RETORNO_REAL_ANO), fx: cambioTxt()
   };
   $$("[data-ex]").forEach(el => { if (mapa[el.dataset.ex]) el.textContent = mapa[el.dataset.ex]; });
+
+  // pausa o que se move sozinho: mouse em cima, foco, toque, fora da tela ou aba escondida
+  const pausavel = (alvo, area) => {
+    const motivos = new Set(), marca = (m, on) => { on ? motivos.add(m) : motivos.delete(m); alvo.classList.toggle("pausa", motivos.size > 0); };
+    area.addEventListener("mouseenter", () => marca("mouse", true));
+    area.addEventListener("mouseleave", () => marca("mouse", false));
+    area.addEventListener("focusin", () => marca("foco", true));
+    area.addEventListener("focusout", () => marca("foco", false));
+    area.addEventListener("pointerdown", e => { if (e.pointerType === "touch") marca("toque", !motivos.has("toque")); });
+    if ("IntersectionObserver" in window) new IntersectionObserver(es => marca("fora", !es[0].isIntersecting)).observe(area);
+    document.addEventListener("visibilitychange", () => marca("aba", document.hidden));
+  };
+
+  // hero: o país e o valor se alternam a cada 4 s (Estados Unidos, Portugal, Canadá). Parado, fica nos Estados Unidos.
+  const GIRO = ["USA", "PRT", "CAN"];
+  const giro = $("#giro"), giroV = $("#giro-v"), giroP = $("#giro-p");
+  if (giro){
+    let gi = 0, ultimo = usdMedia(ex.custo, GIRO[0]);
+    const lugar = k => PAISES[k][1] + " " + PAISES[k][0];
+    giroV.textContent = usd(ultimo);
+    giroP.innerHTML = `<span>${esc(lugar(GIRO[0]))}</span>`;
+    if (!reduz){
+      const anel = $(".giro-t", giro);
+      setTimeout(() => revelaNumero(giroV, ultimo, usd), 250);
+      anel.addEventListener("animationend", () => {
+        gi = (gi + 1) % GIRO.length;
+        const k = GIRO[gi], alvo = usdMedia(ex.custo, k);
+        giroP.innerHTML = `<span class="troca">${esc(lugar(k))}</span>`;
+        revelaNumero(giroV, alvo, usd, ultimo); ultimo = alvo;
+        anel.style.animation = "none"; void anel.getBoundingClientRect(); anel.style.animation = "";
+        anel.style.animationDelay = "0s";
+      });
+      pausavel(giro, $(".hero-oferta"));
+    }
+  }
+
+  // faixa de países: R$ 20.000 por mês em cada país, com a mesma conta e os mesmos dados do simulador
+  const trilho = $("#paises-trilho");
+  if (trilho){
+    const ks = Object.keys(PAISES).sort((a, b) => PAISES[b][2] - PAISES[a][2]);
+    const lista = ks.map(k => `<li><span>${esc(PAISES[k][0])}</span><b>${usd(usdMedia(ex.custo, k))}</b></li>`).join("");
+    trilho.innerHTML = `<ul>${lista}</ul><ul aria-hidden="true">${lista}</ul>`;
+    if (!reduz){
+      const larg = trilho.firstElementChild.getBoundingClientRect().width;
+      trilho.style.setProperty("--dur-faixa", Math.round(larg / 45) + "s");   // cerca de 45 px por segundo, em qualquer tela
+      pausavel($("#paises"), $("#paises"));
+    }
+  }
+
+  // barras da frase de abertura: comprimento proporcional ao maior valor
+  const vals = { cambio: ex.custo / CONFIG.CAMBIO, ppcPT: usdMedia(ex.custo, "PRT"), ppcEUA: usdMedia(ex.custo, "USA") };
+  const maior = Math.max(...Object.values(vals));
+  $$("#ibarras i").forEach(i => i.style.setProperty("--w", (vals[i.dataset.v] / maior).toFixed(4)));
+
+  // frase de abertura: cada palavra vira uma peça que acende com a rolagem
+  const frase = $("#frase");
+  if (frase){
+    const pecas = [];
+    Array.from(frase.childNodes).forEach(n => {
+      if (n.nodeType === 3){
+        const partes = n.textContent.split(/(\s+)/), frag = document.createDocumentFragment();
+        partes.forEach(t => { if (!t) return; if (/^\s+$/.test(t)) frag.appendChild(document.createTextNode(t)); else { const sp = document.createElement("span"); sp.className = "pw"; sp.textContent = t; frag.appendChild(sp); pecas.push(sp); } });
+        frase.replaceChild(frag, n);
+      } else { n.classList.add("pw"); pecas.push(n); }
+    });
+    pecas.forEach((el, i) => el.style.setProperty("--a", (i / pecas.length).toFixed(4)));
+    const temLinha = window.CSS && CSS.supports && CSS.supports("animation-timeline: view()");
+    if (!reduz && !temLinha && "IntersectionObserver" in window){
+      // alternativa: acompanha a rolagem só enquanto a frase está na tela
+      let marcado = false;
+      const pinta = () => {
+        marcado = false;
+        const r = frase.getBoundingClientRect(), vh = window.innerHeight, p = (vh - r.top) / (vh + r.height);
+        pecas.forEach(el => el.classList.toggle("acesa", p >= 0.2 + Number(el.style.getPropertyValue("--a")) * 0.3));
+        frase.classList.toggle("fim", p >= 0.53);
+      };
+      const rola = () => { if (!marcado){ marcado = true; requestAnimationFrame(pinta); } };
+      new IntersectionObserver(es => { if (es[0].isIntersecting){ window.addEventListener("scroll", rola, { passive:true }); pinta(); } else window.removeEventListener("scroll", rola); }).observe(frase);
+    }
+  }
   $("#ano").textContent = ANO;
   if (!CONFIG.ENVIA_EMAIL) $("#hero-meta").textContent = "Sete perguntas · 2 minutos · relatório completo na hora";
   if (CONFIG.FONTES_ESTADOS) $("#fontes").textContent += " Índices de custo de vida por estado: " + CONFIG.FONTES_ESTADOS + ".";
@@ -1941,14 +2288,31 @@ document.addEventListener("click", e => {
   liga("#news-link", CONFIG.NEWSLETTER_URL);
   liga("#politica-link", CONFIG.POLITICA_URL);
 
+  // títulos grandes: refaz as linhas quando a largura muda e quando a fonte Anton termina de carregar
+  const titulos = $$(".titulo");
+  const parte = () => titulos.forEach(partirLinhas);
+  parte();
+  let larg = window.innerWidth, tParte;
+  window.addEventListener("resize", () => { if (window.innerWidth === larg) return; larg = window.innerWidth; clearTimeout(tParte); tParte = setTimeout(parte, 150); });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(parte);
+
+  // números que contam uma vez só, ao entrar na tela
+  const numeros = $$("[data-conta]");
+  numeros.forEach(el => {
+    const ate = Number(el.dataset.conta), formato = FORMATOS[el.dataset.formato] || fmt;
+    el.textContent = formato(ate);
+    if (reduz) return;
+    if (el.classList.contains("cn")) el.style.minWidth = el.getBoundingClientRect().width + "px";   // o rótulo ao lado não anda enquanto conta
+    el.textContent = formato(0);
+  });
+  const contaNumero = el => revelaNumero(el, Number(el.dataset.conta), FORMATOS[el.dataset.formato] || fmt);
+
   if (!reduz){
-    const deg = $(".degraus"), raizDoc = document.documentElement;
+    const raizDoc = document.documentElement;
     let ultimoY = Math.max(0, window.scrollY), marcado = false;
     const aoRolar = () => {
       marcado = false;
-      const y = Math.max(0, window.scrollY), vh = window.innerHeight;
-      // degraus: crescem conforme a faixa sobe pela tela
-      if (deg){ const r = deg.getBoundingClientRect(); if (r.top < vh + 60 && r.bottom > -60) deg.style.setProperty("--p", Math.min(1, Math.max(0, (vh - r.top) / (vh * 0.55))).toFixed(3)); }
+      const y = Math.max(0, window.scrollY);
       // cabeçalho: some ao rolar para baixo e volta ao rolar para cima (o CSS só aplica isso no celular)
       if (y <= 160 || y < ultimoY - 6) raizDoc.classList.remove("sem-topo");
       else if (y > ultimoY + 6) raizDoc.classList.add("sem-topo");
@@ -1960,7 +2324,30 @@ document.addEventListener("click", e => {
 
   if ("IntersectionObserver" in window){
     const io = new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting){ en.target.classList.add("vis"); io.unobserve(en.target); } }), { rootMargin:"0px 0px -8% 0px" });
-    $$(".rev").forEach(el => io.observe(el));
+    $$(".rev, .titulo, .rodape-nome, .ibarras, .degraus, .rotulo").forEach(el => io.observe(el));
+    // troca de fundo: o tema vale enquanto a seção cruza o meio da tela
+    const ioTema = new IntersectionObserver(es => es.forEach(en => en.target.classList.toggle("ativa", en.isIntersecting)), { rootMargin:"-50% 0px -50% 0px" });
+    if (!reduz) $$(".banda").forEach(el => ioTema.observe(el));
+    // menu: um marcador desliza até o link da seção visível
+    const menu = $(".menu");
+    if (menu){
+      const marca = document.createElement("span"); marca.className = "menu-marca"; marca.setAttribute("aria-hidden", "true"); menu.appendChild(marca);
+      const SECAO = { simulador:"#simulador", produtos:"#produtos", projeto:"#produtos", consultoria:"#consultoria", sobre:"#sobre" };
+      const ativas = new Set();
+      const pinta = () => {
+        const id = Object.keys(SECAO).find(k => ativas.has(k)), a = id && $(`.menu a[href="${SECAO[id]}"]`);
+        $$(".menu a").forEach(l => { if (l === a) l.setAttribute("aria-current", "location"); else l.removeAttribute("aria-current"); });
+        if (!a){ marca.style.opacity = "0"; return; }
+        marca.style.transform = `translateX(${a.offsetLeft}px) scaleX(${a.offsetWidth})`; marca.style.opacity = "1";
+      };
+      const ioMenu = new IntersectionObserver(es => { es.forEach(en => en.isIntersecting ? ativas.add(en.target.id) : ativas.delete(en.target.id)); pinta(); }, { rootMargin:"-50% 0px -50% 0px" });
+      Object.keys(SECAO).forEach(id => { const el = document.getElementById(id); if (el) ioMenu.observe(el); });
+      window.addEventListener("resize", pinta);
+    }
+    if (!reduz){
+      const ioNum = new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting){ contaNumero(en.target); ioNum.unobserve(en.target); } }), { rootMargin:"0px 0px -12% 0px" });
+      numeros.forEach(el => ioNum.observe(el));
+    }
     const fixo = $("#fixo"); let heroVisivel = true, simVisivel = false, fimVisivel = false, fechoVisivel = false;
     const pinta = () => fixo.classList.toggle("on", !heroVisivel && !simVisivel && !fimVisivel && !fechoVisivel);
     new IntersectionObserver(es => { heroVisivel = es[0].isIntersecting; pinta(); }).observe($("#cta-hero"));
@@ -1968,9 +2355,29 @@ document.addEventListener("click", e => {
     new IntersectionObserver(es => { fimVisivel = es[0].isIntersecting; pinta(); }).observe($("#contato"));
     new IntersectionObserver(es => { fechoVisivel = es[0].isIntersecting; pinta(); }).observe($("#fecho"));
   } else {
-    $$(".rev").forEach(el => el.classList.add("vis"));
+    $$(".rev, .titulo, .rodape-nome, .ibarras, .degraus, .rotulo").forEach(el => el.classList.add("vis"));
+    numeros.forEach(el => { el.textContent = (FORMATOS[el.dataset.formato] || fmt)(Number(el.dataset.conta)); el.classList.add("contou"); });
   }
 })();
+
+/* ---------- perguntas frequentes: abrir e fechar com altura animada ---------- */
+if (!reduz && Element.prototype.animate){
+  $$(".faq details").forEach(d => {
+    const sum = $("summary", d);
+    let anim = null;
+    sum.addEventListener("click", e => {
+      e.preventDefault();
+      const de = d.offsetHeight, borda = d.offsetHeight - d.clientHeight;
+      if (anim) anim.cancel();
+      let ate;
+      if (d.open && !d.classList.contains("fechando")){ d.classList.add("fechando"); ate = sum.offsetHeight + borda; }
+      else { d.classList.remove("fechando"); d.open = true; ate = d.offsetHeight; }
+      d.style.overflow = "hidden";
+      anim = d.animate({ height:[de + "px", ate + "px"] }, { duration:450, easing:"cubic-bezier(0.22,1,0.36,1)" });
+      anim.onfinish = () => { if (d.classList.contains("fechando")){ d.open = false; d.classList.remove("fechando"); } d.style.overflow = ""; anim = null; };
+    });
+  });
+}
 
 /* ---------- início: retoma de onde a pessoa parou ---------- */
 (function inicio(){
