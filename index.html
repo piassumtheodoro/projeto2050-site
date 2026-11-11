@@ -453,7 +453,7 @@ section{position:relative}
 @media (min-width:760px){ .fecho .btn{justify-self:start} .fecho .sub{font-size:22px} }
 @media (min-width:980px){
   .fecho{grid-template-columns:minmax(0,7fr) minmax(0,5fr);column-gap:48px;align-items:center}
-  .fecho > :not(.fecho-col){grid-column:1}
+  .fecho > :not(.fecho-col):not(.fio){grid-column:1}   /* o fio fica fora da grade: preso à coluna 1, ele começava com a margem lateral contada duas vezes */
   .fecho-col{grid-column:2;grid-row:1 / span 4;width:100%;max-width:440px;margin:0;justify-self:end}
 }
 
