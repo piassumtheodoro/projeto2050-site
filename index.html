@@ -1533,7 +1533,7 @@ const TELAS = {
 
   custo(){
     const tem = () => s.custo !== null && s.custo >= 1000;
-    const anual = () => { const a = s.custo * 12; return a >= 1e6 ? "R$ " + (a/1e6).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2}) + " mi" : "R$ " + fmt(a/1e3) + " mil"; };
+    const anual = () => { const a = s.custo * 12; return a >= 1e6 ? "R$\u00a0" + (a/1e6).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2}) + " mi" : "R$\u00a0" + fmt(a/1e3) + " mil"; };
     const pinta = () => {
       $("#v-custo").innerHTML = `<span class="${tem() ? "" : "vazio"}">${tem() ? brl(s.custo) : "R$ ?"}</span> <small>por mês</small>`;
       $("#n-custo").hidden = !tem();
