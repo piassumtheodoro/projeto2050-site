@@ -414,6 +414,9 @@ section{position:relative}
 #fontes{margin-top:var(--e5);padding-top:12px;border-top:1px solid var(--filete)}
 @media (min-width:760px){
   .tres{grid-template-columns:repeat(3,minmax(0,1fr));gap:32px}
+}
+/* a colagem só vai para o lado do título a partir de 980px: entre 760 e 900px a coluna ficava estreita e o título partia em quatro linhas */
+@media (min-width:980px){
   .conta-topo{grid-template-columns:minmax(0,1fr) 280px;align-items:end}
   .conta-topo .titulo,.conta-topo .sub{grid-column:1}
   .conta-col{grid-column:2;grid-row:1 / span 2;width:280px;margin:0}
