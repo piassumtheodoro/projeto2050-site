@@ -315,8 +315,9 @@ section{position:relative}
 .produtos-topo .sub{margin-top:8px}
 .grade{display:grid;gap:40px;grid-template-columns:minmax(0,1fr)}
 .cartao{position:relative;display:flex;flex-direction:column;gap:16px;color:var(--texto)}
-.cartao-v{position:relative;aspect-ratio:4/3;overflow:hidden;border-radius:var(--r-m);background-image:radial-gradient(ellipse 80% 90% at 30% 25%,#23272D 0%,#14171B 50%,#0B0D0E 100%);background-size:100% 100%;background-repeat:no-repeat;background-position:0 0}
-.cartao-v b{position:absolute;left:16px;bottom:12px;z-index:2;font-family:var(--serifa);font-weight:400;font-size:clamp(56px,17vw,96px);line-height:.95;letter-spacing:-.03em;color:var(--texto)}
+.cartao-v{position:relative;aspect-ratio:4/3;overflow:hidden;border-radius:var(--r-m);background-image:radial-gradient(ellipse 80% 90% at 30% 25%,#23272D 0%,#14171B 50%,#0B0D0E 100%);background-size:100% 100%;background-repeat:no-repeat;background-position:0 0;container-type:inline-size}
+/* a palavra grande acompanha a largura do cartão (cqi), não a da tela: com dois cartões lado a lado em tablet, ela passava por cima da colagem. A primeira medida fica para navegador sem cqi. */
+.cartao-v b{position:absolute;left:16px;bottom:12px;z-index:2;font-family:var(--serifa);font-weight:400;font-size:clamp(56px,17vw,96px);font-size:clamp(56px,19.1cqi,96px);line-height:.95;letter-spacing:-.03em;color:var(--texto)}
 .cartao-v b span{color:var(--azul-tinta)}
 .cartao-v .colagem{position:absolute;right:-4%;top:18%;height:64%;width:auto}
 .cartao-v .col-obj{height:100%;width:auto}
