@@ -237,7 +237,7 @@ section{position:relative}
   .hero-meta{grid-row:6;max-width:46ch;margin:14px 0 0;align-self:start}
   .hero-foto{grid-column:2;grid-row:1 / -1;align-self:stretch;min-height:0}
   .hero-foto img{right:0;height:86%;max-height:720px}
-  .hero .fio{bottom:48px}
+  .hero .fio{bottom:48px;bottom:clamp(0px,calc((100svh - 664px) / 2),48px)}   /* em tela baixa (notebook de 768px de altura) o fio desce para não passar por cima do botão e da linha de apoio */
 }
 @media (max-width:759px){ .hero-meta{font-size:13px} }
 /* celular alto: o texto sobe para baixo do botão e a foto não passa de 80% da largura */
