@@ -25,6 +25,10 @@
   --display:"Anton","Impact","Haettenschweiler","Arial Narrow Bold",sans-serif;
   --body:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   --gut:20px; --max:1320px; --r:16px; --topo:60px;
+  --tit2:#8a8a8a;   /* linhas seguintes dos títulos grandes, como no rodapé */
+  /* movimento: uma curva para tudo, durações de 400 a 700 ms, 70 ms entre itens em sequência */
+  --ease:cubic-bezier(0.22,1,0.36,1); --dur-c:400ms; --dur:600ms; --dur-l:700ms; --passo:70ms;
+  --dur-num:900ms; --desfoque:8px;   /* a contagem desfocada: o número fica nítido em menos de 1 s */
 }
 *,*::before,*::after{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -57,6 +61,12 @@ button{cursor:pointer}
 .marca span,.hero-t .ast,.rodape-nome span{color:var(--blue)}
 .hero-t .l{display:inline-block;overflow:hidden;vertical-align:bottom;padding-top:.1em;margin-top:-.1em}   /* cada linha do título é uma máscara: o texto sobe de dentro dela */
 .hero-t .l > span{display:inline-block}
+.ast-svg{display:inline-block;width:.42em;height:.42em;margin:.04em 0 0 .06em;vertical-align:top;overflow:visible}
+.ast-svg path{fill:none;stroke:currentColor;stroke-width:3.4}
+.marca .ast-svg{width:.5em;height:.5em}
+.titulo .tl{display:block;overflow:hidden;padding-top:.14em;margin-top:-.14em}   /* cada linha do título é uma máscara (montada pelo script) */
+.titulo .tl > span{display:inline-block}
+.titulo .tl + .tl{color:var(--tit2)}
 .menu{display:none;gap:28px}
 .menu a{display:inline-flex;align-items:center;min-height:44px;font-size:15px;font-weight:500;text-decoration:none;color:var(--ink)}
 .menu a:hover{color:var(--blue2)}
@@ -340,7 +350,7 @@ html:not(.transp) .vidro .sim[data-tom="azul"]{background:var(--blue)}
 .metodo{display:grid;gap:12px;padding:12px;border-radius:var(--r);background:var(--card)}
 .metodo-c{display:grid;gap:12px;padding:20px;border-radius:10px;background:#0d0d0d}
 .metodo-c .n{font-family:var(--display);font-size:72px;line-height:.9}
-.metodo-c .n span{font-family:var(--body);font-size:13px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--blue2);margin-left:10px}
+.metodo-c .n .rot{font-family:var(--body);font-size:13px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--blue2);margin-left:10px}
 .metodo-c p{font-size:15px;color:#d0d0d0}
 .seg{display:grid;grid-template-columns:repeat(20,1fr);gap:3px}
 .seg i{height:14px;border-radius:2px;background:rgba(255,255,255,.16)}
@@ -373,6 +383,7 @@ html:not(.transp) .vidro .sim[data-tom="azul"]{background:var(--blue)}
 /* ---------- sobre ---------- */
 .fatos{display:grid;width:100%;border-top:1px solid var(--line)}
 .fatos li{display:grid;gap:2px;padding:15px 0;border-bottom:1px solid var(--line)}
+.cn{display:inline-block;text-align:right}
 .fatos b{font-family:var(--display);font-weight:400;font-size:34px;line-height:1;text-transform:uppercase}
 .fatos span{font-size:15px;color:var(--muted)}
 
@@ -423,7 +434,7 @@ html:not(.transp) .vidro .sim[data-tom="azul"]{background:var(--blue)}
 .toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));z-index:60;transform:translateX(-50%);max-width:calc(100vw - 32px);padding:12px 18px;border-radius:999px;background:#fff;color:#090909;font-size:14px;font-weight:600;box-shadow:0 10px 40px rgba(0,0,0,.5)}
 
 /* ---------- entrada suave ---------- */
-.mov .rev{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease}
+.mov .rev{opacity:0;transform:translateY(18px);transition:opacity var(--dur) var(--ease),transform var(--dur) var(--ease)}
 .mov .rev.vis{opacity:1;transform:none}
 html:not(.mov){scroll-behavior:auto}
 html:not(.mov) .btn,html:not(.mov) .btn .bola,html:not(.mov) .fixo{transition:none}
@@ -436,6 +447,21 @@ html:not(.mov) .btn,html:not(.mov) .btn .bola,html:not(.mov) .fixo{transition:no
 }
 
 /* ---------- movimento: só vale para quem não pediu "reduzir movimento" no aparelho ---------- */
+/* títulos: cada linha sobe de dentro da sua máscara ao entrar na tela */
+.mov .titulo .tl > span{transform:translateY(100%);transition:transform var(--dur-l) var(--ease);transition-delay:calc(var(--i,0) * var(--passo))}
+.mov .titulo.vis .tl > span{transform:none}
+/* asterisco: os três traços se desenham uma vez; no logo, gira no hover */
+.mov .marca .ast-svg path,.mov .rodape-nome .ast-svg path{stroke-dasharray:1;stroke-dashoffset:1}
+.mov .marca .ast-svg path,.mov .rodape-nome.vis .ast-svg path{animation:traco var(--dur) var(--ease) forwards}
+.mov .marca .ast-svg path{animation-delay:.2s}
+.mov .marca .ast-svg path:nth-child(2),.mov .rodape-nome.vis .ast-svg path:nth-child(2){animation-delay:calc(.2s + var(--passo))}
+.mov .marca .ast-svg path:nth-child(3),.mov .rodape-nome.vis .ast-svg path:nth-child(3){animation-delay:calc(.2s + 2 * var(--passo))}
+.mov .rodape-nome.vis .ast-svg path:nth-child(1){animation-delay:.2s}
+.mov .marca .ast-svg{transition:transform var(--dur) var(--ease)}
+@media (hover:hover){ .mov .marca:hover .ast-svg{transform:rotate(180deg)} }
+/* números que contam: começam desfocados; o script tira o desfoque enquanto conta */
+.mov [data-conta]:not(.contou){filter:blur(var(--desfoque))}
+
 @keyframes entra{from{opacity:0;transform:translateX(26px)}}
 @keyframes entra-volta{from{opacity:0;transform:translateX(-26px)}}
 @keyframes enche{from{transform:scaleX(0)}}
@@ -448,31 +474,32 @@ html:not(.mov) .btn,html:not(.mov) .btn .bola,html:not(.mov) .fixo{transition:no
 @keyframes dlg-sai{to{opacity:0;transform:translateY(16px) scale(.98)}}
 @keyframes folha-entra{from{transform:translateY(100%)}}
 @keyframes folha-sai{to{transform:translateY(100%)}}
-@keyframes sobe-linha{from{transform:translateY(112%)}}
-@keyframes recua{from{transform:scale(1.07)}}
+@keyframes sobe-linha{from{transform:translateY(100%)}}
+@keyframes recua{from{transform:scale(1.06)}}
+@keyframes traco{to{stroke-dashoffset:0}}
 @keyframes pulso{50%{transform:scale(1.07)}}
 @keyframes painel-sobe{from{clip-path:inset(100% 0 0 0)}to{clip-path:inset(0)}}
 @keyframes painel-lado{from{clip-path:inset(0 0 0 100%)}to{clip-path:inset(0)}}
 /* a classe .mov é posta no <html> pelo script do início do <body>, só quando o aparelho não pede menos movimento */
 /* simulador: troca de pergunta, progresso, barras e resultado */
 .mov .sim{transition:background-color .3s ease,color .3s ease}
-.mov .sim.ajusta{overflow:hidden;transition:height .32s cubic-bezier(.2,.7,.2,1),background-color .3s ease,color .3s ease}
-.mov .entra{animation:entra .28s cubic-bezier(.2,.7,.2,1) backwards}
-.mov .entra-volta{animation:entra-volta .28s cubic-bezier(.2,.7,.2,1) backwards}
+.mov .sim.ajusta{overflow:hidden;transition:height .32s var(--ease),background-color .3s ease,color .3s ease}
+.mov .entra{animation:entra .28s var(--ease) backwards}
+.mov .entra-volta{animation:entra-volta .28s var(--ease) backwards}
 .mov .prog i.on.novo{position:relative;overflow:hidden;background:var(--pline)}
-.mov .prog i.on.novo::after{content:"";position:absolute;inset:0;background:var(--blue);transform-origin:left;animation:enche .45s cubic-bezier(.2,.7,.2,1) .1s backwards}
-.mov .barra{transform-origin:left;animation:enche .55s cubic-bezier(.2,.7,.2,1) .2s backwards}
+.mov .prog i.on.novo::after{content:"";position:absolute;inset:0;background:var(--blue);transform-origin:left;animation:enche .45s var(--ease) .1s backwards}
+.mov .barra{transform-origin:left;animation:enche .55s var(--ease) .2s backwards}
 .mov .barra.forte{animation-duration:.8s;animation-delay:.55s}
 .mov .revela > :nth-child(n+3){animation:surge .4s ease backwards}
 .mov .revela > :nth-child(3){animation-delay:.55s}
 .mov .revela > :nth-child(4){animation-delay:.7s}
 .mov .revela > :nth-child(5){animation-delay:.85s}
 .mov .revela > :nth-child(6){animation-delay:1s}
-.mov .primeira .pilha i{transform-origin:left;animation:enche .6s cubic-bezier(.2,.7,.2,1) .15s backwards}
+.mov .primeira .pilha i{transform-origin:left;animation:enche .6s var(--ease) .15s backwards}
 .mov .primeira .pilha i:nth-child(2){animation-delay:.35s}
 .mov .primeira .pilha i:nth-child(3){animation-delay:.55s}
 .mov .ok.nova{animation:surge .3s ease backwards}
-.mov .ok-barra i{transition:width .5s cubic-bezier(.2,.7,.2,1)}
+.mov .ok-barra i{transition:width .5s var(--ease)}
 /* resposta ao toque, aceite desenhado e erro */
 .mov .chip, .mov .opcao, .mov .sim-btn, .mov .alav button, .mov .passo-num button{transition:background-color .15s ease,color .15s ease,border-color .15s ease,transform .1s ease}
 .mov .chip:active, .mov .opcao:active, .mov .sim-btn:not(:disabled):active, .mov .alav button:active, .mov .passo-num button:active, .mov .btn:active{transform:scale(.97)}
@@ -481,19 +508,19 @@ html:not(.mov) .btn,html:not(.mov) .btn .bola,html:not(.mov) .fixo{transition:no
 .mov .alav button.recem[aria-pressed="true"] .cx svg path{animation:desenha .28s ease .05s backwards}
 .mov .treme{animation:treme .32s ease}
 /* janelas: lista de espera e consultoria */
-.mov .dlg[open]{animation:dlg-entra .26s cubic-bezier(.2,.8,.2,1)}
+.mov .dlg[open]{animation:dlg-entra .26s var(--ease)}
 .mov .dlg[open]::backdrop{animation:some .26s ease}
 .mov .dlg.saindo{animation:dlg-sai .2s ease forwards}
 .mov .dlg.saindo::backdrop{animation:fundo-some .2s ease forwards}
 /* página: frase do dólar, cartões, degraus, Método 20/50 e cabeçalho */
 .mov .frase s{color:var(--ink);transition:color .4s ease 1.4s}
-.mov .frase s::after{transform:scaleX(0);transition:transform .5s cubic-bezier(.2,.7,.2,1) 1.05s}
+.mov .frase s::after{transform:scaleX(0);transition:transform .5s var(--ease) 1.05s}
 .mov .frase.vis s{color:var(--muted)}
 .mov .frase.vis s::after{transform:scaleX(1)}
 .mov .frase b{color:var(--ink);transition:color .5s ease .45s}
 .mov .frase.vis b{color:var(--blue2);animation:pulso .5s ease .45s backwards}
 .mov .cartao{transition:opacity .6s ease,transform .6s ease,translate .25s ease}
-.mov .cartao-v b{transition:transform .4s cubic-bezier(.2,.7,.2,1)}
+.mov .cartao-v b{transition:transform .4s var(--ease)}
 .mov .cartao .link span[aria-hidden]{transition:transform .2s ease}
 .mov .degraus i{transform-origin:bottom;transform:scaleY(clamp(0,calc(var(--p,1) * 1.5 - var(--d,0)),1))}
 .mov .metodo .seg i.on{background:rgba(255,255,255,.16);transition:background-color .25s ease}
@@ -505,14 +532,14 @@ html:not(.mov) .btn,html:not(.mov) .btn .bola,html:not(.mov) .fixo{transition:no
 .mov .metodo .seg i:nth-child(5){transition-delay:.63s}
 .mov .metodo .seg i:nth-child(6){transition-delay:.7s}
 .mov .metodo .seg i:nth-child(7){transition-delay:.77s}
-.mov .metodo .trilho i{transform:scaleX(0);transform-origin:left;transition:transform .7s cubic-bezier(.2,.7,.2,1) .95s}
+.mov .metodo .trilho i{transform:scaleX(0);transform-origin:left;transition:transform .7s var(--ease) .95s}
 .mov .metodo.vis .trilho i{transform:scaleX(1)}
 .mov .topo{transition:transform .3s ease}
 /* topo: título sobe por linha, foto recua e o painel azul entra */
-.mov .hero-foto img{animation:recua 1s cubic-bezier(.2,.7,.2,1) backwards}
-.mov .hero-t .l > span{animation:sobe-linha .55s cubic-bezier(.2,.8,.2,1) backwards}
-.mov .hero-t .l:nth-of-type(2) > span{animation-delay:.06s}
-.mov .hero-oferta{animation:painel-sobe .45s cubic-bezier(.2,.8,.2,1) backwards}
+.mov .hero-foto img{animation:recua var(--dur-l) var(--ease) backwards}
+.mov .hero-t .l > span{animation:sobe-linha var(--dur) var(--ease) backwards}   /* termina em 670 ms, sem esperar nada */
+.mov .hero-t .l:nth-of-type(2) > span{animation-delay:var(--passo)}
+.mov .hero-oferta{animation:painel-sobe .45s var(--ease) backwards}
 .mov .hero-oferta > *{animation:surge .32s ease backwards}
 .mov .hero-oferta > :nth-child(1){animation-delay:.15s}
 .mov .hero-oferta > :nth-child(2){animation-delay:.19s}
@@ -521,7 +548,7 @@ html:not(.mov) .btn,html:not(.mov) .btn .bola,html:not(.mov) .fixo{transition:no
 .mov .hero-oferta > :nth-child(5){animation-delay:.31s}
 @media (max-width:759px){
   .mov.sem-topo .topo:not(:focus-within){transform:translateY(-100%)}   /* some ao rolar para baixo, volta ao rolar para cima */
-  .mov .dlg[open]{animation:folha-entra .34s cubic-bezier(.2,.8,.2,1)}
+  .mov .dlg[open]{animation:folha-entra .34s var(--ease)}
   .mov .dlg.saindo{animation:folha-sai .2s ease-in forwards}
 }
 @media (min-width:980px){
@@ -599,7 +626,7 @@ d.classList.add("js");if(!r)d.classList.add("mov");if(!t)d.classList.add("transp
 </script>
 
 <header class="topo">
-  <a class="marca" href="#inicio" aria-label="Tiago Piassum, início da página">Tiago Piassum<span aria-hidden="true">*</span></a>
+  <a class="marca" href="#inicio" aria-label="Tiago Piassum, início da página">Tiago Piassum<span aria-hidden="true"><svg class="ast-svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path pathLength="1" d="M12 1v22"/><path pathLength="1" d="M2.47 6.5l19.06 11"/><path pathLength="1" d="M2.47 17.5l19.06-11"/></svg></span></a>
   <nav class="menu" aria-label="Seções da página">
     <a href="#simulador">Simulador<sup>01</sup></a>
     <a href="#produtos">Produtos<sup>02</sup></a>
@@ -614,7 +641,7 @@ d.classList.add("js");if(!r)d.classList.add("mov");if(!t)d.classList.add("transp
   <section class="hero" id="inicio">
     <!-- Fotos: ficam na pasta img/, junto da página. Para trocar uma foto, substitua o arquivo mantendo o nome. -->
     <div class="hero-foto"><img src="img/tiago-topo.jpg" alt="Tiago Piassum sentado à mesa, olhando para a câmera" fetchpriority="high" onerror="this.remove()"></div>
-    <h1 class="hero-t"><span class="l"><span>Planeje sua</span></span> <br><span class="l"><span>vida global<span class="ast" aria-hidden="true">*</span></span></span></h1>
+    <h1 class="hero-t"><span class="l"><span>Planeje sua</span></span> <br><span class="l"><span>vida global<span class="ast" aria-hidden="true"><svg class="ast-svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path pathLength="1" d="M12 1v22"/><path pathLength="1" d="M2.47 6.5l19.06 11"/><path pathLength="1" d="M2.47 17.5l19.06-11"/></svg></span></span></span></h1>
     <div class="hero-oferta">
       <p class="olho">Entenda como planejar sua liberdade financeira de forma Global.</p>
       <p class="hero-def">Quanto você precisa poupar ao mês para atingir sua independência em dólar?</p>
@@ -664,9 +691,9 @@ d.classList.add("js");if(!r)d.classList.add("mov");if(!t)d.classList.add("transp
 
   <!-- PRODUTOS -->
   <section class="bloco" id="produtos" aria-labelledby="prod-titulo">
-    <div class="centro rev">
+    <div class="centro">
       <h2 class="titulo" id="prod-titulo">Do primeiro número ao plano inteiro</h2>
-      <p class="sub">O que você encontra aqui, do gratuito ao acompanhamento individual.</p>
+      <p class="sub rev">O que você encontra aqui, do gratuito ao acompanhamento individual.</p>
     </div>
     <div class="grade">
       <article class="cartao clicavel rev">
@@ -718,29 +745,29 @@ d.classList.add("js");if(!r)d.classList.add("mov");if(!t)d.classList.add("transp
     <div class="duo alto">
       <div class="metodo rev" aria-label="Método 20/50, com valores de exemplo">
         <div class="metodo-c">
-          <div class="n">20<span>Formação</span></div>
+          <div class="n"><span class="cn" data-conta="20">20</span><span class="rot">Formação</span></div>
           <div class="seg" role="img" aria-label="Exemplo: 7 de 20 trilhas concluídas"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
           <p>Trilhas concluídas de 20. Mede o que você aprendeu e praticou.</p>
         </div>
         <div class="metodo-c">
-          <div class="n">50<span>Patrimônio</span></div>
+          <div class="n"><span class="cn" data-conta="50">50</span><span class="rot">Patrimônio</span></div>
           <div class="trilho" role="img" aria-label="Exemplo: 21% da meta"><i></i></div>
           <p>Patrimônio atual comparado à sua meta para 2050, em valores de hoje.</p>
         </div>
         <p class="exemplo">Valores de exemplo. As duas medidas são independentes: concluir as 20 trilhas não significa atingir a liberdade financeira.</p>
       </div>
-      <div class="duo-c rev">
+      <div class="duo-c">
         <h2 class="titulo" id="proj-titulo">20 trilhas. Um plano até 2050.</h2>
-        <p class="txt">Uma comunidade por assinatura que junta educação, um Plano de Voo de longo prazo, o seu patrimônio consolidado e os gastos do dia a dia. O resultado do simulador é o começo desse plano.</p>
-        <ul class="pilares">
+        <p class="txt rev">Uma comunidade por assinatura que junta educação, um Plano de Voo de longo prazo, o seu patrimônio consolidado e os gastos do dia a dia. O resultado do simulador é o começo desse plano.</p>
+        <ul class="pilares rev">
           <li><span class="k">Aprender</span><span><b>Academia 2050</b><span>20 trilhas com aulas curtas, quizzes, desafios e certificados.</span></span></li>
           <li><span class="k">Planejar</span><span><b>Plano de Voo</b><span>Meta para 2050 em valores de hoje, aportes, três cenários e revisão mensal.</span></span></li>
           <li><span class="k">Organizar</span><span><b>Orçamento e patrimônio</b><span>O orçamento do mês e o patrimônio consolidado, com Open Finance ou à mão.</span></span></li>
           <li><span class="k">Evoluir junto</span><span><b>Comunidade</b><span>Grupos, eventos ao vivo e desafios, sem nenhum saldo à mostra.</span></span></li>
         </ul>
-        <div class="preco"><b class="num">R$ 149</b><span>por mês · assinatura única · abre em breve</span></div>
-        <button type="button" class="btn azul" data-abrir="lista"><span class="bola" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>Entrar na lista de espera</button>
-        <p class="legal">O Projeto 2050 é educação e acompanhamento: não faz custódia, não executa ordens e não dá recomendação individual de investimento.</p>
+        <div class="preco rev"><b class="num">R$ 149</b><span>por mês · assinatura única · abre em breve</span></div>
+        <button type="button" class="btn azul rev" data-abrir="lista"><span class="bola" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>Entrar na lista de espera</button>
+        <p class="legal rev">O Projeto 2050 é educação e acompanhamento: não faz custódia, não executa ordens e não dá recomendação individual de investimento.</p>
       </div>
     </div>
   </section>
@@ -750,28 +777,28 @@ d.classList.add("js");if(!r)d.classList.add("mov");if(!t)d.classList.add("transp
     <div class="rotulo"><span>Consultoria Global</span><span>03</span></div>
     <div class="duo inv alto">
       <figure class="duo-foto rev"><img src="img/tiago-reuniao.jpg" alt="Tiago Piassum apresenta em uma sala de reunião" loading="lazy" onerror="this.remove()"></figure>
-      <div class="duo-c rev">
+      <div class="duo-c">
         <h2 class="titulo" id="cons-titulo">Consultoria Global</h2>
-        <p class="sub2">Do número ao plano de vida</p>
-        <div>
+        <p class="sub2 rev">Do número ao plano de vida</p>
+        <div class="rev">
           <p class="txt">Para empresários e investidores com patrimônio a partir de R$ 1 milhão que buscam clareza, estrutura e decisões alinhadas aos seus projetos de vida, dentro e fora do Brasil.</p>
           <p class="txt">O simulador dá o número. A consultoria trata do que vem depois: onde viver, em que moeda manter o patrimônio e como organizar tudo até 2050.</p>
         </div>
-        <ol class="etapas">
+        <ol class="etapas rev">
           <li><span class="n">01</span><b>Aplicação</b><span>Um formulário curto sobre o seu momento e o que você quer resolver.</span></li>
           <li><span class="n">02</span><b>Entrevista</b><span>Uma conversa individual com o Tiago para avaliar perfil, desafios e encaixe.</span></li>
           <li><span class="n">03</span><b>Encontros</b><span>Encontros estratégicos e personalizados, com foco em planejamento patrimonial, organização financeira e decisões de alto impacto.</span></li>
         </ol>
-        <button type="button" class="btn" data-abrir="consultoria"><span class="bola" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>Quero aplicar</button>
+        <button type="button" class="btn rev" data-abrir="consultoria"><span class="bola" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>Quero aplicar</button>
       </div>
     </div>
   </section>
 
   <!-- COMO A CONTA É FEITA -->
   <section class="bloco" id="conta" aria-labelledby="conta-titulo">
-    <div class="centro rev">
+    <div class="centro">
       <h2 class="titulo" id="conta-titulo">Como a conta é feita</h2>
-      <p class="sub">As premissas ficam à vista. É uma simulação educativa, não uma promessa de retorno.</p>
+      <p class="sub rev">As premissas ficam à vista. É uma simulação educativa, não uma promessa de retorno.</p>
     </div>
     <div class="tres">
       <article class="passo rev">
@@ -801,14 +828,14 @@ d.classList.add("js");if(!r)d.classList.add("mov");if(!t)d.classList.add("transp
     <div class="rotulo"><span>Sobre</span><span>04</span></div>
     <div class="duo alto">
       <figure class="duo-foto rev"><img src="img/tiago-palestra.jpg" alt="Tiago Piassum fala ao microfone durante uma palestra, apontando para a plateia" loading="lazy" onerror="this.remove()"></figure>
-      <div class="duo-c rev">
+      <div class="duo-c">
         <h2 class="titulo" id="sobre-titulo">Quem faz a conta com você</h2>
-        <div>
+        <div class="rev">
           <p class="txt">Tiago Piassum é economista, empreendedor e especialista financeiro. Fundou a Marco Investimentos, assessoria que saiu do zero ao bilhão de custódia em três anos, e hoje está à frente da Rivool, fintech global de investimentos globais em dólar.</p>
           <p class="txt">É autor do livro “Declare Independência” e criou o Projeto 2050 para dar método a quem quer construir liberdade real: um número, uma data e o caminho até eles.</p>
         </div>
-        <ul class="fatos">
-          <li><b>R$ 1 bilhão</b><span>sob custódia em três anos, na Marco Investimentos</span></li>
+        <ul class="fatos rev">
+          <li><b data-conta="1000000000" data-formato="bilhao">R$ 1 bilhão</b><span>sob custódia em três anos, na Marco Investimentos</span></li>
           <li><b>Rivool</b><span>investimentos globais em dólar</span></li>
           <li><b>Declare Independência</b><span>livro sobre como a matemática muda vidas no Brasil</span></li>
         </ul>
@@ -818,7 +845,7 @@ d.classList.add("js");if(!r)d.classList.add("mov");if(!t)d.classList.add("transp
 
   <!-- FAQ -->
   <section class="bloco" id="faq" aria-labelledby="faq-titulo">
-    <div class="centro rev"><h2 class="titulo" id="faq-titulo">Perguntas frequentes</h2></div>
+    <div class="centro"><h2 class="titulo" id="faq-titulo">Perguntas frequentes</h2></div>
     <div class="faq">
       <details open><summary>O simulador é gratuito mesmo?</summary><p>Sim. Você responde sete perguntas e vê a sua vida global na hora. Para liberar o relatório completo, com o plano mensal e as alavancas, pedimos seu nome e e-mail. O WhatsApp é opcional.</p></details>
       <details><summary>Preciso me mudar para outro país?</summary><p>Não. O lugar serve para medir a sua vida em dólar. Muita gente usa o número para decidir quanto do patrimônio manter em moeda forte, mesmo ficando no Brasil. O relatório mostra os dois valores.</p></details>
@@ -831,7 +858,7 @@ d.classList.add("js");if(!r)d.classList.add("mov");if(!t)d.classList.add("transp
 
   <!-- FECHO: volta ao gancho e leva ao simulador -->
   <section class="bloco fecho" id="fecho" aria-labelledby="fecho-titulo">
-    <h2 class="titulo rev" id="fecho-titulo">Qual é o seu número?</h2>
+    <h2 class="titulo" id="fecho-titulo">Qual é o seu número?</h2>
     <p class="sub rev">Pelo câmbio, a resposta é a mesma em qualquer país. Na vida real, não é. A régua certa muda o plano inteiro.</p>
     <a class="btn azul rev" href="#sim"><span class="bola" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>Fazer a minha conta</a>
     <p class="legal rev">Sete perguntas · 2 minutos · gratuito</p>
@@ -848,7 +875,7 @@ d.classList.add("js");if(!r)d.classList.add("mov");if(!t)d.classList.add("transp
       <a href="#" id="news-link" target="_blank" rel="noopener" hidden><span><small>04 /</small>Acompanhe a Newsletter</span><span aria-hidden="true">→</span></a>
     </nav>
   </div>
-  <p class="rodape-nome" aria-hidden="true">Projeto 2050<span>*</span></p>
+  <p class="rodape-nome" aria-hidden="true">Projeto 2050<span><svg class="ast-svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path pathLength="1" d="M12 1v22"/><path pathLength="1" d="M2.47 6.5l19.06 11"/><path pathLength="1" d="M2.47 17.5l19.06-11"/></svg></span></p>
   <div class="rodape-fim">
     <span>© <span id="ano">2026</span> Tiago Piassum · Projeto 2050</span>
     <a href="#" id="politica-link" target="_blank" rel="noopener" hidden>Política de privacidade</a>
@@ -1065,17 +1092,43 @@ function faltando(passo){
 /* ---------- movimento (tudo aqui é desligado quando o aparelho pede "reduzir movimento") ---------- */
 const ORDEM = ["onde","custo","chute","resposta","destino","estrada","partida","aporte","calculando","vida","contato","plano"];
 let animarVida = false, animarPlano = false, tAltura = null, alavRecente = null, combAnterior = null;
+// A mesma curva do CSS (--ease), para o que o script anima quadro a quadro.
+const curva = (function(x1, y1, x2, y2){
+  const A = (a, b) => 1 - 3*b + 3*a, B = (a, b) => 3*b - 6*a, C = a => 3*a;
+  const f = (t, a, b) => ((A(a, b)*t + B(a, b))*t + C(a))*t, df = (t, a, b) => 3*A(a, b)*t*t + 2*B(a, b)*t + C(a);
+  return x => {
+    if (x <= 0) return 0; if (x >= 1) return 1;
+    let t = x;
+    for (let i = 0; i < 8; i++){ const e = f(t, x1, x2) - x, d = df(t, x1, x2); if (Math.abs(e) < 1e-5 || !d) break; t = Math.min(1, Math.max(0, t - e/d)); }
+    return f(t, y1, y2);
+  };
+})(0.22, 1, 0.36, 1);
+const DUR_NUM = 900, DESFOQUE = 8;   // os mesmos --dur-num e --desfoque do CSS
 // Faz um número subir de um valor a outro; sem movimento, mostra o valor final direto.
-function contar(el, de, ate, ms, formato){
+// Com desfoca, é a assinatura da página: o número começa borrado e fica nítido ao chegar no valor.
+function contar(el, de, ate, ms, formato, desfoca){
   if (!el) return;
-  if (reduz){ el.textContent = formato(ate); return; }
+  if (reduz){ el.textContent = formato(ate); el.classList.add("contou"); return; }
   const ini = performance.now();
+  if (desfoca) el.classList.add("contou");   // a partir daqui o desfoque é controlado aqui, quadro a quadro
   (function passo(t){
     if (!el.isConnected) return;
-    const p = Math.min(1, Math.max(0, (t - ini) / ms)), suave = 1 - Math.pow(1 - p, 3);
+    const p = Math.min(1, Math.max(0, (t - ini) / ms)), suave = curva(p);
     el.textContent = formato(de + (ate - de) * suave);
+    if (desfoca) el.style.filter = p < 1 ? "blur(" + (DESFOQUE * (1 - suave)).toFixed(2) + "px)" : "";
     if (p < 1) requestAnimationFrame(passo);
   })(ini);
+}
+const revelaNumero = (el, ate, formato, de) => contar(el, de || 0, ate, DUR_NUM, formato, true);
+const FORMATOS = { bilhao: v => v >= 999.5e6 ? "R$ 1 bilhão" : "R$ " + fmt(v / 1e6) + (Math.round(v / 1e6) < 2 ? " milhão" : " milhões") };
+
+// Corta um título grande nas linhas em que ele quebra de fato, cada uma dentro de uma máscara.
+function partirLinhas(h){
+  const texto = h.dataset.texto || (h.dataset.texto = h.textContent.trim().replace(/\s+/g, " "));
+  h.innerHTML = texto.split(" ").map(w => `<span class="tp">${esc(w)}</span>`).join(" ");
+  const linhas = []; let y = null;
+  $$(".tp", h).forEach(w => { const t = w.offsetTop; if (y === null || Math.abs(t - y) > 4){ linhas.push([]); y = t; } linhas[linhas.length - 1].push(w.textContent); });
+  h.innerHTML = linhas.map((l, i) => `<span class="tl" style="--i:${i}"><span>${esc(l.join(" "))}</span></span>`).join(" ");
 }
 
 function ir(passo){
@@ -1941,6 +1994,25 @@ document.addEventListener("click", e => {
   liga("#news-link", CONFIG.NEWSLETTER_URL);
   liga("#politica-link", CONFIG.POLITICA_URL);
 
+  // títulos grandes: refaz as linhas quando a largura muda e quando a fonte Anton termina de carregar
+  const titulos = $$(".titulo");
+  const parte = () => titulos.forEach(partirLinhas);
+  parte();
+  let larg = window.innerWidth, tParte;
+  window.addEventListener("resize", () => { if (window.innerWidth === larg) return; larg = window.innerWidth; clearTimeout(tParte); tParte = setTimeout(parte, 150); });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(parte);
+
+  // números que contam uma vez só, ao entrar na tela
+  const numeros = $$("[data-conta]");
+  numeros.forEach(el => {
+    const ate = Number(el.dataset.conta), formato = FORMATOS[el.dataset.formato] || fmt;
+    el.textContent = formato(ate);
+    if (reduz) return;
+    if (el.classList.contains("cn")) el.style.minWidth = el.getBoundingClientRect().width + "px";   // o rótulo ao lado não anda enquanto conta
+    el.textContent = formato(0);
+  });
+  const contaNumero = el => revelaNumero(el, Number(el.dataset.conta), FORMATOS[el.dataset.formato] || fmt);
+
   if (!reduz){
     const deg = $(".degraus"), raizDoc = document.documentElement;
     let ultimoY = Math.max(0, window.scrollY), marcado = false;
@@ -1960,7 +2032,11 @@ document.addEventListener("click", e => {
 
   if ("IntersectionObserver" in window){
     const io = new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting){ en.target.classList.add("vis"); io.unobserve(en.target); } }), { rootMargin:"0px 0px -8% 0px" });
-    $$(".rev").forEach(el => io.observe(el));
+    $$(".rev, .titulo, .rodape-nome").forEach(el => io.observe(el));
+    if (!reduz){
+      const ioNum = new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting){ contaNumero(en.target); ioNum.unobserve(en.target); } }), { rootMargin:"0px 0px -12% 0px" });
+      numeros.forEach(el => ioNum.observe(el));
+    }
     const fixo = $("#fixo"); let heroVisivel = true, simVisivel = false, fimVisivel = false, fechoVisivel = false;
     const pinta = () => fixo.classList.toggle("on", !heroVisivel && !simVisivel && !fimVisivel && !fechoVisivel);
     new IntersectionObserver(es => { heroVisivel = es[0].isIntersecting; pinta(); }).observe($("#cta-hero"));
@@ -1968,7 +2044,8 @@ document.addEventListener("click", e => {
     new IntersectionObserver(es => { fimVisivel = es[0].isIntersecting; pinta(); }).observe($("#contato"));
     new IntersectionObserver(es => { fechoVisivel = es[0].isIntersecting; pinta(); }).observe($("#fecho"));
   } else {
-    $$(".rev").forEach(el => el.classList.add("vis"));
+    $$(".rev, .titulo, .rodape-nome").forEach(el => el.classList.add("vis"));
+    numeros.forEach(el => { el.textContent = (FORMATOS[el.dataset.formato] || fmt)(Number(el.dataset.conta)); el.classList.add("contou"); });
   }
 })();
 
