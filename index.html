@@ -83,6 +83,36 @@ button{cursor:pointer}
 .hero-def{font-size:19px;line-height:1.35;font-weight:600;text-wrap:balance}
 .hero-meta{font-size:13px;color:rgba(255,255,255,.86)}
 .hero-fonte{font-size:12px;line-height:1.45;color:rgba(255,255,255,.84)}
+.giro{display:grid;gap:6px;width:100%;padding-top:14px;border-top:1px solid rgba(255,255,255,.32)}
+.giro-l{font-size:14px;line-height:1.4;color:rgba(255,255,255,.9)}
+.giro-v{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:12px;row-gap:4px}
+.giro-v b{font-family:var(--display);font-weight:400;font-size:clamp(40px,11vw,56px);line-height:1;font-variant-numeric:tabular-nums}
+.giro-p{grid-column:1;display:block;overflow:hidden;font-size:17px;font-weight:600;line-height:1.3}
+.giro-p > span{display:inline-block}
+.giro-anel{grid-column:2;grid-row:1;width:22px;height:22px;transform:rotate(-90deg)}
+.giro-anel circle{fill:none;stroke:rgba(255,255,255,.3);stroke-width:2.5}
+.giro-anel .giro-t{stroke:#fff;stroke-dasharray:1;stroke-dashoffset:1}
+html:not(.mov) .giro-anel{display:none}
+
+/* faixa de países */
+.paises{display:flex;align-items:stretch;height:56px;border-bottom:1px solid var(--line);overflow:hidden}
+.paises-rot{flex:none;position:relative;z-index:1;display:flex;align-items:center;padding:0 14px 0 var(--gut);background:var(--bg);box-shadow:14px 0 18px var(--bg);font-size:12px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--blue2);white-space:nowrap}
+.paises-janela{flex:1;min-width:0;overflow:hidden}
+.paises-trilho{display:flex;width:max-content;height:100%}
+.paises ul{display:flex;align-items:center;height:100%}
+.paises li{position:relative;display:flex;align-items:baseline;gap:8px;padding:0 22px;white-space:nowrap;font-size:15px;color:var(--muted)}
+.paises li b{font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+.paises li::after{content:"";position:absolute;right:-2px;top:50%;width:4px;height:4px;margin-top:-2px;border-radius:50%;background:var(--blue)}
+html:not(.mov) .paises-janela{overflow-x:auto;scrollbar-width:none}   /* parada: dá para arrastar com o dedo */
+html:not(.mov) .paises-janela::-webkit-scrollbar{display:none}
+html:not(.mov) .paises ul + ul{display:none}
+
+/* barras da frase de abertura */
+.ibarras{display:grid;gap:14px;width:100%;max-width:760px}
+.ibarras li{display:grid;grid-template-columns:1fr auto;gap:6px 12px;align-items:baseline;font-size:15px;color:var(--muted)}
+.ibarras b{font-family:var(--display);font-weight:400;font-size:26px;line-height:1;color:var(--ink)}
+.ibarras i{grid-column:1 / -1;height:12px;border-radius:3px;background:var(--blue);transform-origin:left;transform:scaleX(var(--w,1))}
+.ibarras li:first-child i{background:#4a4a4a}
 
 /* ---------- seções ---------- */
 .bloco{max-width:var(--max);margin:0 auto;padding:64px var(--gut)}
@@ -513,12 +543,40 @@ html:not(.mov) .btn,html:not(.mov) .btn .bola,html:not(.mov) .fixo{transition:no
 .mov .dlg.saindo{animation:dlg-sai .2s ease forwards}
 .mov .dlg.saindo::backdrop{animation:fundo-some .2s ease forwards}
 /* página: frase do dólar, cartões, degraus, Método 20/50 e cabeçalho */
-.mov .frase s{color:var(--ink);transition:color .4s ease 1.4s}
-.mov .frase s::after{transform:scaleX(0);transition:transform .5s var(--ease) 1.05s}
-.mov .frase.vis s{color:var(--muted)}
-.mov .frase.vis s::after{transform:scaleX(1)}
-.mov .frase b{color:var(--ink);transition:color .5s ease .45s}
-.mov .frase.vis b{color:var(--blue2);animation:pulso .5s ease .45s backwards}
+/* frase de abertura: as palavras vão do cinza ao branco conforme a rolagem; no fim, os valores ficam azuis e o câmbio é riscado.
+   Com animation-timeline, o próprio CSS acompanha a rolagem; sem ele, o script acende palavra por palavra (classe .acesa e .fim). */
+.mov .frase .pw{color:#6b6b6b;transition:color var(--dur-c) var(--ease)}
+.mov .frase .pw.acesa{color:var(--ink)}
+.mov .frase s::after{transform:scaleX(0);transition:transform var(--dur) var(--ease)}
+.mov .frase.fim s.pw{color:var(--muted)}
+.mov .frase.fim s::after{transform:scaleX(1)}
+.mov .frase.fim b.pw{color:var(--blue2)}
+@keyframes acende{from{color:#6b6b6b}to{color:var(--ink)}}
+@keyframes azula{to{color:var(--blue2)}}
+@keyframes apaga{to{color:var(--muted)}}
+@keyframes risca{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@supports (animation-timeline: view()){
+  .mov .frase{view-timeline-name:--frase}
+  .mov .frase .pw{transition:none;animation:acende linear both;animation-timeline:--frase;animation-range:cover calc(18% + var(--a) * 30%) cover calc(22% + var(--a) * 30%)}
+  .mov .frase b.pw{animation:acende linear both,azula linear both;animation-timeline:--frase,--frase;animation-range:cover calc(18% + var(--a) * 30%) cover calc(22% + var(--a) * 30%),cover 50% cover 55%}
+  .mov .frase s.pw{animation:acende linear both,apaga linear both;animation-timeline:--frase,--frase;animation-range:cover calc(18% + var(--a) * 30%) cover calc(22% + var(--a) * 30%),cover 52% cover 56%}
+  .mov .frase s::after{transition:none;animation:risca linear both;animation-timeline:--frase;animation-range:cover 50% cover 56%}
+}
+/* barras da frase: crescem em sequência ao aparecer */
+.mov .ibarras i{transform:scaleX(0);transition:transform var(--dur-l) var(--ease)}
+.mov .ibarras li:nth-child(2) i{transition-delay:var(--passo)}
+.mov .ibarras li:nth-child(3) i{transition-delay:calc(2 * var(--passo))}
+.mov .ibarras.vis i{transform:scaleX(var(--w,1))}
+/* hero: o valor do painel alterna entre países; o anel marca os 4 s de cada um */
+@keyframes anel{to{stroke-dashoffset:0}}
+.mov .giro-t{animation:anel 4s linear .4s forwards}
+.mov .giro.pausa .giro-t{animation-play-state:paused}
+.mov #giro-v:not(.contou){filter:blur(var(--desfoque))}
+.mov .giro-p > span.troca{animation:sobe-linha var(--dur) var(--ease)}
+/* faixa de países: rolagem contínua, conteúdo duplicado para o laço não ter emenda */
+@keyframes faixa{to{transform:translateX(-50%)}}
+.mov .paises-trilho{animation:faixa var(--dur-faixa,240s) linear infinite}
+.mov .paises.pausa .paises-trilho{animation-play-state:paused}
 .mov .cartao{transition:opacity .6s ease,transform .6s ease,translate .25s ease}
 .mov .cartao-v b{transition:transform .4s var(--ease)}
 .mov .cartao .link span[aria-hidden]{transition:transform .2s ease}
@@ -540,12 +598,13 @@ html:not(.mov) .btn,html:not(.mov) .btn .bola,html:not(.mov) .fixo{transition:no
 .mov .hero-t .l > span{animation:sobe-linha var(--dur) var(--ease) backwards}   /* termina em 670 ms, sem esperar nada */
 .mov .hero-t .l:nth-of-type(2) > span{animation-delay:var(--passo)}
 .mov .hero-oferta{animation:painel-sobe .45s var(--ease) backwards}
-.mov .hero-oferta > *{animation:surge .32s ease backwards}
+.mov .hero-oferta > *{animation:surge var(--dur-c) var(--ease) backwards}
 .mov .hero-oferta > :nth-child(1){animation-delay:.15s}
 .mov .hero-oferta > :nth-child(2){animation-delay:.19s}
 .mov .hero-oferta > :nth-child(3){animation-delay:.23s}
 .mov .hero-oferta > :nth-child(4){animation-delay:.27s}
 .mov .hero-oferta > :nth-child(5){animation-delay:.31s}
+.mov .hero-oferta > :nth-child(6){animation-delay:.35s}
 @media (max-width:759px){
   .mov.sem-topo .topo:not(:focus-within){transform:translateY(-100%)}   /* some ao rolar para baixo, volta ao rolar para cima */
   .mov .dlg[open]{animation:folha-entra .34s var(--ease)}
@@ -601,6 +660,7 @@ html:not(.mov) .btn,html:not(.mov) .btn .bola,html:not(.mov) .fixo{transition:no
   .hero-t{position:absolute;left:0;bottom:22px;margin:0;padding:0 0 0 var(--gut);font-size:clamp(84px,11.4vw,200px);white-space:nowrap;pointer-events:none}   /* o título cabe inteiro sobre a foto, sem invadir o painel azul */
   .intro{grid-template-columns:minmax(0,1fr) minmax(0,2.2fr);gap:28px 56px}
   .intro .frase{grid-column:1 / -1;max-width:27ch}
+  .intro .ibarras{grid-column:1 / -1}
   .intro .tag{align-self:start;padding-top:4px}
   .intro-txt{grid-column:2;max-width:60ch}
   .sim-grid{grid-template-columns:minmax(0,1fr) minmax(0,560px);gap:64px;align-items:start}
@@ -645,14 +705,30 @@ d.classList.add("js");if(!r)d.classList.add("mov");if(!t)d.classList.add("transp
     <div class="hero-oferta">
       <p class="olho">Entenda como planejar sua liberdade financeira de forma Global.</p>
       <p class="hero-def">Quanto você precisa poupar ao mês para atingir sua independência em dólar?</p>
+      <div class="giro" id="giro">
+        <p class="giro-l">A vida de <span class="num" data-ex="custo">R$ 20.000</span> por mês no Brasil custa</p>
+        <p class="giro-v"><b class="num" id="giro-v">US$ 8.032</b><span class="giro-p" id="giro-p"><span>nos Estados Unidos</span></span><svg class="giro-anel" viewBox="0 0 20 20" aria-hidden="true" focusable="false"><circle cx="10" cy="10" r="8"/><circle class="giro-t" cx="10" cy="10" r="8" pathLength="1"/></svg></p>
+      </div>
       <a class="btn" href="#sim" id="cta-hero"><span class="bola" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>Fazer a minha conta</a>
       <p class="hero-meta" id="hero-meta">Sete perguntas · 2 minutos · relatório completo no seu e-mail</p>
+      <p class="hero-fonte">Poder de compra: Banco Mundial, Programa de Comparação Internacional, 2024. Média nacional de cada país.</p>
     </div>
+  </section>
+
+  <!-- FAIXA DE PAÍSES: preenchida pelo script com a mesma conta do simulador -->
+  <section class="paises" id="paises" aria-label="Quanto custa, em dólar, a vida de R$ 20.000 por mês no Brasil em cada país">
+    <p class="paises-rot"><span class="num" data-ex="custo">R$ 20.000</span>/mês</p>
+    <div class="paises-janela"><div class="paises-trilho" id="paises-trilho"></div></div>
   </section>
 
   <!-- INTRO -->
   <section class="bloco intro">
-    <p class="frase rev">A vida que custa <span class="num" data-ex="custo">R$ 20.000</span> por mês no Brasil custa <b class="num" data-ex="ppcPT">US$ 4.486</b> em Portugal e <b class="num" data-ex="ppcEUA">US$ 8.032</b> nos Estados Unidos. O câmbio diria <s class="num" data-ex="cambio">US$ 3.704</s> nos dois.</p>
+    <p class="frase" id="frase">A vida que custa <span class="num" data-ex="custo">R$ 20.000</span> por mês no Brasil custa <b class="num" data-ex="ppcPT">US$ 4.486</b> em Portugal e <b class="num" data-ex="ppcEUA">US$ 8.032</b> nos Estados Unidos. O câmbio diria <s class="num" data-ex="cambio">US$ 3.704</s> nos dois.</p>
+    <ul class="ibarras" id="ibarras">
+      <li><span>Câmbio</span><b class="num" data-ex="cambio">US$ 3.704</b><i data-v="cambio"></i></li>
+      <li><span>Portugal</span><b class="num" data-ex="ppcPT">US$ 4.486</b><i data-v="ppcPT"></i></li>
+      <li><span>Estados Unidos</span><b class="num" data-ex="ppcEUA">US$ 8.032</b><i data-v="ppcEUA"></i></li>
+    </ul>
     <p class="tag rev">O dólar de verdade</p>
     <div class="intro-txt rev">
       <p class="txt">Trocar dinheiro é uma coisa. Encher o mesmo carrinho de supermercado é outra. O câmbio só responde à primeira.</p>
@@ -979,6 +1055,8 @@ const reduz = !document.documentElement.classList.contains("mov");   // decidido
 const iMes = Math.pow(1 + CONFIG.RETORNO_REAL_ANO, 1/12) - 1;
 const fatorAporte = anos => (Math.pow(1 + iMes, 12*anos) - 1) / iMes;
 const fatorCapital = anos => Math.pow(1 + iMes, 12*anos);
+// O exemplo da página (topo, faixa e frase): a média do Brasil contra a média de cada país. É a conta de usdMes com índice 100 nos dois lados.
+const usdMedia = (custo, pais) => custo / CONFIG.PPC * PAISES[pais][2];
 function usdMes(custo, uf, pais, st){ return custo / CONFIG.PPC / (IDX_BR[uf]/100) * PAISES[pais][2] * (pais === "USA" ? IDX_US[st]/100 : 1); }
 function calcular(x){
   const anos = x.ret - x.age;
@@ -1981,10 +2059,90 @@ document.addEventListener("click", e => {
 (function pagina(){
   const ex = { custo: 20000 };   // exemplo do topo: média do Brasil contra a média de cada país, só com dados do Banco Mundial
   const mapa = {
-    custo: brl(ex.custo), cambio: usd(ex.custo / CONFIG.CAMBIO), ppcEUA: usd(ex.custo / CONFIG.PPC), ppcPT: usd(ex.custo / CONFIG.PPC * PAISES.PRT[2]),
+    custo: brl(ex.custo), cambio: usd(ex.custo / CONFIG.CAMBIO), ppcEUA: usd(usdMedia(ex.custo, "USA")), ppcPT: usd(usdMedia(ex.custo, "PRT")),
     retirada: pctCfg(CONFIG.RETIRADA_MES), retorno: pctCfg(CONFIG.RETORNO_REAL_ANO), fx: cambioTxt()
   };
   $$("[data-ex]").forEach(el => { if (mapa[el.dataset.ex]) el.textContent = mapa[el.dataset.ex]; });
+
+  // pausa o que se move sozinho: mouse em cima, foco, toque, fora da tela ou aba escondida
+  const pausavel = (alvo, area) => {
+    const motivos = new Set(), marca = (m, on) => { on ? motivos.add(m) : motivos.delete(m); alvo.classList.toggle("pausa", motivos.size > 0); };
+    area.addEventListener("mouseenter", () => marca("mouse", true));
+    area.addEventListener("mouseleave", () => marca("mouse", false));
+    area.addEventListener("focusin", () => marca("foco", true));
+    area.addEventListener("focusout", () => marca("foco", false));
+    area.addEventListener("pointerdown", e => { if (e.pointerType === "touch") marca("toque", !motivos.has("toque")); });
+    if ("IntersectionObserver" in window) new IntersectionObserver(es => marca("fora", !es[0].isIntersecting)).observe(area);
+    document.addEventListener("visibilitychange", () => marca("aba", document.hidden));
+  };
+
+  // hero: o país e o valor se alternam a cada 4 s (Estados Unidos, Portugal, Canadá). Parado, fica nos Estados Unidos.
+  const GIRO = ["USA", "PRT", "CAN"];
+  const giro = $("#giro"), giroV = $("#giro-v"), giroP = $("#giro-p");
+  if (giro){
+    let gi = 0, ultimo = usdMedia(ex.custo, GIRO[0]);
+    const lugar = k => PAISES[k][1] + " " + PAISES[k][0];
+    giroV.textContent = usd(ultimo);
+    giroP.innerHTML = `<span>${esc(lugar(GIRO[0]))}</span>`;
+    if (!reduz){
+      const anel = $(".giro-t", giro);
+      setTimeout(() => revelaNumero(giroV, ultimo, usd), 250);
+      anel.addEventListener("animationend", () => {
+        gi = (gi + 1) % GIRO.length;
+        const k = GIRO[gi], alvo = usdMedia(ex.custo, k);
+        giroP.innerHTML = `<span class="troca">${esc(lugar(k))}</span>`;
+        revelaNumero(giroV, alvo, usd, ultimo); ultimo = alvo;
+        anel.style.animation = "none"; void anel.getBoundingClientRect(); anel.style.animation = "";
+        anel.style.animationDelay = "0s";
+      });
+      pausavel(giro, $(".hero-oferta"));
+    }
+  }
+
+  // faixa de países: R$ 20.000 por mês em cada país, com a mesma conta e os mesmos dados do simulador
+  const trilho = $("#paises-trilho");
+  if (trilho){
+    const ks = Object.keys(PAISES).sort((a, b) => PAISES[b][2] - PAISES[a][2]);
+    const lista = ks.map(k => `<li><span>${esc(PAISES[k][0])}</span><b>${usd(usdMedia(ex.custo, k))}</b></li>`).join("");
+    trilho.innerHTML = `<ul>${lista}</ul><ul aria-hidden="true">${lista}</ul>`;
+    if (!reduz){
+      const larg = trilho.firstElementChild.getBoundingClientRect().width;
+      trilho.style.setProperty("--dur-faixa", Math.round(larg / 45) + "s");   // cerca de 45 px por segundo, em qualquer tela
+      pausavel($("#paises"), $("#paises"));
+    }
+  }
+
+  // barras da frase de abertura: comprimento proporcional ao maior valor
+  const vals = { cambio: ex.custo / CONFIG.CAMBIO, ppcPT: usdMedia(ex.custo, "PRT"), ppcEUA: usdMedia(ex.custo, "USA") };
+  const maior = Math.max(...Object.values(vals));
+  $$("#ibarras i").forEach(i => i.style.setProperty("--w", (vals[i.dataset.v] / maior).toFixed(4)));
+
+  // frase de abertura: cada palavra vira uma peça que acende com a rolagem
+  const frase = $("#frase");
+  if (frase){
+    const pecas = [];
+    Array.from(frase.childNodes).forEach(n => {
+      if (n.nodeType === 3){
+        const partes = n.textContent.split(/(\s+)/), frag = document.createDocumentFragment();
+        partes.forEach(t => { if (!t) return; if (/^\s+$/.test(t)) frag.appendChild(document.createTextNode(t)); else { const sp = document.createElement("span"); sp.className = "pw"; sp.textContent = t; frag.appendChild(sp); pecas.push(sp); } });
+        frase.replaceChild(frag, n);
+      } else { n.classList.add("pw"); pecas.push(n); }
+    });
+    pecas.forEach((el, i) => el.style.setProperty("--a", (i / pecas.length).toFixed(4)));
+    const temLinha = window.CSS && CSS.supports && CSS.supports("animation-timeline: view()");
+    if (!reduz && !temLinha && "IntersectionObserver" in window){
+      // alternativa: acompanha a rolagem só enquanto a frase está na tela
+      let marcado = false;
+      const pinta = () => {
+        marcado = false;
+        const r = frase.getBoundingClientRect(), vh = window.innerHeight, p = (vh - r.top) / (vh + r.height);
+        pecas.forEach(el => el.classList.toggle("acesa", p >= 0.2 + Number(el.style.getPropertyValue("--a")) * 0.3));
+        frase.classList.toggle("fim", p >= 0.53);
+      };
+      const rola = () => { if (!marcado){ marcado = true; requestAnimationFrame(pinta); } };
+      new IntersectionObserver(es => { if (es[0].isIntersecting){ window.addEventListener("scroll", rola, { passive:true }); pinta(); } else window.removeEventListener("scroll", rola); }).observe(frase);
+    }
+  }
   $("#ano").textContent = ANO;
   if (!CONFIG.ENVIA_EMAIL) $("#hero-meta").textContent = "Sete perguntas · 2 minutos · relatório completo na hora";
   if (CONFIG.FONTES_ESTADOS) $("#fontes").textContent += " Índices de custo de vida por estado: " + CONFIG.FONTES_ESTADOS + ".";
@@ -2032,7 +2190,7 @@ document.addEventListener("click", e => {
 
   if ("IntersectionObserver" in window){
     const io = new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting){ en.target.classList.add("vis"); io.unobserve(en.target); } }), { rootMargin:"0px 0px -8% 0px" });
-    $$(".rev, .titulo, .rodape-nome").forEach(el => io.observe(el));
+    $$(".rev, .titulo, .rodape-nome, .ibarras").forEach(el => io.observe(el));
     if (!reduz){
       const ioNum = new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting){ contaNumero(en.target); ioNum.unobserve(en.target); } }), { rootMargin:"0px 0px -12% 0px" });
       numeros.forEach(el => ioNum.observe(el));
@@ -2044,7 +2202,7 @@ document.addEventListener("click", e => {
     new IntersectionObserver(es => { fimVisivel = es[0].isIntersecting; pinta(); }).observe($("#contato"));
     new IntersectionObserver(es => { fechoVisivel = es[0].isIntersecting; pinta(); }).observe($("#fecho"));
   } else {
-    $$(".rev, .titulo, .rodape-nome").forEach(el => el.classList.add("vis"));
+    $$(".rev, .titulo, .rodape-nome, .ibarras").forEach(el => el.classList.add("vis"));
     numeros.forEach(el => { el.textContent = (FORMATOS[el.dataset.formato] || fmt)(Number(el.dataset.conta)); el.classList.add("contou"); });
   }
 })();
