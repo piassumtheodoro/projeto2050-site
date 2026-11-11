@@ -1977,7 +1977,7 @@ function desenharRelatorio(doc, d){
   });
 
   /* premissas, em letra pequena, acima da faixa final */
-  txt(d.legal, M, 269.4, { s:5.6, c:C.apagado, w:CW });
+  txt(d.legal, M, 269.4, { s:5.6, c:C.apagado, w:CW - 4 });
 
   /* faixa final: a conclusão e o convite para abrir a conta, com área clicável */
   fundo(C.tinta); doc.rect(0, 275, W, 22, "F");
@@ -1986,6 +1986,7 @@ function desenharRelatorio(doc, d){
   doc.setFont("helvetica", "bold"); doc.setFontSize(10.5);
   txt(frase, M, 284.6, { s: doc.getTextWidth(frase) > larguraFrase ? 9 : 10.5, b:true, c:C.branco });
   txt("Refaça a conta em " + d.site, M, 290.6, { s:8, c:C.claro });
+  doc.link(M, 287.2, doc.getTextWidth("Refaça a conta em " + d.site), 4.6, { url: "https://" + d.site });
   fundo(C.azul); doc.roundedRect(bX, bY, bL, bA, 6.5, 6.5, "F");
   txt(d.ctaTexto, bX + 9, bY + 8.1, { s:10.5, b:true, c:C.branco });
   const sX = bX + bL - 13, sY = bY + bA / 2;
