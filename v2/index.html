@@ -64,11 +64,7 @@
   --sai-suave:cubic-bezier(.25,1,.5,1); --dado:cubic-bezier(.33,1,.68,1); --virada:cubic-bezier(.22,1,.36,1);
   --saida:cubic-bezier(.32,0,.67,0); --camera:cubic-bezier(.37,0,.63,1); --passagem:cubic-bezier(.76,0,.24,1); --desenho:cubic-bezier(.65,0,.35,1);
   --d-toque:.12s; --d-estado:.18s; --d-saida:.25s; --d-entrada:.38s; --d-virada:.45s; --d-passagem:.5s; --d-barra:.6s; --d-conta:.85s; --d-fio:.9s;
-  /* nomes antigos que o JS e o bloco do simulador ainda leem */
-  --display:var(--serifa); --body:var(--sans); --r-antigo:16px;
-  --bg:#0B0D0E; --bg2:#14171B; --card:#14171B;
-  --blue:var(--azul); --blue2:var(--azul-tinta); --blue-d:#1D0FB8;
-  --paper:var(--papel); --erro:var(--erro-papel); --ok:var(--azul);
+  --erro:var(--erro-papel);
 }
 @media (min-width:760px){ :root{ --topo:64px } }
 
@@ -102,12 +98,8 @@
   background-position:0 0, 0 0;
   background-repeat:repeat, no-repeat;
 }
-/* nomes antigos que as telas geradas por JS leem em estilo inline: só mudam de valor */
-[data-fundo], .sim[data-tom]{
-  --graf:var(--azul); --graf2:var(--texto); --fraco:var(--trilho); --fraco2:var(--cinza-dado);
-  --pink:var(--texto); --pmuted:var(--apoio); --pline:var(--filete); --paper2:var(--trilho);
-  --ok:var(--acento); --blue:var(--azul); --blue2:var(--azul-tinta); --ink:var(--texto); --muted:var(--apoio); --line:var(--filete);
-}
+/* as duas séries dos gráficos do aporte: lidas pelos estilos inline das colunas (a tela 8 as troca por escopo) */
+[data-fundo], .sim[data-tom]{ --graf:var(--azul); --graf2:var(--texto) }
 
 /* ---------- base ---------- */
 *,*::before,*::after{box-sizing:border-box}
@@ -122,7 +114,6 @@ button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
 :focus-visible{outline:3px solid var(--fio,var(--azul-fio-tinta));outline-offset:3px}
 .num{font-variant-numeric:tabular-nums}
-.so-leitor{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .seta{flex:none;display:block}
 section{position:relative}
 
@@ -153,16 +144,16 @@ section{position:relative}
 
 /* ---------- botões ---------- */
 .btn,.sim-btn{position:relative;display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:56px;padding:0 24px;border:0;border-radius:var(--r);background:var(--botao);color:var(--botao-texto);font-family:var(--sans);font-weight:700;font-size:var(--t-botao);line-height:1.15;text-align:center;text-decoration:none;transition:background-color var(--d-estado) var(--dado),color var(--d-estado) var(--dado),scale var(--d-toque) var(--dado),opacity var(--d-estado) var(--dado)}
-.btn.contorno,.sim-btn.claro{background:transparent;color:var(--texto);box-shadow:inset 0 0 0 1.5px var(--texto)}
+.sim-btn.claro{background:transparent;color:var(--texto);border:1.5px solid var(--texto)}
 .btn:disabled,.sim-btn:disabled{opacity:.38;cursor:default;pointer-events:none}
 .btn.peq{display:inline-flex;width:auto;min-height:36px;padding:0 14px;gap:8px;font-size:14px}
 .btn.peq::before{content:"";position:absolute;inset:-4px 0}
 @media (hover:hover){
   .btn:hover,.sim-btn:hover{background:var(--botao-toque);color:var(--botao-toque-texto)}
-  .btn.contorno:hover,.sim-btn.claro:hover{background:var(--texto);color:var(--fundo)}
+  .sim-btn.claro:hover{background:var(--texto);color:var(--fundo)}
 }
 .btn:active,.sim-btn:not(:disabled):active{background:var(--botao-toque);color:var(--botao-toque-texto);scale:.97}
-.btn.contorno:active,.sim-btn.claro:active{background:var(--texto);color:var(--fundo)}
+.sim-btn.claro:active{background:var(--texto);color:var(--fundo)}
 @media (min-width:760px){ .btn{display:inline-flex;width:auto} .sim-btn{width:100%} }
 .link{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0;background:none;border:0;font-family:var(--sans);font-weight:700;font-size:16px;color:var(--texto);text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px}
 .link span[aria-hidden]{display:inline-flex}
@@ -279,7 +270,7 @@ section{position:relative}
 }
 
 /* a lâmina */
-.sim{--sim-pad:var(--gut);position:relative;display:flex;flex-direction:column;container-type:inline-size;padding:16px var(--sim-pad) 0;min-height:calc(100svh - var(--topo));scroll-margin-top:0}
+.sim{--sim-pad:var(--gut);position:relative;display:flex;flex-direction:column;container-type:inline-size;padding:16px var(--sim-pad) 0;min-height:calc(100svh - var(--topo));scroll-margin-top:-12px}
 #sim-top{display:flex;align-items:center;gap:12px;min-height:44px;margin-bottom:20px}
 #sim-corpo{flex:1 0 auto;display:grid;grid-template-columns:minmax(0,1fr);gap:16px;align-content:start;padding-bottom:24px}
 #sim-corpo:has(.calc){align-content:center}
@@ -288,6 +279,7 @@ section{position:relative}
 #sim-acao .sim-btn{width:100%}
 .sim :is(input,select,textarea), .dlg :is(input,select,textarea){scroll-margin-bottom:120px}
 @media (min-width:980px){
+  .sim{scroll-margin-top:0}
   .sim{--sim-pad:28px;padding-top:24px;min-height:620px;border-radius:var(--r);border:1px solid var(--filete);box-shadow:var(--sombra-print-tinta)}
   #sim-acao{border-radius:0 0 var(--r) var(--r)}
 }
@@ -475,140 +467,221 @@ section{position:relative}
 @media (hover:hover){ .fixo a:hover{background:#B3ADF8;color:#0B0D0E} }
 @media (min-width:760px){ .fixo{display:none} .rodape{padding-bottom:var(--e6)} }
 
-/* ===== SIMULADOR E FORMULÁRIOS: estilo da versão 1, a refazer na etapa 2 ===== */
-/* Só ajustado para ler sobre os fundos novos: as cores saem das variáveis das superfícies (papel e tinta). */
-.sim .olho{color:var(--apoio)}
-.sim-voltar{flex:none;display:grid;place-items:center;width:44px;height:44px;margin-left:-8px;border:0;border-radius:50%;background:transparent;color:inherit}
-.sim-voltar:hover{background:rgba(127,127,127,.18)}
-.prog{flex:1;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
-.prog i{height:4px;border-radius:2px;background:var(--pline)}
-.prog i.on{background:var(--blue)}
-.conta{flex:none;width:34px;text-align:right}
+/* ---------- simulador: topo, controles e as doze telas ---------- */
+.sim-voltar{flex:none;display:grid;place-items:center;width:44px;height:44px;margin-left:-6px;border:1.5px solid var(--filete);border-radius:50%;background:transparent;color:var(--texto);transition:background-color var(--d-estado) var(--dado),color var(--d-estado) var(--dado),scale var(--d-toque) var(--dado)}
+.sim-voltar:active{background:var(--texto);color:var(--fundo);scale:.95}
+@media (hover:hover){ .sim-voltar:hover{background:var(--texto);color:var(--fundo)} }
+/* o progresso é o fio com sete nós */
+.prog{flex:1;display:flex;align-items:center;height:24px;padding-right:12px;counter-reset:p}
+.prog i{position:relative;flex:1;height:2px;background:var(--filete);counter-increment:p}
+.prog i::before{content:"";position:absolute;inset:0;background:var(--fio);transform:scaleX(0);transform-origin:0 50%}
+.prog i.on::before{transform:scaleX(1)}
+.prog i::after{content:"";position:absolute;z-index:1;right:-5px;top:50%;translate:0 -50%;box-sizing:border-box;width:10px;height:10px;border-radius:50%;background:var(--fundo);border:2px solid var(--filete)}
+.prog i.on::after{background:var(--fio);border-color:var(--fio)}
+#sim[data-n="1"] .prog i:nth-child(1)::after,#sim[data-n="2"] .prog i:nth-child(2)::after,
+#sim[data-n="3"] .prog i:nth-child(3)::after,#sim[data-n="4"] .prog i:nth-child(4)::after,
+#sim[data-n="5"] .prog i:nth-child(5)::after,#sim[data-n="6"] .prog i:nth-child(6)::after,
+#sim[data-n="7"] .prog i:nth-child(7)::after{content:counter(p);width:24px;height:24px;right:-12px;border:0;background:var(--azul);color:#fff;font:400 14px/24px var(--serifa);text-align:center}
+.conta{flex:none;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--apoio)}
+
+/* texto da tela */
 .sim-t{font-family:var(--serifa);font-weight:400;font-size:var(--t-tela);line-height:1.09;letter-spacing:-.02em;text-wrap:balance;outline:none}
-.sim-s{font-size:var(--t-apoio);line-height:1.45;color:var(--pmuted)}
-.grande{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 10px;font-family:var(--serifa);font-size:clamp(42px,14cqi,64px);line-height:1;letter-spacing:-.03em}
-.grande small{font-family:var(--sans);font-size:15px;font-weight:500;letter-spacing:0;color:var(--pmuted)}
+.sim-s{font-size:var(--t-apoio);line-height:1.45;color:var(--apoio)}
+.sim-s b{font-weight:700;color:var(--texto)}
+.sim-s.c{font-size:16px;line-height:1.5;color:var(--texto)}
+.sim-s.q{font-size:18px;font-weight:600;line-height:1.35;color:var(--texto)}
+.sim-s.q.m{font-size:16px}
+.sim-s.dest{font-family:var(--serifa);font-weight:400;font-size:var(--t-destaque);line-height:1.12;letter-spacing:-.02em;color:var(--texto)}
+#sim-corpo > .legal{padding-top:12px;border-top:1px solid var(--filete)}
+.nota{display:grid;gap:8px;padding-top:12px;border-top:1px solid var(--filete);font-size:16px;line-height:1.5;color:var(--texto)}
+.nota b{font-weight:700;font-size:16px}
+.nota small{font-size:var(--t-fonte);color:var(--apoio)}
+.nota:has(.faixa){gap:16px}
+.grande{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 10px;font-family:var(--serifa);font-weight:400;font-size:clamp(44px,15cqi,72px);line-height:1;letter-spacing:-.03em;color:var(--texto)}
+.grande small{font-family:var(--sans);font-size:15px;font-weight:500;letter-spacing:0;color:var(--apoio)}
 .grande .vazio{color:var(--cinza-dado)}
-.chips{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.dg{display:inline-block;width:.56em;text-align:center}
+
+/* chip: o escolhido é a coisa azul da tela */
+.chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}
 .chips.duas{grid-template-columns:repeat(2,minmax(0,1fr))}
-.chip{min-height:48px;padding:6px 6px;border:1.5px solid var(--texto);border-radius:var(--r-p);background:var(--campo);font-size:clamp(13.5px,4.4cqi,15px);font-weight:700;line-height:1.15;color:var(--texto);transition:background-color .15s ease,color .15s ease,border-color .15s ease,scale .1s ease}
+.chip{min-height:48px;padding:6px 12px;border:1.5px solid var(--texto);border-radius:var(--r-p);background:var(--campo);font-size:15px;font-weight:700;line-height:1.15;text-wrap:balance;color:var(--texto);transition:background-color var(--d-estado) var(--dado),color var(--d-estado) var(--dado),border-color var(--d-estado) var(--dado),scale var(--d-toque) var(--dado)}
 .chip[aria-pressed="true"]{background:var(--azul);border-color:var(--azul);color:#fff}
 .chip:active{scale:.97}
-.campo{display:grid;gap:6px}
-.campo label{font-size:14px;font-weight:600}
-.campo input,.campo select,.campo textarea{width:100%;min-height:52px;padding:0 16px;border:1.5px solid var(--texto);border-radius:var(--r);background:var(--campo);color:var(--texto);font-size:16px}
-.campo textarea{padding:14px 16px;min-height:96px;resize:vertical}
-.campo select{appearance:none;-webkit-appearance:none;padding-right:44px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%2363696E' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;background-size:20px 20px}
-.campo [aria-invalid="true"]{border-width:2px;border-color:var(--erro)}
-.erro{font-size:14px;font-weight:600;color:var(--erro)}
-.erro:empty{display:none}
-.nota{display:grid;gap:6px;padding:14px 16px;border-radius:var(--r);background:var(--trilho);font-size:15px;line-height:1.45}
-.nota b{font-weight:700}
-.nota small{font-size:13px;color:var(--pmuted)}
-.sim-acao{display:grid;gap:8px}
 .opcoes{display:grid;gap:10px}
-.opcao{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:76px;padding:12px 16px;border:1.5px solid var(--texto);border-radius:var(--r);background:var(--campo);text-align:left;color:var(--texto)}
-.opcao:hover{background:var(--texto);color:var(--fundo)}
-.opcao b{display:block;font-family:var(--serifa);font-weight:400;font-size:28px;line-height:1.1}
-.opcao span span{display:block;font-size:14px;color:var(--pmuted)}
-.opcao:hover span span{color:inherit}
-.barras{display:grid;gap:16px}
-.barra-l{display:flex;align-items:baseline;justify-content:space-between;gap:12px;font-size:15px}
-.barra-l b{font-family:var(--serifa);font-weight:400;font-size:26px}
-.barra{height:14px;border-radius:var(--r-s);background:var(--cinza-dado)}
-.barra.forte{background:var(--azul)}
-.passo-num{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:66px;padding:8px 8px 8px 16px;border:1.5px solid var(--texto);border-radius:var(--r);background:var(--campo);font-size:15px;font-weight:600}
-.passo-num div{display:flex;align-items:center;gap:4px}
-.passo-num button{display:grid;place-items:center;width:46px;height:46px;border:0;border-radius:50%;background:var(--trilho);color:var(--texto)}
-.passo-num output{width:52px;text-align:center;font-family:var(--serifa);font-size:30px;line-height:1}
-.regua{position:relative;height:26px;border-radius:var(--r-s);background:var(--trilho)}
-.regua i{position:absolute;top:0;bottom:0;border-radius:var(--r-s);background:var(--graf)}
-.regua em{position:absolute;top:-5px;bottom:-5px;width:3px;margin-left:-1px;background:var(--texto)}
-.regua-n{display:flex;justify-content:space-between;font-size:12px;font-weight:600;color:var(--pmuted)}
-.faixa{display:grid;gap:5px}
-.faixa-l{display:flex;justify-content:space-between;gap:12px;font-size:14px}
-.faixa-l b{font-weight:700}
-.faixa-l span{color:var(--pmuted)}
-.faixa-b{display:flex;gap:2px;height:12px}
-.faixa-b i{border-radius:2px}
-.graf{display:flex;align-items:stretch;gap:2px;height:120px;border-bottom:1px solid var(--pline)}
-.graf div{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;gap:1px;min-width:0}
-.graf i{display:block;border-radius:1px}
-.leg-mini{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;font-weight:500}
-.leg-mini span{display:inline-flex;align-items:center;gap:6px}
-.leg-mini i{width:10px;height:10px;border-radius:2px}
-.calc{display:grid;gap:18px;align-content:center;flex:1}
-.calc-n{font-family:var(--serifa);font-size:84px;line-height:1;letter-spacing:-.04em}
-.calc li{display:flex;align-items:center;gap:10px;padding:8px 0;font-size:15px;color:var(--apoio);transition:color .3s ease}
-.calc li.on{color:var(--texto)}
-.calc li::before{content:"";flex:none;width:9px;height:9px;border-radius:50%;background:currentColor}
-.vida-n{font-family:var(--serifa);font-weight:400;font-size:clamp(40px,13cqi,72px);line-height:.95;letter-spacing:-.03em;white-space:nowrap;color:var(--acento)}
-.vida-l{display:grid;border-bottom:1px solid var(--filete)}
-.vida-l div{display:grid;gap:3px;padding:13px 0;border-top:1px solid var(--filete)}
-.vida-l p{font-size:15px;line-height:1.45}
-.resumo{display:grid;gap:3px;padding:16px;border-radius:var(--r);background:#0B0D0E;color:#F4F5F6;box-shadow:inset 0 0 0 1px #33383E}
-.resumo .olho{color:#B3ADF8}
-.resumo b{font-family:var(--serifa);font-weight:400;font-size:38px;line-height:1.05;letter-spacing:-.03em}
-.resumo span:last-child{font-size:14px;color:#8D939B}
-.check{position:relative;display:grid;grid-template-columns:24px 1fr;gap:12px;align-items:start;font-size:14px;line-height:1.45;cursor:pointer}
-.check input{position:absolute;left:0;top:0;width:24px;height:24px;margin:0;opacity:0;cursor:pointer}
-.check .cx{display:grid;place-items:center;width:24px;height:24px;border:1.5px solid var(--texto);border-radius:var(--r-s);background:var(--campo);color:#fff}
+.opcao{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:76px;padding:12px 16px;border:1.5px solid var(--texto);border-radius:var(--r);background:var(--campo);text-align:left;color:var(--texto);transition:background-color var(--d-estado) var(--dado),color var(--d-estado) var(--dado),scale var(--d-toque) var(--dado)}
+.opcao b{display:block;font-family:var(--serifa);font-weight:400;font-size:30px;line-height:1.1}
+.opcao span span{display:block;font-size:14px;color:var(--apoio)}
+.opcao:active{background:var(--texto);color:var(--fundo);scale:.98}
+.opcao:active span span{color:inherit}
+@media (hover:hover){ .opcao:hover{background:var(--texto);color:var(--fundo)} .opcao:hover span span{color:inherit} }
+
+/* campos */
+.campo{display:grid;gap:8px}
+.campo label{font-size:14px;font-weight:600;line-height:1.2;color:var(--texto)}
+.campo input,.campo select,.campo textarea{width:100%;min-height:56px;padding:0 16px;border:1.5px solid var(--texto);border-radius:var(--r);background-color:var(--campo);color:var(--texto);font-size:17px;font-weight:500}
+.campo input::placeholder{color:#63696E;opacity:1}
+.campo textarea{padding:14px 16px;min-height:120px;resize:vertical}
+.campo select{appearance:none;-webkit-appearance:none;padding-right:44px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%230B0D0E' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;background-size:18px 18px}
+.campo select:has(option[value=""]:checked){color:#63696E}
+.campo select option{color:#0B0D0E}
+.campo [aria-invalid="true"]{border-width:2px;border-color:var(--erro)}
+.erro{font-size:13px;font-weight:600;line-height:1.35;color:var(--erro)}
+.erro:empty{display:none}
+.passo-num{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:72px;border-bottom:1px solid var(--filete);font-size:16px;font-weight:600;line-height:1.2}
+.passo-num div{flex:none;display:flex;align-items:center;gap:4px}
+.passo-num button{display:grid;place-items:center;width:48px;height:48px;border:1.5px solid var(--texto);border-radius:50%;background:transparent;color:var(--texto);transition:background-color var(--d-estado) var(--dado),color var(--d-estado) var(--dado),scale var(--d-toque) var(--dado)}
+.passo-num button:active{background:var(--texto);color:var(--fundo);scale:.95}
+.passo-num button:disabled{opacity:.38}
+.passo-num output{min-width:2ch;text-align:center;font-family:var(--serifa);font-size:40px;line-height:1}
+.check{position:relative;display:grid;grid-template-columns:24px 1fr;gap:12px;align-items:start;min-height:44px;padding-block:4px;font-size:15px;font-weight:500;line-height:1.45;cursor:pointer}
+.check input{position:absolute;left:0;top:4px;width:24px;height:24px;margin:0;opacity:0;cursor:pointer}
+.check .cx{display:grid;place-items:center;width:24px;height:24px;border:1.5px solid var(--texto);border-radius:var(--r-s);background:var(--campo);color:#fff;transition:background-color var(--d-estado) var(--dado),border-color var(--d-estado) var(--dado),scale var(--d-toque) var(--dado)}
+.check:active .cx{scale:.95}
 .check .cx svg path,.alav .cx svg path{stroke-dasharray:24;stroke-dashoffset:24}
 .check input:checked + .cx{background:var(--azul);border-color:var(--azul)}
 .check input:checked + .cx svg path,.alav button[aria-pressed="true"] .cx svg path{stroke-dashoffset:0}
 .check input:focus-visible + .cx{outline:3px solid var(--fio);outline-offset:3px}
 .check input[aria-invalid="true"] + .cx{border-width:2px;border-color:var(--erro)}
-.dados{font-size:14px;color:var(--pmuted)}
-.dados summary{min-height:44px;display:flex;align-items:center;cursor:pointer;font-weight:600;color:var(--texto);text-decoration:underline;text-underline-offset:4px}
+.dados{font-size:var(--t-fonte);line-height:1.35;color:var(--apoio)}
+.dados summary{display:flex;align-items:center;min-height:44px;cursor:pointer;font-size:14px;font-weight:600;color:var(--texto);text-decoration:underline;text-underline-offset:4px}
+.dados p{padding-bottom:8px}
 .pote{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
-.pilha{display:flex;gap:2px;height:18px}
-.pilha i{border-radius:3px}
-.leg{display:grid;gap:6px;font-size:15px}
-.leg div{display:flex;align-items:center;gap:8px}
-.leg i{flex:none;width:11px;height:11px;border-radius:2px}
-.leg b{margin-left:auto;font-weight:700;white-space:nowrap}
-.alav{display:grid;gap:8px}
-.alav button{display:grid;grid-template-columns:26px 1fr auto;gap:12px;align-items:center;min-height:68px;padding:10px 14px;border:1.5px solid var(--texto);border-radius:var(--r);background:var(--campo);text-align:left;color:var(--texto)}
-.alav .cx{display:grid;place-items:center;width:24px;height:24px;border:1.5px solid var(--texto);border-radius:var(--r-s);color:transparent}
-.alav button[aria-pressed="true"]{border-color:var(--azul);box-shadow:inset 0 0 0 1px var(--azul)}
-.alav button[aria-pressed="true"] .cx{background:var(--azul);border-color:var(--azul);color:#fff}
-.alav .t b{display:block;font-size:15px;line-height:1.3}
-.alav .t span{display:block;font-size:13px;color:var(--pmuted)}
-.alav .p{font-family:var(--serifa);font-size:26px;color:var(--texto)}
-.ok{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center;padding:12px 14px;border-radius:var(--r);background:var(--trilho);color:var(--texto);font-size:15px}
-.ok-barra{grid-column:1 / -1;position:relative;height:8px;border-radius:var(--r-s);background:var(--cinza-dado)}
-.ok-barra i{display:block;height:100%;border-radius:var(--r-s);background:var(--azul)}
-.ok-barra em{position:absolute;top:-3px;bottom:-3px;width:2px;margin-left:-1px;background:var(--texto)}
-.prox{display:grid;gap:10px}
-.cartao-e{display:grid;gap:10px;padding:18px;border-radius:var(--r);background:#0B0D0E;color:#F4F5F6;box-shadow:inset 0 0 0 1px #33383E}
-.cartao-e .olho{color:#B3ADF8}
-.cartao-e h4{font-size:21px;line-height:1.2;letter-spacing:-.01em}
-.cartao-e p{font-size:15px;line-height:1.5;color:#C9CDD2}
-.cartao-e.azul{background:var(--azul);box-shadow:none}
-.cartao-e.azul .olho,.cartao-e.azul p{color:#fff}
-.cartao-e .sim-btn{background:#F4F5F6;color:#0B0D0E}
-.cartao-e .link{color:#F4F5F6}
-.demo{padding:12px 14px;border:1.5px dashed var(--apoio);border-radius:var(--r);color:var(--texto);font-size:14px;line-height:1.45}
-.sim .legal{color:var(--pmuted)}
-/* ===== fim do bloco da versão 1 ===== */
 
-/* ---------- diálogo e aviso (a casca) ---------- */
-.dlg{width:min(520px,calc(100vw - 24px));max-height:calc(100dvh - 24px);padding:0;border:0;border-radius:var(--r);box-shadow:var(--sombra-print-tinta);overflow:auto;color:var(--texto)}
+/* tela 4, a resposta */
+.resp-n{display:inline-block;font-size:clamp(48px,17cqi,88px);line-height:.92;letter-spacing:-.03em;white-space:nowrap;color:var(--acento)}
+.resp-por{font-family:var(--sans);font-size:18px;font-weight:500;letter-spacing:0;color:var(--apoio)}
+.resp-nao{display:block;margin-top:6px;font-size:var(--t-destaque);line-height:1.12;color:var(--texto)}
+.barras{display:grid;gap:20px}
+.barra-l{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:6px;font-size:15px;font-weight:600}
+.barra-l b{flex:none;white-space:nowrap;font-family:var(--serifa);font-weight:400;font-size:26px;line-height:1.1;color:var(--texto)}
+.barra-l:has(+ .barra.forte) b{color:var(--acento)}
+.barra{height:12px;border-radius:var(--r-s);background:var(--cinza-dado)}
+.barra.forte{background:var(--azul)}
+
+/* tela 6, a estrada: o fio vira a régua da idade */
+.est-l{font-size:18px;font-weight:700;line-height:1.3;color:var(--texto)}
+.est-n{font-family:var(--serifa);font-weight:400;font-size:clamp(44px,15cqi,72px);line-height:.92;letter-spacing:-.03em;color:var(--azul)}
+.est-s{display:block;font-size:var(--t-apoio);font-weight:500;color:var(--apoio)}
+.regua{position:relative;height:56px;margin-top:8px}
+.regua::before{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:color-mix(in srgb,var(--texto) 25%,transparent)}
+.regua::after{content:"";position:absolute;left:0;right:0;top:100%;height:6px;
+  background:linear-gradient(color-mix(in srgb,var(--texto) 25%,transparent),color-mix(in srgb,var(--texto) 25%,transparent)) 0 0/2px 100% no-repeat,
+    linear-gradient(color-mix(in srgb,var(--texto) 25%,transparent),color-mix(in srgb,var(--texto) 25%,transparent)) 25.4% 0/2px 100% no-repeat,
+    linear-gradient(color-mix(in srgb,var(--texto) 25%,transparent),color-mix(in srgb,var(--texto) 25%,transparent)) 50.7% 0/2px 100% no-repeat,
+    linear-gradient(color-mix(in srgb,var(--texto) 25%,transparent),color-mix(in srgb,var(--texto) 25%,transparent)) 74.6% 0/2px 100% no-repeat,
+    linear-gradient(color-mix(in srgb,var(--texto) 25%,transparent),color-mix(in srgb,var(--texto) 25%,transparent)) 100% 0/2px 100% no-repeat}
+.regua i{position:absolute;bottom:0;height:6px;border-radius:3px;background:var(--azul)}
+.regua i::before,.regua i::after{content:"";position:absolute;top:50%;width:12px;height:12px;border-radius:50%;background:var(--azul);translate:0 -50%}
+.regua i::before{left:-6px}
+.regua i::after{right:-6px}
+.regua em{position:absolute;bottom:0;display:flex;justify-content:center;width:2px;height:50px;margin-left:-1px;font:400 14px/14px var(--serifa);color:var(--texto);white-space:nowrap}
+.regua em::before{content:"";position:absolute;left:0;bottom:0;width:2px;height:36px;background:var(--texto)}
+.regua-n{position:relative;height:20px;margin-top:10px;font-size:var(--t-fonte);font-weight:500;color:var(--apoio)}
+.regua-n span{position:absolute;top:0;translate:-50% 0}
+.regua-n span:nth-child(1){left:0;translate:0 0}
+.regua-n span:nth-child(2){left:25.4%}
+.regua-n span:nth-child(3){left:50.7%}
+.regua-n span:nth-child(4){left:74.6%}
+.regua-n span:nth-child(5){left:100%;translate:-100% 0}
+
+/* tela 7, a partida */
+.faixa{display:grid;gap:6px}
+.faixa-l{display:flex;justify-content:space-between;gap:12px;font-size:14px;font-weight:600;line-height:1.3}
+.faixa-l b{font-size:14px;font-weight:600;color:var(--texto)}
+.faixa-l span{color:var(--apoio)}
+.faixa-b{display:flex;gap:2px;height:12px}
+.faixa-b i{border-radius:var(--r-s)}
+
+/* tela 8, o aporte: o azul é o que o tempo acrescenta */
+.graf,.leg-mini{--graf:var(--texto);--graf2:var(--azul)}
+.leg-mini{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;font-weight:600}
+.leg-mini span{display:inline-flex;align-items:center;gap:6px}
+.leg-mini i{width:10px;height:10px;border-radius:var(--r-s)}
+.graf{display:flex;align-items:stretch;gap:2px;height:140px;border-bottom:2px solid color-mix(in srgb,var(--texto) 25%,transparent)}
+.graf div{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;gap:0;min-width:0}
+.graf i{display:block;border-radius:1px 1px 0 0}
+.graf-n{display:flex;justify-content:space-between;margin-top:6px;font-size:var(--t-fonte);font-weight:500;color:var(--apoio)}
+.ap-total{display:grid;gap:2px}
+.ap-v{font-family:var(--serifa);font-size:32px;line-height:1.05;letter-spacing:-.02em;color:var(--texto)}
+
+/* tela 9, o cálculo */
+.calc{display:grid;gap:18px;align-content:center;flex:1}
+.calc-n{font-family:var(--serifa);font-size:clamp(72px,26cqi,120px);line-height:.92;letter-spacing:-.045em;color:var(--azul)}
+.calc ul{display:grid}
+.calc li{position:relative;padding:8px 0 8px 26px;font-size:16px;line-height:24px;color:var(--apoio);transition:color var(--d-estado) var(--dado)}
+.calc li.on{color:var(--texto)}
+.calc li::before{content:"";position:absolute;left:0;top:20px;translate:0 -50%;box-sizing:border-box;width:10px;height:10px;border-radius:50%;background:var(--fundo);border:2px solid var(--filete);z-index:1}
+.calc li.on::before{background:var(--texto);border-color:var(--texto)}
+.calc li:not(:last-child)::after{content:"";position:absolute;left:4px;top:25px;bottom:-15px;width:2px;background:var(--filete)}
+.calc li:has(+ li.on)::after{background:var(--texto)}
+
+/* tela 10, o número: o momento mais forte */
+.vida-n{position:relative;display:block;width:fit-content;max-width:100%;font-size:min(calc(100cqi / (var(--n,14) * .48)),132px);line-height:.92;letter-spacing:-.03em;white-space:nowrap;color:var(--acento);padding-bottom:.16em}
+.vida-n .risco{bottom:0;height:.12em}
+.vida-l{display:grid;border-bottom:1px solid var(--filete)}
+.vida-l div{display:grid;gap:4px;padding:14px 0;border-top:1px solid var(--filete)}
+.vida-l p{font-size:16px;line-height:1.5;color:var(--texto)}
+
+/* tela 11, o contato */
+.resumo{display:grid;gap:4px;padding-bottom:16px;border-bottom:1px solid var(--filete)}
+.resumo b{font-family:var(--serifa);font-weight:400;font-size:clamp(40px,13cqi,64px);line-height:1;letter-spacing:-.03em;color:var(--azul)}
+.resumo span:last-child{font-size:var(--t-apoio);color:var(--apoio)}
+
+/* tela 12, o relatório */
+#p-ritmo{display:block;font-size:clamp(72px,26cqi,132px);line-height:.92;letter-spacing:-.045em;color:var(--azul)}
+.pilha{display:flex;gap:3px;height:14px}
+.pilha i{border-radius:var(--r-s)}
+.falta{background:none!important;border:1.5px dashed color-mix(in srgb,var(--texto) 45%,transparent)}
+.leg{display:grid}
+.leg div{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--filete);font-size:15px;font-weight:500}
+.leg i{flex:none;width:10px;height:10px;border-radius:var(--r-s)}
+.leg i.falta{border-width:1.5px}
+.leg b{margin-left:auto;padding-left:12px;font-family:var(--serifa);font-weight:400;font-size:20px;white-space:nowrap}
+.alav-t{font-family:var(--serifa);font-weight:400;font-size:24px;line-height:1.15;letter-spacing:-.01em}
+.alav{display:grid;gap:8px}
+.alav button{display:grid;grid-template-columns:24px 1fr auto;gap:12px;align-items:center;min-height:68px;padding:12px 14px;border:1.5px solid var(--texto);border-radius:var(--r);background:var(--campo);text-align:left;color:var(--texto);transition:border-color var(--d-estado) var(--dado),box-shadow var(--d-estado) var(--dado),scale var(--d-toque) var(--dado)}
+.alav button:active{scale:.98}
+.alav .cx{display:grid;place-items:center;width:24px;height:24px;border:1.5px solid var(--texto);border-radius:var(--r-s);background:var(--campo);color:#fff;transition:background-color var(--d-estado) var(--dado),border-color var(--d-estado) var(--dado)}
+.alav .t b{display:block;font-size:16px;font-weight:700;line-height:1.3}
+.alav .t span{display:block;font-size:14px;line-height:1.35;color:var(--apoio)}
+.alav .p{flex:none;font-family:var(--serifa);font-size:28px;line-height:1;transition:color var(--d-estado) var(--dado)}
+.alav button[aria-pressed="true"]{border-color:var(--azul);box-shadow:inset 0 0 0 .5px var(--azul)}
+.alav button[aria-pressed="true"] .cx{background:var(--azul);border-color:var(--azul)}
+.alav button[aria-pressed="true"] .p{color:var(--azul)}
+.ok{display:grid;gap:12px;padding-top:12px;border-top:1px solid var(--filete);font-size:16px;line-height:1.5;color:var(--texto)}
+.ok #p-comb{font-family:var(--serifa);font-size:28px;line-height:1;color:var(--azul)}
+.ok-barra{position:relative;height:10px;border-radius:var(--r-s);background:var(--trilho)}
+.ok-barra i{display:block;height:100%;border-radius:var(--r-s);background:var(--azul)}
+.ok-barra em{position:absolute;top:-4px;width:2px;height:18px;margin-left:-1px;background:var(--texto)}
+.demo{padding:12px;border:1px dashed var(--apoio);border-radius:var(--r);font-size:var(--t-fonte);line-height:1.35;color:var(--apoio)}
+.prox{display:grid;gap:12px}
+.cartao-e{position:relative;display:grid;gap:12px;padding:20px;border-radius:var(--r-m)}
+.cartao-e .col-mini{position:absolute;top:16px;right:16px;width:88px;height:auto}
+.cartao-e :is(.olho,h4){padding-right:96px}
+.cartao-e h4{font-family:var(--serifa);font-weight:400;font-size:24px;line-height:1.15;letter-spacing:-.01em}
+.cartao-e p{font-size:16px;line-height:1.5;color:var(--texto)}
+.cartao-e .link{justify-self:start}
+#btn-refazer{justify-self:center}
+
+/* ---------- diálogo e aviso ---------- */
+.dlg{--pi:28px;--pb:28px;--pt:28px;width:min(520px,calc(100vw - 24px));max-height:calc(100dvh - 24px);padding:0;border:0;border-radius:var(--r);box-shadow:var(--sombra-print-tinta);overflow:auto;overscroll-behavior:contain;color:var(--texto)}
 .dlg::backdrop{background:rgba(11,13,14,.6)}
-.dlg-c{display:grid;gap:16px;padding:28px}
+.dlg-c{position:relative;display:grid;gap:16px;padding:var(--pt) var(--pi) calc(var(--pb) + env(safe-area-inset-bottom))}
 .dlg-topo{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.dlg-topo .olho{color:var(--apoio)}
-.dlg-x{display:grid;place-items:center;width:44px;height:44px;margin-right:-8px;border:1.5px solid var(--filete);border-radius:50%;background:transparent;font-size:26px;line-height:1;color:var(--texto)}
-.dlg-x:hover{background:var(--texto);color:var(--fundo)}
+.dlg-x{display:grid;place-items:center;width:44px;height:44px;margin-right:-8px;border:1.5px solid var(--filete);border-radius:50%;background:transparent;color:var(--texto);transition:background-color var(--d-estado) var(--dado),color var(--d-estado) var(--dado),scale var(--d-toque) var(--dado)}
+.dlg-x:active{background:var(--texto);color:var(--fundo);scale:.95}
+@media (hover:hover){ .dlg-x:hover{background:var(--texto);color:var(--fundo)} }
 .dlg h3{font-family:var(--serifa);font-weight:400;font-size:var(--t-tela);line-height:1.09;letter-spacing:-.02em;text-wrap:balance}
 .dlg p{font-size:16px;line-height:1.5;color:var(--texto)}
 .dlg form{display:grid;gap:16px}
+.dlg .fio[data-fio="fim"]{position:relative;left:auto;right:auto;bottom:auto;width:62%;height:40px}
+.acao-fixa{position:sticky;bottom:0;z-index:5;margin:8px calc(-1 * var(--pi)) calc(-1 * (var(--pb) + env(safe-area-inset-bottom)));padding:12px var(--pi) max(12px,env(safe-area-inset-bottom));background-color:var(--fundo);border-top:1px solid var(--filete)}
 .toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));z-index:60;translate:-50% 0;max-width:calc(100vw - 32px);padding:12px 18px;border:1px solid #33383E;border-radius:var(--r-p);background:#1B1E21;color:#F4F5F6;font-size:14px;font-weight:600;line-height:1.35;text-align:center}
 @media (min-width:760px){ .toast{bottom:32px} }
 @media (max-width:759px){
-  .dlg{width:100%;max-width:none;max-height:92dvh;margin:auto 0 0;border-radius:12px 12px 0 0;padding-bottom:env(safe-area-inset-bottom)}
-  .dlg-c{padding:12px var(--gut) 24px}
-  .dlg-c::before{content:"";justify-self:center;width:40px;height:4px;border-radius:2px;background:var(--filete)}
+  .dlg{--pi:var(--gut);--pt:12px;--pb:24px;width:100%;max-width:none;max-height:92dvh;margin:auto 0 0;border-radius:12px 12px 0 0}
+  .dlg-c::before{content:"";position:absolute;top:8px;left:50%;translate:-50% 0;width:40px;height:4px;border-radius:2px;background:var(--filete)}
 }
 
 /* ---------- movimento: só vale para quem não pediu "reduzir movimento" no aparelho ---------- */
@@ -629,15 +702,16 @@ section{position:relative}
 @keyframes risco-desenha{from{opacity:1;stroke-dashoffset:1}to{opacity:1;stroke-dashoffset:0}}
 @keyframes cam{from{transform:scale(1.04)}}
 @keyframes luz{from{transform:translateX(-12%)}}
-@keyframes av-entra{from{opacity:0;transform:scale(.88)}}
-@keyframes acende{from{opacity:0;transform:scaleY(.4)}}
 @keyframes aviso-entra{from{opacity:0;transform:translateY(12px)}}
 @keyframes halo{from{box-shadow:0 0 0 4px color-mix(in srgb,var(--erro) 25%,transparent)}to{box-shadow:0 0 0 4px transparent}}
 @keyframes erro-surge{from{opacity:0;transform:translateY(4px)}}
 @keyframes resposta-abre{from{opacity:0;transform:translateY(8px)}}
 @keyframes paralaxe{from{translate:0 12px}to{translate:0 -12px}}
 @keyframes bola-entra{from{scale:0}to{scale:1}}
-@keyframes cartao-sobe{from{opacity:0;transform:translateY(24px)}}
+@keyframes no{from{scale:.4}to{scale:1}}
+@keyframes cresce{from{transform:scaleY(0)}}
+@keyframes linha-abre{from{clip-path:inset(-8px 100% -8px 0)}to{clip-path:inset(-8px -8px -8px -8px)}}
+@keyframes fio-desenha{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
 
 /* 1. dobra entra ao rolar */
 .mov .rev{opacity:0;transform:translateY(24px);transition:opacity var(--d-entrada) var(--sai-suave),transform var(--d-entrada) var(--sai-suave)}
@@ -715,8 +789,14 @@ section{position:relative}
 .mov .sim.ajusta{overflow:clip;transition:height .32s cubic-bezier(.2,.7,.2,1)}
 .mov .entra{animation:entra .32s var(--sai-suave) backwards}
 .mov .entra-volta{animation:entra-volta .32s var(--sai-suave) backwards}
-.mov .prog i.on.novo{position:relative;overflow:hidden;background:var(--pline)}
-.mov .prog i.on.novo::after{content:"";position:absolute;inset:0;background:var(--blue);transform-origin:left;animation:enche .45s var(--dado) .1s backwards}
+.mov .prog i.on.novo::before{animation:enche .45s var(--dado) both}
+.mov .prog i.on.novo::after{animation:no .22s var(--virada) .35s both}
+.mov .graf > div{transform-origin:bottom;animation:cresce .5s var(--dado) calc(min(var(--i,0) * 12ms,480ms)) backwards}
+.mov .entra .regua i{animation:linha-abre .6s var(--dado) backwards}
+.mov .calc li.on::before{animation:no .22s var(--virada) backwards}
+.mov .vida-n .risco path{opacity:1;stroke-dashoffset:0}
+.mov .revela .vida-n .risco path{opacity:0;stroke-dashoffset:1;animation:risco-desenha .4s var(--dado) .85s forwards}
+.mov .dlg .fio path{animation:fio-desenha var(--d-fio) var(--desenho) backwards}
 .mov .barra{transform-origin:left;animation:enche var(--d-barra) var(--dado) .2s backwards}
 .mov .barra.forte{animation-duration:.8s;animation-delay:.55s}
 .mov .revela > :nth-child(n+3){animation:surge .4s ease backwards}
@@ -730,9 +810,6 @@ section{position:relative}
 .mov .ok.nova{animation:surge .3s ease backwards}
 .mov .ok-barra i{transition:width .5s var(--dado)}
 /* resposta ao toque, aceite desenhado e erro */
-.mov .opcao,.mov .alav button,.mov .passo-num button{transition:background-color .15s ease,color .15s ease,border-color .15s ease,scale .1s ease}
-.mov .opcao:active,.mov .alav button:active,.mov .passo-num button:active{scale:.97}
-.mov .check .cx{transition:background-color .15s ease,border-color .15s ease}
 .mov .check input:checked + .cx svg path{transition:stroke-dashoffset .28s ease .05s}
 .mov .alav button.recem[aria-pressed="true"] .cx svg path{animation:desenha .28s ease .05s backwards}
 .mov .treme{animation:halo .3s var(--dado)}
@@ -781,13 +858,12 @@ section{position:relative}
 </head>
 <body>
 <script>
-/* Liga as animações (classe "mov") só se o aparelho não pede "reduzir movimento", e o vidro translúcido
-   (classe "transp") só se ele não pede "reduzir transparência".
-   Para ver os dois num aparelho com essas opções ligadas, abra a página com ?movimento=1&vidro=1 no endereço. */
-(function(){var d=document.documentElement,q=location.search,m=function(c){return !!(window.matchMedia&&matchMedia(c).matches)};
-var r=m("(prefers-reduced-motion: reduce)"),t=m("(prefers-reduced-transparency: reduce)");
-if(/[?&]movimento=1(&|#|$)/.test(q))r=false;if(/[?&]vidro=1(&|#|$)/.test(q))t=false;
-d.classList.add("js");if(!r)d.classList.add("mov");if(!t)d.classList.add("transp");})();
+/* Liga as animações (classe "mov") só se o aparelho não pede "reduzir movimento".
+   Para ver o movimento num aparelho com essa opção ligada, abra a página com ?movimento=1 no endereço. */
+(function(){var d=document.documentElement,q=location.search;
+var r=!!(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches);
+if(/[?&]movimento=1(&|#|$)/.test(q))r=false;
+d.classList.add("js");if(!r)d.classList.add("mov");})();
 </script>
 
 <header class="topo" data-fundo="tinta">
@@ -1189,9 +1265,11 @@ const cambioTxt = () => "R$ " + CONFIG.CAMBIO.toLocaleString("pt-BR",{minimumFra
 const arred = (v, passo) => Math.round(v/passo)*passo;
 const esc = t => String(t).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const digitos = t => String(t || "").replace(/\D/g, "");
-const SETA = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
-const VOLTA = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>';
-const VISTO = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
+const SETA = '<svg class="seta" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+const SETA16 = SETA.replace('width="18" height="18"', 'width="16" height="16"');
+const FECHAR = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>';
+const VOLTA = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>';
+const VISTO = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
 const reduz = !document.documentElement.classList.contains("mov");   // decidido no script do início do <body>
 
 /* ---------- modelo (o mesmo do simulador original) ---------- */
@@ -1312,6 +1390,7 @@ function faltando(passo){
 const ORDEM = ["onde","custo","chute","resposta","destino","estrada","partida","aporte","calculando","vida","contato","plano"];
 let animarVida = false, animarPlano = false, tAltura = null, alavRecente = null, combAnterior = null;
 // Faz um número subir de um valor a outro; sem movimento, mostra o valor final direto.
+const celulas = t => String(t).replace(/\d/g, '<span class="dg">$&</span>');   // cada algarismo numa célula de largura fixa: o número não treme
 function contar(el, de, ate, ms, formato){
   if (!el) return;
   if (reduz){ el.textContent = formato(ate); return; }
@@ -1319,8 +1398,8 @@ function contar(el, de, ate, ms, formato){
   (function passo(t){
     if (!el.isConnected) return;
     const p = Math.min(1, Math.max(0, (t - ini) / ms)), suave = 1 - Math.pow(1 - p, 3);
-    el.textContent = formato(de + (ate - de) * suave);
-    if (p < 1) requestAnimationFrame(passo);
+    if (p < 1){ el.innerHTML = celulas(formato(de + (ate - de) * suave)); requestAnimationFrame(passo); }
+    else el.textContent = formato(ate);   // no último quadro, texto puro
   })(ini);
 }
 
@@ -1359,7 +1438,9 @@ function render(mover, sentido){
   if (mover){
     const r = raiz.getBoundingClientRect();
     const alturaTopo = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--topo"), 10) || 60;
-    if (r.top < alturaTopo || r.top > window.innerHeight * 0.45) window.scrollTo({ top: window.scrollY + r.top - alturaTopo - 12, behavior: reduz ? "auto" : "smooth" });
+    // no celular a lâmina tem a altura da tela: ela é posta logo abaixo do cabeçalho a cada troca, para a pergunta inteira ficar à vista
+    const celular = window.innerWidth < 980;
+    if (celular ? Math.abs(r.top - alturaTopo) > 6 : (r.top < alturaTopo || r.top > window.innerHeight * 0.45 || r.bottom > window.innerHeight)) window.scrollTo({ top: window.scrollY + r.top - alturaTopo - (celular ? 0 : 12), behavior: reduz ? "auto" : "smooth" });
     const h = $(".sim-t", corpo); if (h) h.focus({ preventScroll:true });
   }
 }
@@ -1441,7 +1522,7 @@ const TELAS = {
       html: `
         <span class="olho">Ato 2 · O dólar de verdade</span>
         <h3 class="sim-t" tabindex="-1">Um chute antes da conta.</h3>
-        <p class="sim-s" style="color:var(--pink);font-weight:600"><span class="num">${brl(s.custo)}</span> por mês ${esc(emBR(s.uf))} compram o mesmo padrão de vida que quantos dólares na Flórida?</p>
+        <p class="sim-s q"><span class="num">${brl(s.custo)}</span> por mês ${esc(emBR(s.uf))} compram o mesmo padrão de vida que quantos dólares na Flórida?</p>
         <div class="opcoes">${op.map((o, i) => `<button type="button" class="opcao" data-chute="${i}"><span><b class="num">${usd(o.v)}</b><span>${o.t}</span></span>${SETA}</button>`).join("")}</div>
         <p class="sim-s">Não vale nota. O chute serve para a resposta fazer sentido.</p>`,
       montar(){ $$("[data-chute]", corpo).forEach(b => b.addEventListener("click", () => { s.chute = Number(b.dataset.chute); evento("Chute", {}, true); ir("resposta"); })); }
@@ -1456,14 +1537,14 @@ const TELAS = {
     return {
       html: `
         <span class="olho">A resposta</span>
-        <h3 class="sim-t num" tabindex="-1">${usd(ppc)} por mês, não ${usd(cambio)}.</h3>
+        <h3 class="sim-t num" tabindex="-1"><span class="resp-n">${usd(ppc)}</span><span class="resp-por"> por mês,</span> <span class="resp-nao">não ${usd(cambio)}.</span></h3>
         <p class="sim-s">Seu chute: <span class="num">${usd(op[s.chute].v)}</span>. ${s.chute === 2 ? "Você acertou, e pouca gente acerta." : "A maioria chuta perto do câmbio."}</p>
         <div class="barras">
           <div><div class="barra-l"><span>Pelo câmbio</span><b class="num">${usd(cambio)}</b></div><div class="barra" style="width:${(cambio/ppc*100).toFixed(1)}%"></div></div>
           <div><div class="barra-l"><span>Pelo poder de compra</span><b class="num">${usd(ppc)}</b></div><div class="barra forte"></div></div>
         </div>
-        <p class="sim-s">O câmbio diz quanto o real vale no mercado de moedas. O poder de compra diz quanto custa viver. Morar, comer e se cuidar na Flórida custa mais do que a cotação sugere: ${vezTxt}.</p>
-        <p class="sim-s" style="font-weight:700">Para planejar aposentadoria, a régua certa é a segunda.</p>
+        <p class="sim-s c">O câmbio diz quanto o real vale no mercado de moedas. O poder de compra diz quanto custa viver. Morar, comer e se cuidar na Flórida custa mais do que a cotação sugere: ${vezTxt}.</p>
+        <p class="sim-s dest">Para planejar aposentadoria, a régua certa é a segunda.</p>
         <p class="legal">Paridade de poder de compra ajustada pelo custo de vida de cada estado. Câmbio de referência: ${cambioTxt()}.${fontes}</p>`,
       acao: btnSeguir(true, "Continuar", "destino")
     };
@@ -1525,9 +1606,9 @@ const TELAS = {
         ${passo("Sua idade hoje", "age", s.age)}
         ${passo("Idade para viver de renda", "ret", s.ret)}
         ${mostra2050 ? `<button type="button" class="chip" id="chip-2050" aria-pressed="${s.ret === idade2050}">Viver de renda em ${CONFIG.ANO_ALVO}, aos ${idade2050}</button>` : ""}
-        <p class="sim-s num" style="color:var(--pink);font-weight:700">${anos} anos de estrada · ${anos*12} aportes mensais · até ${ANO + anos}</p>
+        <p class="sim-s est-l num"><span class="est-n">${anos}</span> anos de estrada<span class="est-s"> · ${anos*12} aportes mensais · até ${ANO + anos}</span></p>
         <div>
-          <div class="regua" aria-hidden="true"><i style="left:${pos(s.age)};width:${((s.ret - s.age) / (85 - 18) * 100).toFixed(2)}%"></i>${mostra2050 ? `<em style="left:${pos(idade2050)}"></em>` : ""}</div>
+          <div class="regua" aria-hidden="true"><i style="left:${pos(s.age)};width:${((s.ret - s.age) / (85 - 18) * 100).toFixed(2)}%"></i>${mostra2050 ? `<em style="left:${pos(idade2050)}">${CONFIG.ANO_ALVO}</em>` : ""}</div>
           <div class="regua-n num" aria-hidden="true"><span>18</span><span>35</span><span>52</span><span>68</span><span>85</span></div>
         </div>
         ${mostra2050 ? `<p class="legal">A linha preta marca ${CONFIG.ANO_ALVO}: você terá ${idade2050} anos.</p>` : ""}
@@ -1550,8 +1631,8 @@ const TELAS = {
       visual = `<div class="nota"><span>Começar do zero tem uma vantagem: dá para montar o patrimônio já pensando na moeda do plano.</span></div>`;
     } else if (s.investido > 0 && s.dolar !== null){
       visual = `<div class="nota">
-        <div class="faixa"><div class="faixa-l"><b>Seu patrimônio hoje</b><span class="num">${String(d).replace(".", ",")}% em dólar · ${String(100 - d).replace(".", ",")}% em real</span></div><div class="faixa-b" aria-hidden="true"><i style="width:${Math.max(d, 1.5)}%;background:var(--graf)"></i><i style="flex:1;background:var(--fraco2)"></i></div></div>
-        <div class="faixa"><div class="faixa-l"><b>Sua renda na aposentadoria</b><span>100% em dólar</span></div><div class="faixa-b" aria-hidden="true"><i style="width:100%;background:var(--graf)"></i></div></div>
+        <div class="faixa"><div class="faixa-l"><b>Seu patrimônio hoje</b><span class="num">${String(d).replace(".", ",")}% em dólar · ${String(100 - d).replace(".", ",")}% em real</span></div><div class="faixa-b" aria-hidden="true"><i style="width:${Math.max(d, 1.5)}%;background:var(--azul)"></i><i style="flex:1;background:var(--cinza-dado)"></i></div></div>
+        <div class="faixa"><div class="faixa-l"><b>Sua renda na aposentadoria</b><span>100% em dólar</span></div><div class="faixa-b" aria-hidden="true"><i style="width:100%;background:var(--azul)"></i></div></div>
         <span>O plano é em dólar e ${d < 10 ? "quase todo o" : "parte do"} patrimônio está em real. Essa distância se chama descasamento cambial, e o plano existe para fechá-la aos poucos.</span>
       </div>`;
     }
@@ -1559,11 +1640,11 @@ const TELAS = {
       html: `
         <span class="olho">Ato 3 · Seu caminho</span>
         <h3 class="sim-t" tabindex="-1">De onde você parte?</h3>
-        <p class="sim-s" id="l-inv" style="color:var(--pink);font-weight:600">Quanto você já tem investido</p>
+        <p class="sim-s q m" id="l-inv">Quanto você já tem investido</p>
         <div role="group" aria-labelledby="l-inv">${chips(OPC_INVEST, s.investido, s.investidoOutro)}</div>
         ${s.investidoOutro ? `<div class="campo"><label for="s-inv">Valor investido</label><input id="s-inv" type="text" inputmode="numeric" autocomplete="off" placeholder="R$ 0" value="${s.investido ? "R$ " + s.investido.toLocaleString("pt-BR") : ""}"></div>` : ""}
         <div id="bloco-dolar" ${s.investido > 0 ? "" : "hidden"} style="display:grid;gap:14px">
-          <p class="sim-s" id="l-dol" style="color:var(--pink);font-weight:600">Quanto disso está em dólar</p>
+          <p class="sim-s q m" id="l-dol">Quanto disso está em dólar</p>
           <div role="group" aria-labelledby="l-dol">${chips(OPC_DOLAR, s.dolar, undefined, " duas")}</div>
         </div>
         ${visual}`,
@@ -1592,16 +1673,16 @@ const TELAS = {
       let barras = "";
       for (let y = 1; y <= anos; y++){
         const a = ap * 12 * y, t = ap * fatorAporte(y);
-        barras += `<div><i style="height:${((t - a) / total * 100).toFixed(1)}%;background:var(--graf2)"></i><i style="height:${(a / total * 100).toFixed(1)}%;background:var(--graf)"></i></div>`;
+        barras += `<div style="--i:${y - 1}"><i style="height:${((t - a) / total * 100).toFixed(1)}%;background:var(--graf2)"></i><i style="height:${(a / total * 100).toFixed(1)}%;background:var(--graf)"></i></div>`;
       }
       return `
         <div class="leg-mini"><span><i style="background:var(--graf)"></i>Seus aportes</span><span><i style="background:var(--graf2)"></i>Rendimento</span></div>
         <div>
           <div class="graf" role="img" aria-label="Crescimento ano a ano: aportes e rendimento" style="gap:${anos > 30 ? 1 : 2}px">${barras}</div>
-          <div class="regua-n num" style="margin-top:4px"><span>${s.age} anos</span><span>${s.ret} anos</span></div>
+          <div class="graf-n num"><span>${s.age} anos</span><span>${s.ret} anos</span></div>
         </div>
-        <p class="sim-s num" style="color:var(--pink);font-weight:700">Em ${anos} anos: ${usd(total)}</p>
-        <p class="sim-s num">${usd(aportes)} saem do seu bolso e ${usd(rend)} vêm de rendimento. É o tempo trabalhando a seu favor: ${Math.round(rend / total * 100)}% do total.</p>`;
+        <p class="sim-s ap-total num"><span class="olho">Em ${anos} anos:</span> <span class="ap-v">${usd(total)}</span></p>
+        <p class="sim-s c num">${usd(aportes)} saem do seu bolso e ${usd(rend)} vêm de rendimento. É o tempo trabalhando a seu favor: ${Math.round(rend / total * 100)}% do total.</p>`;
     };
     const pinta = () => {
       $("#v-aporte").innerHTML = `<span class="${tem() ? "" : "vazio"}">${tem() ? brl(s.aporte) : "R$ ?"}</span> <small>por mês${tem() && s.aporte > 0 ? " · " + usd(s.aporte / CONFIG.CAMBIO) : ""}</small>`;
@@ -1641,7 +1722,7 @@ const TELAS = {
         (function passo(t){
           if (atual !== "calculando") return;
           const p = Math.min(1, (t - ini) / dur);
-          n.textContent = Math.round(p * 100) + "%";
+          n.innerHTML = celulas(Math.round(p * 100) + "%");
           lis.forEach((li, i) => li.classList.toggle("on", p >= (i + 0.5) / lis.length));
           if (p < 1) requestAnimationFrame(passo); else { animarVida = true; atual = "vida"; render(true, 1); }
         })(ini);
@@ -1657,9 +1738,9 @@ const TELAS = {
     return {
       html: `
         <span class="olho">Sua vida global</span>
-        <h3 class="sim-t vida-n num" tabindex="-1" aria-label="${usd(k.numero)}">${usd(k.numero)}</h3>
+        <h3 class="sim-t vida-n num" tabindex="-1" aria-label="${usd(k.numero)}" style="--n:${usd(k.numero).length}"><span class="vn">${usd(k.numero)}</span><svg class="risco" viewBox="0 0 300 12" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M2,8 C60,2 140,3 298,6"/></svg></h3>
         <p class="sim-s num">Cerca de ${brlCurto(k.numero * CONFIG.CAMBIO)} no câmbio de hoje.</p>
-        <p class="sim-s" style="font-size:19px;font-weight:600;line-height:1.35">É o patrimônio em dólar que paga a sua vida ${esc(lugarEm(s.pais, s.st))}, para viver de renda aos ${s.ret}, em ${k.anoRenda}.</p>
+        <p class="sim-s dest">É o patrimônio em dólar que paga a sua vida ${esc(lugarEm(s.pais, s.st))}, para viver de renda aos ${s.ret}, em ${k.anoRenda}.</p>
         <div class="vida-l">
           <div><span class="olho">Poder de compra</span><p class="num">${brl(s.custo)} ${esc(emBR(s.uf))} equivalem a ${usd(k.mes)} por mês ${esc(lugarEm(s.pais, s.st))}.</p></div>
           <div><span class="olho">Regra de retirada</span><p class="num">${usd(k.mes)} ÷ ${pctCfg(CONFIG.RETIRADA_MES)} ao mês = ${usd(k.numero)}.</p></div>
@@ -1672,7 +1753,7 @@ const TELAS = {
         animarVida = false;
         if (reduz) return;
         corpo.classList.add("revela");
-        contar($(".vida-n", corpo), 0, k.numero, 1100, usd);
+        contar($(".vn", corpo), 0, k.numero, 850, usd);
       }
     };
   },
@@ -1711,38 +1792,40 @@ const TELAS = {
     const w = v => (v / total * 100).toFixed(2) + "%";
     const nome = (contato.nome || "").split(" ")[0];
     const perfilConsultoria = (s.investido || 0) >= CONFIG.CONSULTORIA_MIN_BRL;
-    const cartaoCons = `<div class="cartao-e azul">
+    const cartaoCons = `<div class="cartao-e" data-fundo="tinta">
+        <img class="col-mini" src="img/col-mala.webp" alt="" width="88" height="89" loading="lazy" decoding="async" onerror="this.remove()">
         <span class="olho">Consultoria Global · por aplicação</span>
         <h4>${perfilConsultoria ? "Com o patrimônio que você já construiu, o próximo passo é individual." : "Quer tratar do seu caso com o Tiago?"}</h4>
         <p>Para empresários e investidores com patrimônio a partir de ${brlCurto(CONFIG.CONSULTORIA_MIN_BRL)}: onde viver, em que moeda manter o patrimônio e como organizar tudo até ${CONFIG.ANO_ALVO}.</p>
         <button type="button" class="sim-btn" data-abrir="consultoria">Quero aplicar</button>
       </div>`;
-    const cartao2050 = `<div class="cartao-e">
+    const cartao2050 = `<div class="cartao-e" data-fundo="tinta">
+        <img class="col-mini" src="img/col-plano-de-voo.webp" alt="" width="88" height="99" loading="lazy" decoding="async" onerror="this.remove()">
         <span class="olho">Projeto 2050</span>
         <h4>Você está na lista de espera.</h4>
         <p>Este plano é o começo do seu Plano de Voo. O Projeto 2050 junta 20 trilhas em vídeo, o Plano de Voo até 2050 e uma comunidade para acompanhar o caminho todo mês. Quando abrir, seu plano já vai estar na sua conta.</p>
         ${CONFIG.WHATSAPP_GRUPO ? `<a class="sim-btn" href="${esc(CONFIG.WHATSAPP_GRUPO)}" target="_blank" rel="noopener">Entrar no grupo do lançamento</a>` : ""}
-        <a class="link" href="#projeto" style="color:#fff">Conhecer o Projeto 2050<span aria-hidden="true">→</span></a>
+        <a class="link" href="#projeto">Conhecer o Projeto 2050<span aria-hidden="true">${SETA16}</span></a>
       </div>`;
     return {
       html: `
         <span class="olho">Seu plano${nome ? ", " + esc(nome) : ""}</span>
         <h3 class="sim-t num" tabindex="-1"${chegou ? "" : ` aria-label="No ritmo de hoje, você chega a ${pct(k.ritmo)} da sua vida global."`}>${chegou ? "No ritmo de hoje, você passa da sua vida global." : `No ritmo de hoje, você chega a <span id="p-ritmo">${pct(k.ritmo)}</span> da sua vida global.`}</h3>
-        <p class="sim-s num">${chegou ? `Você chega lá antes dos ${s.ret}. Daqui para frente, o trabalho é manter o ritmo e proteger o que construiu.` : `<b style="color:var(--pink)">Com ${brl(k.extraBRL)} a mais por mês</b>, chega a 100% aos ${s.ret}.`}</p>
+        <p class="sim-s c num">${chegou ? `Você chega lá antes dos ${s.ret}. Daqui para frente, o trabalho é manter o ritmo e proteger o que construiu.` : `<b>Com ${brl(k.extraBRL)} a mais por mês</b>, chega a 100% aos ${s.ret}.`}</p>
         <div style="display:grid;gap:12px">
-          <div class="pilha" aria-hidden="true">${k.inv > 0 ? `<i style="width:${w(k.inv)};background:var(--graf2)"></i>` : ""}<i style="width:${w(k.proj - k.inv)};background:var(--graf)"></i>${k.falta > 0 ? `<i style="flex:1;background:var(--fraco)"></i>` : ""}</div>
+          <div class="pilha" aria-hidden="true">${k.inv > 0 ? `<i style="width:${w(k.inv)};background:var(--texto)"></i>` : ""}<i style="width:${w(k.proj - k.inv)};background:var(--azul)"></i>${k.falta > 0 ? `<i class="falta" style="flex:1"></i>` : ""}</div>
           <div class="leg num">
-            ${k.inv > 0 ? `<div><i style="background:var(--graf2)"></i>Já investido hoje · ${pct(k.inv / k.numero)}<b>${usd(k.inv)}</b></div>` : ""}
-            <div><i style="background:var(--graf)"></i>Aportes e rendimento até os ${s.ret}<b>${usd(k.proj - k.inv)}</b></div>
-            ${k.falta > 0 ? `<div><i style="background:var(--fraco)"></i>Falta para a sua vida global<b>${usd(k.falta)}</b></div>` : ""}
+            ${k.inv > 0 ? `<div><i style="background:var(--texto)"></i>Já investido hoje · ${pct(k.inv / k.numero)}<b>${usd(k.inv)}</b></div>` : ""}
+            <div><i style="background:var(--azul)"></i>Aportes e rendimento até os ${s.ret}<b>${usd(k.proj - k.inv)}</b></div>
+            ${k.falta > 0 ? `<div><i class="falta"></i>Falta para a sua vida global<b>${usd(k.falta)}</b></div>` : ""}
           </div>
         </div>
         <div style="display:grid;gap:8px">
-          <h4 style="font-size:20px;letter-spacing:-.01em">${alavs.length === 3 ? "Três alavancas" : "Alavancas"} que ${chegou ? "aceleram" : "fecham"} a conta</h4>
+          <h4 class="alav-t">${alavs.length === 3 ? "Três alavancas" : "Alavancas"} que ${chegou ? "aceleram" : "fecham"} a conta</h4>
           <p class="legal">Toque para combinar.</p>
           <div class="alav">${alavs.map(a => `<button type="button"${alavRecente === a.id ? ' class="recem"' : ""} data-alav="${a.id}" aria-pressed="${!!s.alav[a.id]}"><span class="cx">${VISTO}</span><span class="t"><b class="num">${esc(a.t)}</b><span class="num">${esc(a.d)}</span></span><span class="p num">${pct(a.r)}</span></button>`).join("")}</div>
         </div>
-        ${algum ? `<div class="ok${combAnterior === null ? " nova" : ""}" role="status">${VISTO}<span>Com as alavancas escolhidas, você chega a <b class="num" id="p-comb">${pct(combinado)}</b> da sua vida global.</span>
+        ${algum ? `<div class="ok${combAnterior === null ? " nova" : ""}" role="status"><span>Com as alavancas escolhidas, você chega a <b class="num" id="p-comb">${pct(combinado)}</b> da sua vida global.</span>
           <div class="ok-barra" aria-hidden="true"><i id="p-comb-b" style="width:${Math.min(1, combinado) * 100}%"></i>${k.ritmo < 1 ? `<em style="left:${k.ritmo * 100}%"></em>` : ""}</div></div>` : ""}
         <div class="nota"><span class="olho">E se você ficar no Brasil</span><span class="num">${k.numeroBrasil < k.numero ? `Só pelo câmbio, a sua vida global cai para ${usd(k.numeroBrasil)}, e o ritmo de hoje cobre ${pct(k.ritmoBrasil)} dela. A diferença entre os dois valores é a folga para viver onde quiser.` : `Só pelo câmbio, ficar no Brasil pede ${usd(k.numeroBrasil)}, e o ritmo de hoje cobre ${pct(k.ritmoBrasil)} disso. Medida em dólar, a sua vida ${esc(lugarEm(s.pais, s.st))} sai mais barata do que aqui.`}</span></div>
         ${envio === "demo" ? `<p class="demo">Modo demonstração: o contato não foi enviado. Configure o endereço da planilha (ENDPOINT) na página para começar a receber leads.</p>` : ""}
@@ -1827,151 +1910,215 @@ function dadosRelatorio(){
 }
 
 /* PDF-INICIO */
-/* ---------- relatório em PDF: uma página A4, desenhada direto (sem depender do layout da tela) ----------
-   Recebe um documento do jsPDF em milímetros e os dados já calculados da simulação. */
 function desenharRelatorio(doc, d){
   const W = 210, M = 14, CW = W - 2 * M;
-  const C = { tinta:[9,9,9], azul:[5,65,254], azul2:[142,164,255], papel:[245,244,243], linha:[214,213,210], apagado:[92,92,92], branco:[255,255,255], verde:[11,122,67], claro:[205,205,205] };
+  const C = {
+    tinta:[11,13,14], papel:[244,245,246], grade:[231,232,233], azul:[39,22,233], lilas:[179,173,248], fio:[139,130,245],
+    apoio:[99,105,110], apoioT:[141,147,155], filete:[219,222,225], trilho:[213,216,220], dado:[185,190,196], base:[185,187,188],
+    pilula:[27,30,33], pilulaBorda:[51,56,62]
+  };
   const n0 = v => Math.round(v).toLocaleString("pt-BR");
   const usd = v => "US$ " + n0(v), brl = v => "R$ " + n0(v), pc = v => Math.round(v * 100) + "%";
+
+  /* fontes: as embutidas (pdf-fontes.js) ou, se faltarem, Times no lugar da serifa e Helvetica no resto */
+  let comFontes = false;
+  try{
+    if (typeof registrarFontesPDF === "function" && registrarFontesPDF(doc)){
+      const l = doc.getFontList(); comFontes = !!(l["Figtree"] && l["Hedvig Letters Serif"]);
+    }
+  }catch(e){ comFontes = false; }
+  const FONTE = comFontes
+    ? { serifa:["Hedvig Letters Serif","normal"], texto:["Figtree","normal"], forte:["Figtree","bold"] }
+    : { serifa:["times","normal"], texto:["helvetica","normal"], forte:["helvetica","bold"] };
+  const usa = (f, s) => { const p = FONTE[f || "texto"]; doc.setFont(p[0], p[1]); doc.setFontSize(s); };
+  const larg = (t, f, s) => { usa(f, s); return doc.getTextWidth(String(t)); };
+
   const fundo = c => doc.setFillColor(c[0], c[1], c[2]);
   const traco = c => doc.setDrawColor(c[0], c[1], c[2]);
   const txt = (t, x, y, o) => {
-    o = o || {};
-    doc.setFont("helvetica", o.b ? "bold" : "normal"); doc.setFontSize(o.s || 9);
+    o = o || {}; usa(o.f, o.s || 8);
     const c = o.c || C.tinta; doc.setTextColor(c[0], c[1], c[2]);
-    doc.setCharSpace(o.esp || 0);
-    doc.text(String(t), x, y, { align: o.a || "left", maxWidth: o.w });
-    doc.setCharSpace(0);
+    doc.text(String(t), x, y, { align: o.a || "left" });
   };
-  const rotulo = (t, x, y, c) => txt(String(t).toUpperCase(), x, y, { s:6.3, b:true, c: c || C.apagado, esp:0.22 });
-  const cartao = (x, y, w, h) => { fundo(C.papel); doc.roundedRect(x, y, w, h, 2.5, 2.5, "F"); };
-  const barra = (x, y, w, h, c) => { if (w > 0){ fundo(c); doc.rect(x, y, Math.max(w, 0.4), h, "F"); } };
-  const arco = (cx, cy, r, esp, frac, c) => {
-    if (frac <= 0) return;
-    const n = Math.max(4, Math.round(90 * frac)), pts = [];
-    for (let i = 0; i <= n; i++){ const a = -Math.PI / 2 + 2 * Math.PI * frac * i / n; pts.push([cx + r * Math.cos(a), cy + r * Math.sin(a)]); }
-    const seg = []; for (let i = 1; i < pts.length; i++) seg.push([pts[i][0] - pts[i-1][0], pts[i][1] - pts[i-1][1]]);
-    doc.setLineWidth(esp); traco(c); doc.setLineCap("butt"); doc.setLineJoin("round");
-    doc.lines(seg, pts[0][0], pts[0][1], [1, 1], "S", false);
+  /* uma linha só: encolhe até o mínimo e, se ainda passar, corta com reticências */
+  const caber = (t, x, y, o) => {
+    t = String(t); let s = o.s;
+    while (larg(t, o.f, s) > o.w && s > (o.min || s - 1.5)) s -= 0.1;
+    if (larg(t, o.f, s) > o.w){ while (t.length > 1 && larg(t + "…", o.f, s) > o.w) t = t.slice(0, -1); t = t.trimEnd() + "…"; }
+    txt(t, x, y, Object.assign({}, o, { s })); return s;
   };
+  /* quebra em linhas pela largura (para frase que pode passar de uma linha) */
+  const quebra = (t, f, s, w) => {
+    const out = []; let linha = "";
+    String(t).split(" ").forEach(p => { const tent = linha ? linha + " " + p : p; if (larg(tent, f, s) > w && linha){ out.push(linha); linha = p; } else linha = tent; });
+    if (linha) out.push(linha); return out;
+  };
+  const filete = (x, y, w) => { fundo(C.filete); doc.rect(x, y, w, 0.3, "F"); };
+  const barra = (x, y, w, h, c, r) => {
+    if (!(w > 0)) return; w = Math.max(w, 0.5); fundo(c);
+    if (r && w > 2 * r) doc.roundedRect(x, y, w, h, r, r, "F"); else doc.rect(x, y, w, h, "F");
+  };
+  /* o endereço do botão é o do próprio site? então o botão não aparece */
+  const limpa = u => String(u || "").toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/+$/, "");
+  const temBotao = !!d.ctaUrl && limpa(d.ctaUrl) !== limpa(d.site);
 
-  /* cabeçalho escuro, com os degraus azuis subindo da faixa do número */
-  fundo(C.tinta); doc.rect(0, 0, W, 38, "F");
-  fundo(C.azul); doc.rect(168, 29, 14, 9, "F"); doc.rect(182, 19, 14, 19, "F"); doc.rect(196, 7, 14, 31, "F");
-  rotulo("Projeto 2050 · por Tiago Piassum", M, 12, C.azul2);
-  txt("Sua vida global", M, 24.5, { s:27, b:true, c:C.branco });
-  txt((d.nome ? "Relatório de " + d.nome + " · " : "Relatório · ") + d.data, M, 32, { s:9, c:C.claro });
+  /* fundos: o miolo é papel; as faixas de cima e de baixo são tinta; a grade só no miolo */
+  fundo(C.papel); doc.rect(0, 0, W, 297, "F");
+  fundo(C.tinta); doc.rect(0, 0, W, 82, "F"); doc.rect(0, 275, W, 22, "F");
+  traco(C.grade); doc.setLineWidth(0.1);
+  for (let x = 15; x <= 195; x += 15) doc.line(x, 90, x, 270);
+  for (let y = 90; y <= 270; y += 15) doc.line(15, y, 195, y);
 
-  /* o número */
-  fundo(C.azul); doc.rect(0, 38, W, 42, "F");
-  rotulo("Patrimônio em dólar que paga a sua vida " + d.lugarEm, M, 47.5, C.branco);
-  txt(usd(d.numero), M, 65, { s:42, b:true, c:C.branco });
-  txt("Para viver de renda aos " + d.ret + ", em " + d.anoRenda + ". Cerca de " + d.numeroBRL + " no câmbio de hoje.", M, 74, { s:9.5, c:C.branco });
+  /* faixa de cima: a pílula, o título e o número */
+  const nome = "Tiago Piassum", textoX = comFontes && window.PDF_AVATAR ? 24 : 18.5;
+  const pW = textoX - M + larg(nome, "forte", 8) + 5;
+  fundo(C.pilula); traco(C.pilulaBorda); doc.setLineWidth(0.3); doc.roundedRect(M, 11, pW, 9, 4.5, 4.5, "FD");
+  if (comFontes && window.PDF_AVATAR){ try{ doc.addImage(window.PDF_AVATAR, "JPEG", 15, 12, 7, 7); }catch(e){} }
+  txt(nome, textoX, 17, { f:"forte", s:8, c:C.papel });
+  txt("Projeto 2050", W - M, 17, { s:8, c:C.apoioT, a:"right" });
+  txt("Sua vida global", M, 31, { f:"serifa", s:16, c:C.papel });
+  caber((d.nome ? "Relatório de " + d.nome + " · " : "Relatório · ") + d.data, M, 37, { s:8.5, c:C.apoioT, w:CW, min:7 });
+  caber("Patrimônio em dólar que paga a sua vida " + d.lugarEm, M, 46, { s:9, c:C.apoioT, w:CW, min:7 });
+  let tn = 58; const numTxt = usd(d.numero);
+  while (larg(numTxt, "serifa", tn) > CW && tn > 30) tn -= 1;
+  txt(numTxt, M, 66, { f:"serifa", s:tn, c:C.lilas });
+  const wn = larg(numTxt, "serifa", tn);
+  traco(C.fio); doc.setLineWidth(0.7); doc.setLineCap("round");
+  doc.lines([[wn / 3, -0.9, 2 * wn / 3, -0.9, wn, 0]], M, 69.8, [1, 1], "S", false);
+  doc.setLineCap("butt");
+  caber("Para viver de renda aos " + d.ret + ", em " + d.anoRenda + ". Cerca de " + d.numeroBRL + " no câmbio de hoje.", M, 76, { s:9.5, c:C.papel, w:CW, min:7.5 });
 
   /* três indicadores */
-  const kw = (CW - 10) / 3;
   [["Seu custo de vida hoje", brl(d.custo), "por mês, " + d.estadoEm],
    ["O mesmo padrão lá", usd(d.usdMes), "por mês, " + d.lugarEm],
    ["Tempo de estrada", d.anos + " anos", "dos " + d.age + " aos " + d.ret]].forEach((k, i) => {
-    const x = M + i * (kw + 5);
-    cartao(x, 85, kw, 23); rotulo(k[0], x + 4, 91.5);
-    txt(k[1], x + 4, 100, { s:15.5, b:true }); txt(k[2], x + 4, 104.8, { s:7.5, c:C.apagado });
+    const x = M + i * 62, w = 58;
+    filete(x, 88, w);
+    caber(k[0], x, 93.5, { s:7.5, c:C.apoio, w, min:6.5 });
+    caber(k[1], x, 102, { f:"serifa", s:19, w, min:12 });
+    const ls = quebra(k[2], "texto", 7.5, w).length > 1 ? 6.8 : 7.5;
+    quebra(k[2], "texto", ls, w).slice(0, 2).forEach((l, j) => txt(l, x, 107 + j * 3.2, { s:ls, c:C.apoio }));
   });
 
   /* gráfico 1: câmbio x poder de compra */
-  const cw2 = (CW - 6) / 2, y1 = 113, h1 = 48;
-  cartao(M, y1, cw2, h1); rotulo("Câmbio x poder de compra · US$ por mês", M + 4, y1 + 6.5);
-  const maxA = Math.max(d.usdMes, d.cambioMes), lw = cw2 - 8;
-  txt("Pelo câmbio", M + 4, y1 + 15.5, { s:8 }); txt(usd(d.cambioMes), M + cw2 - 4, y1 + 15.5, { s:10, b:true, a:"right" });
-  barra(M + 4, y1 + 17.5, lw, 6, C.linha); barra(M + 4, y1 + 17.5, lw * d.cambioMes / maxA, 6, C.azul2);
-  txt("Pelo poder de compra", M + 4, y1 + 30.5, { s:8 }); txt(usd(d.usdMes), M + cw2 - 4, y1 + 30.5, { s:10, b:true, a:"right" });
-  barra(M + 4, y1 + 32.5, lw, 6, C.linha); barra(M + 4, y1 + 32.5, lw * d.usdMes / maxA, 6, C.azul);
+  const cw2 = 87, x2 = 109;
+  filete(M, 114, cw2); txt("Câmbio x poder de compra · US$ por mês", M, 119.5, { f:"forte", s:8 });
+  const maxA = Math.max(d.usdMes, d.cambioMes);
+  txt("Pelo câmbio", M, 128, { s:8 }); txt(usd(d.cambioMes), M + cw2, 128, { f:"serifa", s:12, a:"right" });
+  barra(M, 130.5, cw2 * d.cambioMes / maxA, 3, C.dado, 0.8);
+  txt("Pelo poder de compra", M, 141, { s:8 }); txt(usd(d.usdMes), M + cw2, 141, { f:"serifa", s:12, c:C.azul, a:"right" });
+  barra(M, 143.5, cw2 * d.usdMes / maxA, 3, C.azul, 0.8);
   const razao = d.usdMes / d.cambioMes;
-  txt(razao >= 1.005
-      ? "Viver " + d.lugarEm + " custa " + razao.toLocaleString("pt-BR", { minimumFractionDigits:2, maximumFractionDigits:2 }) + (razao >= 2 ? " vezes" : " vez") + " o que o câmbio sugere."
-      : "Viver " + d.lugarEm + " custa " + pc(1 - razao) + " menos do que o câmbio sugere.",
-      M + 4, y1 + 44, { s:7.5, c:C.apagado, w:lw });
+  const frase1 = razao >= 1.005
+    ? "Viver " + d.lugarEm + " custa " + razao.toLocaleString("pt-BR", { minimumFractionDigits:2, maximumFractionDigits:2 }) + (razao >= 2 ? " vezes" : " vez") + " o que o câmbio sugere."
+    : "Viver " + d.lugarEm + " custa " + pc(1 - razao) + " menos do que o câmbio sugere.";
+  quebra(frase1, "texto", 8, cw2).slice(0, 2).forEach((l, i) => txt(l, M, 153 + i * 3.6, { s:8 }));
 
-  /* gráfico 2: quanto do caminho o ritmo de hoje cobre */
-  const x2 = M + cw2 + 6;
-  cartao(x2, y1, cw2, h1); rotulo("Quanto do caminho o ritmo de hoje cobre", x2 + 4, y1 + 6.5);
-  const cx = x2 + 21, cy = y1 + 28;
-  doc.setLineWidth(5); traco(C.linha); doc.circle(cx, cy, 12.5, "S");
-  arco(cx, cy, 12.5, 5, Math.min(1, d.ritmo), C.azul);
-  if (d.inv > 0) arco(cx, cy, 12.5, 5, Math.min(1, d.inv / d.numero), C.tinta);
-  txt(pc(d.ritmo), cx, cy + 2.2, { s:14, b:true, a:"center" });
+  /* gráfico 2: quanto do caminho o ritmo de hoje cobre, um número e uma barra */
+  filete(x2, 114, cw2); txt("Quanto do caminho o ritmo de hoje cobre", x2, 119.5, { f:"forte", s:8 });
+  txt(pc(d.ritmo), x2, 136, { f:"serifa", s:34, c:C.azul });
+  const gap = 0.6, by = 141, bh = 4, tot = cw2;
+  const total = d.chegou ? Math.max(d.proj, d.inv, 1) : d.numero;       // a barra inteira é a vida global (ou a projeção, se passou dela)
+  const wInv = d.inv > 0 ? Math.max(0.5, tot * Math.min(1, d.inv / total)) : 0;
+  const wAp = Math.max(0, Math.min(tot, tot * Math.max(0, d.proj - d.inv) / total, tot - wInv - (wInv ? gap : 0)));
+  let bx2 = x2;
+  if (wInv){ barra(bx2, by, wInv, bh, C.tinta); bx2 += wInv + gap; }
+  if (wAp > 0){ barra(bx2, by, wAp, bh, C.azul); bx2 += wAp + gap; }
+  if (!d.chegou && bx2 < x2 + tot - 0.4){
+    traco(C.apoio); doc.setLineWidth(0.3); doc.setLineDashPattern([1, 1], 0);
+    doc.rect(bx2 + 0.15, by + 0.15, x2 + tot - bx2 - 0.3, bh - 0.3, "S"); doc.setLineDashPattern([], 0);
+  }
   const leg = [];
-  if (d.inv > 0) leg.push([C.tinta, "Já investido hoje", usd(d.inv)]);
-  leg.push([C.azul, "Aportes e rendimento até os " + d.ret, usd(d.proj - d.inv)]);
-  leg.push(d.falta > 0 ? [C.linha, "Falta para a vida global", usd(d.falta)] : [C.verde, "Acima da vida global", usd(d.proj - d.numero)]);
-  const ly0 = y1 + (leg.length === 3 ? 15.5 : 20);
-  leg.forEach((l, i) => { const ly = ly0 + i * 10.5; fundo(l[0]); doc.rect(x2 + 40, ly - 2.3, 2.6, 2.6, "F"); txt(l[1], x2 + 44.5, ly, { s:7, c:C.apagado }); txt(l[2], x2 + 44.5, ly + 4.6, { s:9.5, b:true }); });
-
-  /* gráfico 3: patrimônio ano a ano */
-  const y3 = 166, h3 = 51;
-  cartao(M, y3, CW, h3); rotulo("Seu patrimônio ano a ano · US$", M + 4, y3 + 6.5);
-  let lx = M + CW - 4;
-  [["Rendimento", C.azul2], ["Seus aportes", C.azul], ["Já investido", C.tinta]].forEach(l => {
-    if (l[0] === "Já investido" && !(d.inv > 0)) return;
-    doc.setFont("helvetica", "normal"); doc.setFontSize(7); const w = doc.getTextWidth(l[0]);
-    txt(l[0], lx, y3 + 6.5, { s:7, a:"right", c:C.apagado }); fundo(l[1]); doc.rect(lx - w - 3.6, y3 + 4.3, 2.4, 2.4, "F"); lx -= w + 8;
+  if (d.inv > 0) leg.push(["inv", "Já investido hoje", usd(d.inv)]);
+  leg.push(["azul", "Aportes e rendimento até os " + d.ret, usd(d.proj - d.inv)]);
+  leg.push(d.falta > 0 ? ["falta", "Falta para a vida global", usd(d.falta)] : ["azul", "Acima da vida global", usd(d.proj - d.numero)]);
+  leg.forEach((l, i) => {
+    const ly = 149.5 + i * 5;
+    if (l[0] === "falta"){ traco(C.apoio); doc.setLineWidth(0.3); doc.setLineDashPattern([0.6, 0.5], 0); doc.rect(x2 + 0.15, ly - 2.05, 1.9, 1.9, "S"); doc.setLineDashPattern([], 0); }
+    else { fundo(l[0] === "inv" ? C.tinta : C.azul); doc.rect(x2, ly - 2.2, 2.2, 2.2, "F"); }
+    const wv = larg(l[2], "serifa", 9.5);
+    txt(l[2], x2 + cw2, ly, { f:"serifa", s:9.5, a:"right" });
+    caber(l[1], x2 + 4.5, ly, { s:7.5, c:C.apoio, w:cw2 - 4.5 - wv - 2, min:6 });
   });
-  const gx0 = M + 6, gx1 = M + CW - 6, gTopo = y3 + 15, gBase = y3 + h3 - 8, gh = gBase - gTopo;
+
+  /* gráfico 3: patrimônio ano a ano, colunas retas */
+  filete(M, 166, CW); txt("Seu patrimônio ano a ano · US$", M, 171.5, { f:"forte", s:8 });
+  let lx = M + CW;
+  [["Rendimento", C.azul], ["Seus aportes", C.tinta], ["Já investido", C.apoioT]].forEach(l => {
+    if (l[0] === "Já investido" && !(d.inv > 0)) return;
+    const w = larg(l[0], "texto", 7);
+    txt(l[0], lx, 171.5, { s:7, a:"right", c:C.apoio }); fundo(l[1]); doc.rect(lx - w - 3.6, 169.3, 2.4, 2.4, "F"); lx -= w + 8;
+  });
+  const gx0 = M, gx1 = M + CW, gTopo = 176, gBase = 210, gh = gBase - gTopo, n = d.serie.length;
   const teto = Math.max(d.numero, d.proj) * 1.06, sy = v => gBase - gh * v / teto;
-  const passo = (gx1 - gx0) / d.serie.length, bw = passo * (d.serie.length > 40 ? 0.8 : 0.7);
+  const passo = n ? (gx1 - gx0) / n : 0, bw = Math.max(0.3, passo - 0.8);
+  const topoCol = [];
   d.serie.forEach((p, i) => {
     const x = gx0 + i * passo + (passo - bw) / 2; let base = gBase;
-    [[p.investido, C.tinta], [p.aportes, C.azul], [p.rendimento, C.azul2]].forEach(parte => {
+    [[p.investido, C.apoioT], [p.aportes, C.tinta], [p.rendimento, C.azul]].forEach(parte => {
       const h = gh * parte[0] / teto; if (h > 0.05){ fundo(parte[1]); doc.rect(x, base - h, bw, h, "F"); base -= h; }
     });
+    topoCol.push(base);
   });
-  traco(C.linha); doc.setLineWidth(0.25); doc.line(gx0, gBase, gx1, gBase);
-  traco(C.tinta); doc.setLineWidth(0.35); doc.setLineDashPattern([1.4, 1.1], 0); doc.line(gx0, sy(d.numero), gx1, sy(d.numero)); doc.setLineDashPattern([], 0);
-  txt("Vida global · " + usd(d.numero), gx0, sy(d.numero) - 1.6, { s:7, b:true });
-  const cada = d.serie.length <= 12 ? 2 : d.serie.length <= 30 ? 5 : 10;
-  d.serie.forEach((p, i) => { if (i === 0 || i === d.serie.length - 1 || (p.idade % cada === 0 && i > 1 && i < d.serie.length - 2)) txt(p.idade + (i === 0 || i === d.serie.length - 1 ? " anos" : ""), gx0 + i * passo + passo / 2, gBase + 4.3, { s:6.5, c:C.apagado, a: i === 0 ? "left" : i === d.serie.length - 1 ? "right" : "center" }); });
+  traco(C.base); doc.setLineWidth(0.4); doc.line(gx0, gBase, gx1, gBase);
+  const yv = sy(d.numero);
+  traco(C.tinta); doc.setLineWidth(0.3); doc.setLineDashPattern([1.4, 1.1], 0); doc.line(gx0, yv, gx1, yv); doc.setLineDashPattern([], 0);
+  /* o rótulo da linha vai para onde as colunas ficam abaixo dele: à esquerda, senão à direita, senão sobre papel */
+  const rv = "Vida global · " + usd(d.numero), wr = larg(rv, "forte", 7.5);
+  const livre = (xa, xb) => d.serie.every((p, i) => { const cx = gx0 + i * passo; return cx + passo < xa || cx > xb || topoCol[i] > yv - 1.2; });
+  const rx = livre(gx0, gx0 + wr) || !livre(gx1 - wr, gx1) ? gx0 : gx1 - wr;
+  if (!livre(rx, rx + wr)){ fundo(C.papel); doc.rect(rx - 0.6, yv - 4.8, wr + 1.2, 3.8, "F"); }
+  txt(rv, rx, yv - 1.6, { f:"forte", s:7.5 });
+  const cada = n <= 12 ? 2 : n <= 30 ? 5 : 10;
+  d.serie.forEach((p, i) => { if (i === 0 || i === n - 1 || (p.idade % cada === 0 && i > 1 && i < n - 2)) txt(p.idade + (i === 0 || i === n - 1 ? " anos" : ""), gx0 + i * passo + passo / 2, 215, { s:7, c:C.apoio, a: i === 0 ? "left" : i === n - 1 ? "right" : "center" }); });
 
   /* gráfico 4: alavancas */
-  const y4 = 222, h4 = 43;
-  cartao(M, y4, cw2, h4); rotulo(d.chegou ? "Alavancas que aceleram a conta" : "Alavancas que fecham a conta", M + 4, y4 + 6.5);
-  const aw = cw2 - 22, tetoA = Math.max(1, ...d.alavancas.map(a => a.r), d.ritmo), xh = M + 4 + aw * Math.min(d.ritmo, tetoA) / tetoA;
+  filete(M, 224, cw2); txt(d.chegou ? "Alavancas que aceleram a conta" : "Alavancas que fecham a conta", M, 229.5, { f:"forte", s:8 });
+  const aw = 66, tetoA = Math.max(1, ...d.alavancas.map(a => a.r), d.ritmo), xh = M + aw * Math.min(d.ritmo, tetoA) / tetoA;
   const lista = d.alavancas.slice(0, 3);
   lista.forEach((a, i) => {
-    const ay = y4 + 13.5 + i * 9;
-    txt(a.t, M + 4, ay, { s:7.5 });
-    barra(M + 4, ay + 1.6, aw, 3.4, C.linha); barra(M + 4, ay + 1.6, aw * Math.min(a.r, tetoA) / tetoA, 3.4, a.r >= 0.995 ? C.verde : C.azul);
-    fundo(C.tinta); doc.rect(xh - 0.2, ay + 0.9, 0.4, 4.8, "F");      // marca até onde o ritmo de hoje chega
-    txt(pc(a.r), M + cw2 - 4, ay + 4.6, { s:10, b:true, a:"right", c: a.r >= 0.995 ? C.verde : C.tinta });
+    const ay = 236 + i * 10;
+    caber(a.t, M, ay, { s:8, w:aw, min:6.8 });
+    barra(M, ay + 1.8, aw, 3, C.trilho, 0.8); barra(M, ay + 1.8, aw * Math.min(a.r, tetoA) / tetoA, 3, C.azul, 0.8);
+    fundo(C.tinta); doc.rect(xh - 0.25, ay + 0.8, 0.5, 5, "F");           // até onde o ritmo de hoje chega
+    txt(pc(a.r), M + cw2, ay + 4.8, { f:"serifa", s:13, a:"right" });
   });
-  txt("ritmo de hoje: " + pc(d.ritmo), Math.max(M + 4, Math.min(xh - 1, M + 4 + aw - 26)), y4 + 13.5 + lista.length * 9 + 0.8, { s:6.5, c:C.apagado });
+  const rh = "ritmo de hoje: " + pc(d.ritmo);
+  txt(rh, Math.max(M, Math.min(xh - larg(rh, "texto", 6.5) / 2, M + aw - larg(rh, "texto", 6.5))), 265, { s:6.5, c:C.apoio });
 
   /* gráfico 5: a mesma vida em outros lugares */
-  cartao(x2, y4, cw2, h4); rotulo("A mesma vida em outros lugares · US$ por mês", x2 + 4, y4 + 6.5);
-  const maxL = Math.max(...d.lugares.map(l => l.usd)), bx = x2 + 33, bwMax = cw2 - 33 - 24;
-  d.lugares.slice(0, 5).forEach((l, i) => {
-    const yl = y4 + 13.5 + i * 6.2;
-    txt(l.nome, x2 + 4, yl + 1.1, { s:7.5, b:l.sel });
-    barra(bx, yl - 1.9, bwMax * l.usd / maxL, 3.6, l.sel ? C.azul : C.azul2);
-    txt(usd(l.usd), x2 + cw2 - 4, yl + 1.1, { s:8, b:l.sel, a:"right" });
+  filete(x2, 224, cw2); txt("A mesma vida em outros lugares · US$ por mês", x2, 229.5, { f:"forte", s:8 });
+  const lugares = d.lugares.slice(0, 5), maxL = Math.max(...lugares.map(l => l.usd));
+  const colV = Math.max(...lugares.map(l => larg(usd(l.usd), "serifa", 9.5))), bx = x2 + 29, bwMax = Math.min(36, x2 + cw2 - colV - 2.5 - bx);
+  lugares.forEach((l, i) => {
+    const yl = 236 + i * 6.5, f = l.sel ? "forte" : "texto";
+    let s = 8; while (larg(l.nome, f, s) > 27.5 && s > 6.2) s -= 0.1;
+    const ls = larg(l.nome, f, s) > 27.5 ? quebra(l.nome, f, 6.2, 27.5).slice(0, 2) : [l.nome];
+    ls.forEach((t, j) => txt(t, x2, yl + (ls.length > 1 ? -0.4 + j * 2.6 : 0), { f, s: ls.length > 1 ? 6.2 : s }));
+    barra(bx, yl - 2.2, bwMax * l.usd / maxL, 3, l.sel ? C.azul : C.dado, 0.8);
+    txt(usd(l.usd), x2 + cw2, yl, { f:"serifa", s:9.5, a:"right" });
   });
 
-  /* premissas, em letra pequena, acima da faixa final */
-  txt(d.legal, M, 269.4, { s:5.6, c:C.apagado, w:CW });
+  /* premissas */
+  quebra(d.legal, "texto", 5.6, CW).slice(0, 3).forEach((l, i) => txt(l, M, 270 + i * 2.2, { s:5.6, c:C.apoio }));
 
-  /* faixa final: a conclusão e o convite para abrir a conta, com área clicável */
-  fundo(C.tinta); doc.rect(0, 275, W, 22, "F");
-  const bL = 66, bX = W - M - bL, bY = 279.5, bA = 13, larguraFrase = bX - M - 6;
+  /* faixa de baixo: a conclusão e, quando há endereço próprio, o botão com área clicável */
+  const bL = 66, bX = W - M - bL, bY = 279.5, bA = 13, lf = temBotao ? bX - M - 6 : CW;
   const frase = d.chegou ? "No ritmo de hoje, você passa da sua vida global." : "Com " + brl(d.extraBRL) + " a mais por mês, você chega a 100% aos " + d.ret + ".";
-  doc.setFont("helvetica", "bold"); doc.setFontSize(10.5);
-  txt(frase, M, 284.6, { s: doc.getTextWidth(frase) > larguraFrase ? 9 : 10.5, b:true, c:C.branco });
-  txt("Refaça a conta em " + d.site, M, 290.6, { s:8, c:C.claro });
-  fundo(C.azul); doc.roundedRect(bX, bY, bL, bA, 6.5, 6.5, "F");
-  txt(d.ctaTexto, bX + 9, bY + 8.1, { s:10.5, b:true, c:C.branco });
-  const sX = bX + bL - 13, sY = bY + bA / 2;
-  traco(C.branco); doc.setLineWidth(0.55); doc.setLineCap("round");
-  doc.line(sX, sY, sX + 5.5, sY); doc.line(sX + 3.3, sY - 2.1, sX + 5.5, sY); doc.line(sX + 3.3, sY + 2.1, sX + 5.5, sY);
-  doc.link(bX, bY, bL, bA, { url: d.ctaUrl });
+  caber(frase, M, 284, { f:"forte", s:10.5, c:C.papel, w:lf, min:8 });
+  const refaz = "Refaça a conta em " + d.site;
+  caber(refaz, M, 290.5, { s:8, c:C.apoioT, w:lf, min:7 });
+  if (temBotao){
+    fundo(C.papel); doc.roundedRect(bX, bY, bL, bA, 1.2, 1.2, "F");
+    txt(d.ctaTexto, bX + 8, bY + 8, { f:"forte", s:9.5, c:C.tinta });
+    const sX = bX + bL - 13, sY = bY + bA / 2;
+    traco(C.tinta); doc.setLineWidth(0.5); doc.setLineCap("round");
+    doc.line(sX, sY, sX + 5.5, sY); doc.line(sX + 3.3, sY - 2.1, sX + 5.5, sY); doc.line(sX + 3.3, sY + 2.1, sX + 5.5, sY);
+    doc.setLineCap("butt");
+    doc.link(bX, bY, bL, bA, { url: d.ctaUrl });
+  } else if (d.ctaUrl){
+    doc.link(M, 286.6, Math.min(lf, larg(refaz, "texto", 8)), 5, { url: d.ctaUrl });   // sem botão, o próprio endereço leva ao site
+  }
 }
 /* PDF-FIM */
 
@@ -1983,7 +2130,7 @@ function carregarJsPDF(){
     const sc = document.createElement("script");
     sc.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
     sc.integrity = "sha384-JcnsjUPPylna1s1fvi1u12X5qjY5OL56iySh75FdtrwhO/SWXgMjoVqcKyIIWOLk"; sc.crossOrigin = "anonymous";
-    sc.onload = ok; sc.onerror = () => { carregandoPDF = null; falha(new Error("a biblioteca de PDF não carregou")); };
+    sc.onload = () => { const f = document.createElement("script"); f.src = "pdf-fontes.js"; f.onload = f.onerror = ok; document.head.appendChild(f); }; sc.onerror = () => { carregandoPDF = null; falha(new Error("a biblioteca de PDF não carregou")); };
     document.head.appendChild(sc);
   });
   return carregandoPDF;
@@ -2081,7 +2228,7 @@ function fecharDlg(){
   dlg.classList.add("saindo"); clearTimeout(tFechar); tFechar = setTimeout(fecha, 200);   // espera a folha descer antes de fechar
 }
 dlg.addEventListener("click", e => { if (e.target === dlg) fecharDlg(); });
-const dlgTopo = rotulo => `<div class="dlg-topo"><span class="olho">${rotulo}</span><button type="button" class="dlg-x" data-fechar aria-label="Fechar">×</button></div>`;
+const dlgTopo = rotulo => `<div class="dlg-topo"><span class="olho">${rotulo}</span><button type="button" class="dlg-x" data-fechar aria-label="Fechar">${FECHAR}</button></div>`;
 const avisoEnvio = r => r === "demo" ? `<p class="demo">Modo demonstração: o contato não foi enviado. Configure o endereço da planilha (ENDPOINT) na página.</p>` : r === "pendente" ? `<p class="demo">A conexão falhou ao salvar seu contato. Vamos tentar de novo na próxima visita.</p>` : "";
 
 function abrirLista(jovem){
@@ -2096,7 +2243,7 @@ function abrirLista(jovem){
     <form id="f-lista" novalidate>
       ${camposContato("l-", { whatsOpcional:true })}
       ${campoAceite("l-", TEXTO_ACEITE)}
-      <button type="submit" class="sim-btn" id="l-enviar">${jovem ? "Quero ser avisado" : "Entrar na lista"}</button>
+      <div class="acao-fixa"><button type="submit" class="sim-btn" id="l-enviar">${jovem ? "Quero ser avisado" : "Entrar na lista"}</button></div>
     </form>`);
   ligarForm("l-", { whatsOpcional:true }, async () => {
     const p = payload(simulacaoCompleta() ? "lista + simulador" : "lista de espera");
@@ -2107,6 +2254,7 @@ function abrirLista(jovem){
     abrirDlg(`
       ${dlgTopo(jovem ? "Jovem 2050" : "Projeto 2050")}
       <h3 id="dlg-t">Pronto, ${esc(nome)}. Você está na lista.</h3>
+      <div class="fio vis" data-fio="fim" aria-hidden="true"><svg viewBox="0 0 1000 40" preserveAspectRatio="none"><path pathLength="1" d="M0,20 C333,4 667,36 1000,20"/></svg></div>
       <p>Avisamos você assim que as inscrições abrirem.${simulacaoCompleta() ? "" : " Enquanto isso, descubra a sua vida global: onde você quer viver e quanto custa, em dólar. São sete perguntas."}</p>
       ${avisoEnvio(r)}
       ${CONFIG.WHATSAPP_GRUPO ? `<a class="sim-btn claro" href="${esc(CONFIG.WHATSAPP_GRUPO)}" target="_blank" rel="noopener">Entrar no grupo do lançamento</a>` : ""}
@@ -2127,7 +2275,7 @@ function abrirConsultoria(){
       <div class="campo"><label for="k-faixa">Patrimônio investido hoje</label><select id="k-faixa" aria-describedby="k-faixa-erro"><option value="">Escolha uma faixa</option>${FAIXAS_PATRIMONIO.map(f => `<option${f === sugerida ? " selected" : ""}>${f}</option>`).join("")}</select><span class="erro" id="k-faixa-erro" role="alert"></span></div>
       <div class="campo"><label for="k-msg">O que você quer resolver? (opcional)</label><textarea id="k-msg" maxlength="500"></textarea></div>
       ${campoAceite("k-", TEXTO_ACEITE_CONS)}
-      <button type="submit" class="sim-btn" id="k-enviar">Enviar aplicação</button>
+      <div class="acao-fixa"><button type="submit" class="sim-btn" id="k-enviar">Enviar aplicação</button></div>
     </form>`);
   const faixa = $("#k-faixa");
   faixa.addEventListener("change", () => { faixa.setAttribute("aria-invalid", "false"); $("#k-faixa-erro").textContent = ""; });
@@ -2140,6 +2288,7 @@ function abrirConsultoria(){
     abrirDlg(`
       ${dlgTopo("Consultoria Global")}
       <h3 id="dlg-t">Aplicação recebida, ${esc(contato.nome.split(" ")[0])}.</h3>
+      <div class="fio vis" data-fio="fim" aria-hidden="true"><svg viewBox="0 0 1000 40" preserveAspectRatio="none"><path pathLength="1" d="M0,20 C333,4 667,36 1000,20"/></svg></div>
       <p>O próximo passo é a entrevista individual. Entramos em contato pelo WhatsApp ou pelo e-mail que você informou.</p>
       ${avisoEnvio(r)}
       <button type="button" class="sim-btn" data-fechar>Fechar</button>`);
