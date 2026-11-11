@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Teste do relatório em PDF</title>
+<style>body{font:16px system-ui,sans-serif;margin:24px;max-width:640px}button{font:inherit;padding:10px 14px;margin:4px 8px 4px 0}</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha384-JcnsjUPPylna1s1fvi1u12X5qjY5OL56iySh75FdtrwhO/SWXgMjoVqcKyIIWOLk" crossorigin="anonymous"></script>
+<script>
+  /* ?semfontes=1 não carrega pdf-fontes.js, para ver o PDF com Times e Helvetica */
+  if (!/semfontes=1/.test(location.search)) document.write('<script src="pdf-fontes.js"><\/script>');
+</script>
+<script src="pdf-v2.js"></script>
+</head>
+<body>
+<h1>Relatório em PDF, v2</h1>
+<p id="estado">Escolha um caso.</p>
+<button data-caso="comum">Caso comum (ritmo de 41%)</button>
+<button data-caso="passou">Já passa da vida global</button>
+<button data-caso="longo">Nomes longos, 9 dígitos</button>
+<button data-caso="comum" data-botao="1">Comum, com botão de endereço próprio</button>
+<script>
+/* monta a série como a página: investido fixo, aportes e rendimento crescendo ao ano */
+function serie(age, anos, inv, ap, r){
+  const s = [];
+  for (let y = 1; y <= anos; y++){
+    const m = Math.pow(1 + r, y), fa = (m - 1) / r * 1; // aporte anual capitalizado
+    s.push({ idade: age + y, investido: inv, aportes: ap * 12 * y, rendimento: inv * (m - 1) + ap * 12 * fa - ap * 12 * y });
+  }
+  return s;
+}
+function monta(o){
+  const sr = serie(o.age, o.anos, o.inv, o.ap, 0.04), u = sr[sr.length - 1];
+  const proj = u.investido + u.aportes + u.rendimento;
+  return Object.assign({
+    nome: "Teste", data: "11/11/2026", lugarEm: "em Portugal", estadoEm: "em Santa Catarina",
+    custo: 12000, usdMes: 2304, cambioMes: 2222, numero: o.numero, numeroBRL: "R$ 3,1 milhões",
+    age: o.age, ret: o.age + o.anos, anos: o.anos, anoRenda: 2026 + o.anos, inv: o.inv, proj, falta: Math.max(0, o.numero - proj), ritmo: proj / o.numero, chegou: proj / o.numero >= 0.995, extraBRL: 3590,
+    serie: sr,
+    alavancas: [
+      { t: "Guardar R$ 500 a mais por mês", r: 0.49 }, { t: "Dar três anos a mais à estrada", r: 0.49 }, { t: "Trocar Portugal por Hungria", r: 0.48 }
+    ],
+    lugares: [{ nome: "Portugal", usd: 2304, sel: true }, { nome: "Espanha", usd: 2510 }, { nome: "Itália", usd: 2678 }, { nome: "Uruguai", usd: 2709 }, { nome: "Flórida (EUA)", usd: 4217 }],
+    site: "projeto2050.com", ctaTexto: "Abra sua conta global", ctaUrl: "https://projeto2050.com",
+    legal: "Simulação educativa, com hipóteses de retorno real de 4% ao ano em dólar, retirada de 0,4% ao mês e câmbio de R$ 5,40. Rendimento variável, não garantido. Não é recomendação de investimento. Nível de preços e poder de compra: Banco Mundial, Programa de Comparação Internacional (2024); médias nacionais."
+  }, o.d || {});
+}
+const CASOS = {
+  comum: () => monta({ age: 35, anos: 25, inv: 18519, ap: 370, numero: 576106 }),
+  passou: () => monta({ age: 40, anos: 15, inv: 250000, ap: 800, numero: 600000, d: {
+    numero: 600000, numeroBRL: "R$ 3,2 milhões", custo: 9000, usdMes: 1000, cambioMes: 1500, extraBRL: 0,
+    alavancas: [{ t: "Guardar R$ 500 a mais por mês", r: 1.19 }, { t: "Dar três anos a mais à estrada", r: 1.28 }, { t: "Trocar Portugal por Hungria", r: 1.22 }],
+    lugares: [{ nome: "Portugal", usd: 1000, sel: true }, { nome: "Espanha", usd: 1090 }, { nome: "Itália", usd: 1180 }, { nome: "Uruguai", usd: 1210 }, { nome: "Flórida (EUA)", usd: 1900 }] } }),
+  longo: () => monta({ age: 25, anos: 45, inv: 98765432, ap: 8000, numero: 987654321, d: {
+    nome: "Maria Fernanda", lugarEm: "na Carolina do Norte, Estados Unidos", estadoEm: "no Mato Grosso do Sul",
+    custo: 123456789, usdMes: 987654321, cambioMes: 612345678, numeroBRL: "R$ 5,3 bilhões", extraBRL: 123456789,
+    alavancas: [{ t: "Guardar R$ 123.456.789 a mais por mês", r: 0.52 }, { t: "Dar três anos a mais à estrada", r: 0.49 }, { t: "Trocar Carolina do Norte (EUA) por Emirados Árabes Unidos", r: 0.55 }],
+    lugares: [{ nome: "Hungria", usd: 612345678 }, { nome: "Distrito de Columbia (EUA)", usd: 770000000 }, { nome: "Carolina do Norte (EUA)", usd: 987654321, sel: true }, { nome: "Emirados Árabes Unidos", usd: 999999999 }, { nome: "Flórida (EUA)", usd: 1100000000 }] } })
+};
+/* devolve o PDF como dataurl (para o teste automático) e guarda o último em window.ultimo */
+window.gerar = function(caso, opcoes){
+  const d = CASOS[caso](); if (opcoes && opcoes.botao) d.ctaUrl = "https://conta.exemplo.com/abrir";
+  const doc = new window.jspdf.jsPDF({ unit: "mm", format: "a4" });
+  desenharRelatorio(doc, d);
+  doc.setProperties({ title: "Sua vida global · Projeto 2050", author: "Projeto 2050" });
+  window.ultimo = doc; return doc.output("datauristring");
+};
+document.querySelectorAll("button").forEach(b => b.onclick = () => {
+  const c = b.dataset.caso; const doc = (window.gerar(c, { botao: !!b.dataset.botao }), window.ultimo);
+  document.getElementById("estado").textContent = "Gerado: " + c; doc.save("teste-" + c + ".pdf");
+});
+</script>
+</body>
+</html>
