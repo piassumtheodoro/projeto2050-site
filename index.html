@@ -178,6 +178,10 @@ html:not(.mov) .paises ul + ul{display:none}
 .chip{min-height:46px;padding:6px 6px;border:1px solid var(--pline);border-radius:999px;background:transparent;font-size:clamp(13.5px,4.4cqi,15px);font-weight:600;line-height:1.15;color:var(--pink);transition:background .15s ease,color .15s ease}
 .chip:hover{border-color:var(--pink)}
 .chip[aria-pressed="true"]{background:var(--pink);border-color:var(--pink);color:#fff}
+.chips{position:relative}
+.chips-marca{position:absolute;top:0;left:0;border-radius:999px;background:var(--pink);pointer-events:none}
+.chips.com-marca .chip{position:relative}
+.chips.com-marca .chip[aria-pressed="true"]{background:transparent;border-color:transparent}
 .campo{display:grid;gap:6px}
 .campo label{font-size:14px;font-weight:600}
 .campo input,.campo select,.campo textarea{width:100%;min-height:52px;padding:0 16px;border:1px solid var(--pline);border-radius:12px;background:#fff;color:var(--pink);font-size:16px}
@@ -234,6 +238,15 @@ html:not(.mov) .paises ul + ul{display:none}
 .calc li.on{color:var(--pink)}
 .calc li::before{content:"";flex:none;width:9px;height:9px;border-radius:50%;background:currentColor}
 .vida-n{font-family:var(--display);font-weight:400;font-size:clamp(40px,15cqi,92px);line-height:.95;letter-spacing:.005em;white-space:nowrap}
+.vbarras{display:grid;gap:14px}
+.vbar{height:22px;border-radius:4px;background:rgba(255,255,255,.4);transform-origin:left}
+.vbar.forte{background:#fff}
+.mapa{margin:0;padding:10px;border-radius:16px;background:#090909}
+.mapa svg{display:block;width:100%;height:auto}
+.mapa-pts{fill:none;stroke:#3b3b3b;stroke-width:.62;stroke-linecap:round}
+.mapa-arco{fill:none;stroke:#4d7bff;stroke-width:.7;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:0}
+.mapa-o,.mapa-d{fill:#4d7bff}
+.mapa-d{transform-box:fill-box;transform-origin:center}
 .vida-l{display:grid;border-bottom:1px solid rgba(255,255,255,.34)}
 .vida-l div{display:grid;gap:3px;padding:13px 0;border-top:1px solid rgba(255,255,255,.34)}
 .vida-l p{font-size:15px;line-height:1.45}
@@ -305,6 +318,7 @@ html:not(.mov) .paises ul + ul{display:none}
 .vidro .grande .vazio{color:rgba(255,255,255,.3)}
 .vidro .chip{background:rgba(255,255,255,.05)}
 .vidro .chip[aria-pressed="true"]{background:#f9f9f9;border-color:#f9f9f9;color:#090909}
+.vidro .chips-marca{background:#f9f9f9}
 .vidro .campo input,.vidro .campo select,.vidro .campo textarea{background-color:rgba(255,255,255,.08);color:#f9f9f9}
 .vidro .campo input::placeholder,.vidro .campo textarea::placeholder{color:rgba(255,255,255,.45)}
 .vidro .campo select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%23f9f9f9' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")}
@@ -514,17 +528,24 @@ html:not(.mov) .btn,html:not(.mov) .btn .bola,html:not(.mov) .fixo{transition:no
 /* simulador: troca de pergunta, progresso, barras e resultado */
 .mov .sim{transition:background-color .3s ease,color .3s ease}
 .mov .sim.ajusta{overflow:hidden;transition:height .32s var(--ease),background-color .3s ease,color .3s ease}
-.mov .entra{animation:entra .28s var(--ease) backwards}
-.mov .entra-volta{animation:entra-volta .28s var(--ease) backwards}
+.mov .entra{animation:entra var(--dur-c) var(--ease) backwards}
+.mov .entra-volta{animation:entra-volta var(--dur-c) var(--ease) backwards}
 .mov .prog i.on.novo{position:relative;overflow:hidden;background:var(--pline)}
 .mov .prog i.on.novo::after{content:"";position:absolute;inset:0;background:var(--blue);transform-origin:left;animation:enche .45s var(--ease) .1s backwards}
 .mov .barra{transform-origin:left;animation:enche .55s var(--ease) .2s backwards}
 .mov .barra.forte{animation-duration:.8s;animation-delay:.55s}
-.mov .revela > :nth-child(n+3){animation:surge .4s ease backwards}
-.mov .revela > :nth-child(3){animation-delay:.55s}
-.mov .revela > :nth-child(4){animation-delay:.7s}
-.mov .revela > :nth-child(5){animation-delay:.85s}
-.mov .revela > :nth-child(6){animation-delay:1s}
+/* resultado: depois do número, cada bloco e cada linha do cálculo entram um a um (o atraso --d vem do script) */
+.mov .revela > :not(.olho):not(.vida-n):not(.vida-l),.mov .revela .vida-l > div{animation:surge var(--dur-c) var(--ease) var(--d,0s) backwards}
+.mov .revela .vbar{animation:enche var(--dur-l) var(--ease) calc(var(--d,0s) + 150ms) backwards}
+.mov .revela .vbarras > div:nth-child(2) .vbar{animation-delay:calc(var(--d,0s) + 150ms + var(--passo))}
+@keyframes arco{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+@keyframes ponto{from{transform:scale(0)}}
+.mov .revela .mapa-arco{animation:arco var(--dur-l) var(--ease) calc(var(--d,0s) + 200ms) both}
+.mov .revela .mapa-d{animation:ponto var(--dur-c) var(--ease) calc(var(--d,0s) + 800ms) backwards}
+/* opções que funcionam como abas: um marcador desliza até a escolhida */
+.mov .chips-marca.anda{transition:transform var(--dur-c) var(--ease)}
+.mov .chips.com-marca .chip{transition:color var(--dur-c) var(--ease),border-color .15s ease,transform .1s ease}
+.mov .chips.com-marca .chip.espera[aria-pressed="true"]{color:var(--pink)}
 .mov .primeira .pilha i{transform-origin:left;animation:enche .6s var(--ease) .15s backwards}
 .mov .primeira .pilha i:nth-child(2){animation-delay:.35s}
 .mov .primeira .pilha i:nth-child(3){animation-delay:.55s}
@@ -1005,6 +1026,18 @@ const PAISES = {
   AUS:["Austrália","na",0.8959,"oceania"], NZL:["Nova Zelândia","na",0.8860,"oceania"],
   ZAF:["África do Sul","na",0.4055,"africa"], MAR:["Marrocos","no",0.3988,"africa"], EGY:["Egito","no",0.1748,"africa"], KEN:["Quênia","no",0.3210,"africa"], AGO:["Angola","em",0.2635,"africa"], MOZ:["Moçambique","em",0.3851,"africa"], CPV:["Cabo Verde","em",0.4638,"africa"], MUS:["Maurício","em",0.3766,"africa"]
 };
+/* Latitude e longitude aproximadas de cada país (centro ou capital), para o mapa do resultado. Estados americanos usam o ponto dos EUA. */
+const COORD = {
+  USA:[39,-98], CAN:[56,-106], MEX:[23,-102], PAN:[9,-80], CRI:[10,-84], DOM:[18.8,-70.5],
+  ARG:[-34,-64], CHL:[-33.5,-70.7], URY:[-33,-56], PRY:[-23.4,-58.4], COL:[4.6,-74], PER:[-12,-77], ECU:[-1.8,-78.2], BOL:[-16.5,-68],
+  PRT:[39.5,-8], ESP:[40.4,-3.7], ITA:[42,12.5], FRA:[46.6,2.3], DEU:[51,10.4], GBR:[52.5,-1.5], IRL:[53.3,-8], NLD:[52.2,5.3], BEL:[50.6,4.5], CHE:[46.8,8.2], AUT:[47.5,14.5], SWE:[62,15], NOR:[61,9], DNK:[56,10], FIN:[62,26], GRC:[39,22], POL:[52,19], CZE:[49.8,15.5], HUN:[47.2,19.5], HRV:[45.1,15.2], ROU:[45.9,25], LUX:[49.8,6.1], ISL:[64.9,-18.6], EST:[58.6,25], SVN:[46.1,14.9], MLT:[35.9,14.4],
+  JPN:[36,138], KOR:[36.5,127.8], CHN:[35,103], SGP:[1.35,103.8], THA:[15,101], VNM:[16,107.8], IDN:[-2.5,118], MYS:[4.2,102], PHL:[12.9,122], IND:[21,78], ARE:[24,54], ISR:[31.5,34.9], TUR:[39,35], QAT:[25.3,51.2], SAU:[24,45],
+  AUS:[-25,134], NZL:[-41.5,172.5],
+  ZAF:[-29,24], MAR:[31.8,-7], EGY:[26.8,30.8], KEN:[0,37.9], AGO:[-12.3,17.5], MOZ:[-18.7,35.5], CPV:[15.1,-23.6], MUS:[-20.3,57.6]
+};
+const COORD_BR = [-15.8,-47.9];
+/* Terra firme numa grade de 3 graus (120 × 45, de 78°N a 54°S), um bit por ponto. Gerada do contorno de terra do Natural Earth 1:110m (domínio público). */
+const MAPA_TERRA = "AAACMc//+ADQAAAEAAAAAAADj4B/+AAAAQB/wDQAAAA/s+A/8AAABhf//jwAB/37Rbgf4AA/ANf////37////ho/DgD/P///////F////AgcAAPf////////D+f/8DoAAAPD//////8wAYD//D8AACCf/////8DAAAB//7+AAFH///////CAAAB///8AADf///////AAAAA///zAAB////////AAAAAf//4AAA999////9AAAAAf//AAAHi5N////gAAAAAf/+AAAHBX8///4gAAAAAf/+AAAA8A////8mAAAAAH/8AAAH8A////8QAAAAAH/YAAAH//9///+AAAAAAD8AAAAf/++///8AAAAAAA4AAAAf//fj//6AAAAAAAciAAA///fx+fAAAAAAAAPiAAAf//vg8eCAAAAAAABwAAA///uAYHCAAAAAAAAQAAAf//wAYDAAAAAAAAAN8AAP//+AAAAAAAAAAAAD+AAPP/8AAEAAAAAAAAAD/gAAH/8AAIYAAAAAAAAH/gAAH/wAAG4AAAAAAAAH/+AAH/gAACaOIAAAAAAH//AAD/gAABADgAAAAAAD//AAD/gAAAABQAAAAAAD/+AAB/gAAAANAAAAAAAB/+AAD/yAAAA5AAAAAAAA/+AAD/EAAAB/gBAAAAAAf8AAD/EAAAH/wAAAAAAAf4AAB/EAAAP/4AAAAAAA/wAAB+AAAAP/4AAAAAAA/gAAA8AAAAP/4AAAAAAA/AAAA4AAAAGH4AAAAAAA+AAAAAAAAAADwAAAAAAA4AAAAAAAAAAAACAAAAABwAAAAAAAAAAAgEAAAAABwAAAAAAAAAAAAIAAAAABwAAAAAAAAAAAAAAAAAABgAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAA";
 const CONTINENTES = [["norte","América do Norte"],["sul","América do Sul"],["europa","Europa"],["asia","Ásia"],["oceania","Oceania"],["africa","África"]];
 const EM_CONT = { norte:"Na América do Norte", sul:"Na América do Sul", europa:"Na Europa", asia:"Na Ásia", oceania:"Na Oceania", africa:"Na África" };
 const DESTINOS_RAPIDOS = ["USA","PRT","ESP","ITA","CAN","URY"];
@@ -1149,12 +1182,32 @@ function payload(modo, textoAceite){
   return p;
 }
 
+/* ---------- mapa-múndi de pontos: Brasil → destino ---------- */
+let mapaPontos = null;
+function pontosDoMapa(){
+  if (mapaPontos) return mapaPontos;
+  const bin = atob(MAPA_TERRA); let d = "";
+  for (let i = 0; i < 120 * 45; i++) if (bin.charCodeAt(i >> 3) & (128 >> (i & 7))) d += `M${i % 120 + .5} ${Math.floor(i / 120) + .5}h0`;
+  return (mapaPontos = d);
+}
+const noMapa = ([lat, lon]) => [(lon + 180) / 3, (78 - lat) / 3 + .5];
+function mapaSvg(pais){
+  const [x1, y1] = noMapa(COORD_BR), [x2, y2] = noMapa(COORD[pais] || COORD.USA);
+  const dist = Math.hypot(x2 - x1, y2 - y1), cx = (x1 + x2) / 2, cy = Math.max(1, (y1 + y2) / 2 - dist * .35);
+  const f = v => v.toFixed(2);
+  return `<figure class="mapa" aria-hidden="true"><svg viewBox="0 0 120 45" focusable="false">
+    <path class="mapa-pts" d="${pontosDoMapa()}"/>
+    <path class="mapa-arco" pathLength="1" d="M${f(x1)} ${f(y1)}Q${f(cx)} ${f(cy)} ${f(x2)} ${f(y2)}"/>
+    <circle class="mapa-o" cx="${f(x1)}" cy="${f(y1)}" r=".9"/><circle class="mapa-d" cx="${f(x2)}" cy="${f(y2)}" r="1.1"/>
+  </svg></figure>`;
+}
+
 /* ---------- simulador: navegação ---------- */
 const raiz = $("#sim"), topo = $("#sim-top"), corpo = $("#sim-corpo"), acao = $("#sim-acao");
 const PROG = { onde:1, custo:2, chute:3, resposta:3, destino:4, estrada:5, partida:6, aporte:7 };
 const ANTERIOR = { custo:"onde", chute:"custo", resposta:"chute", destino:"resposta", estrada:"destino", partida:"estrada", aporte:"partida", vida:"aporte", contato:"vida", plano:"vida" };
 const AZUL = { resposta:true, vida:true };
-let atual = "onde";
+let atual = "onde", telaDesenhada = null;
 function faltando(passo){
   const precisa = ["onde","custo","chute","resposta","destino","estrada","partida","aporte","calculando","vida","contato","plano"];
   const pos = precisa.indexOf(passo); if (pos < 0) return null;
@@ -1219,6 +1272,9 @@ function ir(passo){
 function render(mover, sentido){
   const hAntes = raiz.getBoundingClientRect().height, nAntes = Number(raiz.dataset.n || 0);
   clearTimeout(tAltura); raiz.classList.remove("ajusta"); raiz.style.height = "";
+  // onde estava o marcador de cada grupo de opções, para ele deslizar até a nova escolha
+  const marcasAntes = telaDesenhada === atual ? $$(".chips", corpo).map(c => { const b = $('.chip[aria-pressed="true"]', c); return b ? [b.offsetLeft, b.offsetTop] : null; }) : [];
+  telaDesenhada = atual;
   corpo.className = "sim-corpo"; acao.className = "sim-acao";
   const tela = TELAS[atual]();
   raiz.dataset.tom = AZUL[atual] ? "azul" : "papel";
@@ -1232,6 +1288,7 @@ function render(mover, sentido){
   acao.innerHTML = tela.acao || "";
   acao.hidden = !tela.acao;
   if (tela.montar) tela.montar();
+  marcadores(marcasAntes);
   if (!reduz){
     // o cartão muda de altura aos poucos, e a pergunta nova entra pelo lado para onde a pessoa está indo
     const hDepois = raiz.getBoundingClientRect().height;
@@ -1247,6 +1304,24 @@ function render(mover, sentido){
     if (r.top < alturaTopo || r.top > window.innerHeight * 0.45) window.scrollTo({ top: window.scrollY + r.top - alturaTopo - 12, behavior: reduz ? "auto" : "smooth" });
     const h = $(".sim-t", corpo); if (h) h.focus({ preventScroll:true });
   }
+}
+// Opções que funcionam como abas (um valor por grupo): um marcador fica atrás da escolhida e desliza quando ela muda.
+function marcadores(antes){
+  if (reduz) return;
+  $$(".chips", corpo).forEach((c, i) => {
+    const b = $('.chip[aria-pressed="true"]', c);
+    if (!b) return;
+    const m = document.createElement("span");
+    m.className = "chips-marca"; m.setAttribute("aria-hidden", "true");
+    m.style.width = b.offsetWidth + "px"; m.style.height = b.offsetHeight + "px";
+    c.classList.add("com-marca"); c.prepend(m);
+    const de = antes[i], vai = `translate(${b.offsetLeft}px,${b.offsetTop}px)`;
+    if (de && (de[0] !== b.offsetLeft || de[1] !== b.offsetTop)){
+      m.style.transform = `translate(${de[0]}px,${de[1]}px)`; b.classList.add("espera");
+      void m.offsetWidth; m.classList.add("anda");
+      requestAnimationFrame(() => { m.style.transform = vai; b.classList.remove("espera"); });
+    } else m.style.transform = vai;
+  });
 }
 const btnSeguir = (ok, rotulo, destino) => `<button type="button" class="sim-btn" id="btn-seguir" data-ir="${destino}" ${ok ? "" : "disabled"}>${rotulo || "Continuar"}</button>`;
 function chips(opcoes, valor, outro, extra){
@@ -1545,6 +1620,11 @@ const TELAS = {
         <h3 class="sim-t vida-n num" tabindex="-1" aria-label="${usd(k.numero)}">${usd(k.numero)}</h3>
         <p class="sim-s num">Cerca de ${brlCurto(k.numero * CONFIG.CAMBIO)} no câmbio de hoje.</p>
         <p class="sim-s" style="font-size:19px;font-weight:600;line-height:1.35">É o patrimônio em dólar que paga a sua vida ${esc(lugarEm(s.pais, s.st))}, para viver de renda aos ${s.ret}, em ${k.anoRenda}.</p>
+        <div class="vbarras" aria-hidden="true">
+          <div><div class="barra-l"><span>${esc(lugarNome(s.pais, s.st))}</span><b class="num">${usd(k.numero)}</b></div><div class="vbar forte" style="width:${(k.numero / Math.max(k.numero, k.numeroBrasil) * 100).toFixed(1)}%"></div></div>
+          <div><div class="barra-l"><span>Se você ficar no Brasil</span><b class="num">${usd(k.numeroBrasil)}</b></div><div class="vbar" style="width:${(k.numeroBrasil / Math.max(k.numero, k.numeroBrasil) * 100).toFixed(1)}%"></div></div>
+        </div>
+        ${mapaSvg(s.pais)}
         <div class="vida-l">
           <div><span class="olho">Poder de compra</span><p class="num">${brl(s.custo)} ${esc(emBR(s.uf))} equivalem a ${usd(k.mes)} por mês ${esc(lugarEm(s.pais, s.st))}.</p></div>
           <div><span class="olho">Regra de retirada</span><p class="num">${usd(k.mes)} ÷ ${pctCfg(CONFIG.RETIRADA_MES)} ao mês = ${usd(k.numero)}.</p></div>
@@ -1557,7 +1637,12 @@ const TELAS = {
         animarVida = false;
         if (reduz) return;
         corpo.classList.add("revela");
-        contar($(".vida-n", corpo), 0, k.numero, 1100, usd);
+        revelaNumero($(".vida-n", corpo), k.numero, usd);
+        let d = 450;   // o resto entra em sequência, 70 ms entre um e outro
+        Array.from(corpo.children).forEach(el => {
+          if (el.matches(".olho, .vida-n")) return;
+          (el.classList.contains("vida-l") ? Array.from(el.children) : [el]).forEach(x => { x.style.setProperty("--d", d + "ms"); d += 70; });
+        });
       }
     };
   },
