@@ -1,0 +1,5 @@
+# O clasp só envia ao Apps Script os arquivos do receptor. Testes, ferramentas e o LEIA-ME ficam só no repositório.
+**/**
+!appsscript.json
+!Código.gs
+!Pdf.gs
