@@ -1235,7 +1235,7 @@ d.classList.add("js");if(!r)d.classList.add("mov");})();
 
 /* ===== CONFIGURAÇÃO: edite só este bloco ===== */
 const CONFIG = {
-  ENDPOINT: "",            // URL do App da Web do Google Apps Script (termina em /exec). É o mesmo receptor do simulador (apps-script.gs). Vazio = modo demonstração: nada é salvo.
+  ENDPOINT: "",            // URL do App da Web do Google Apps Script (termina em /exec). É o mesmo receptor do simulador (apps-script.gs). Vazio = nada é salvo nem enviado por e-mail; o visitante não vê aviso, só o console do navegador registra.
   ENVIA_EMAIL: true,       // deixe igual a ENVIAR_RESULTADO no Apps Script. Com false, a página deixa de prometer o relatório por e-mail.
   WHATSAPP_GRUPO: "",      // link do grupo ou comunidade do lançamento (opcional)
   CONSULTORIA_URL: "",     // se preenchido, "Quero aplicar" abre este link (formulário externo, WhatsApp ou agenda) em vez do formulário da página
@@ -1373,7 +1373,7 @@ function evento(nome, dados, custom){ try{ if (window.fbq) fbq(custom ? 'trackCu
 const urlBase = () => String(location.href).split(/[?#]/)[0];
 const novoId = () => "S" + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2,6).toUpperCase();
 async function enviar(p){
-  if (!CONFIG.ENDPOINT) return "demo";
+  if (!CONFIG.ENDPOINT){ try{ console.warn("Projeto 2050: ENDPOINT vazio em CONFIG. O contato não foi salvo."); }catch(e){} return "demo"; }
   try{
     await fetch(CONFIG.ENDPOINT, { method:"POST", mode:"no-cors", keepalive:true, headers:{ "Content-Type":"text/plain;charset=utf-8" }, body: JSON.stringify(p) });
     return "ok";
@@ -1874,8 +1874,7 @@ const TELAS = {
         ${algum ? `<div class="ok${combAnterior === null ? " nova" : ""}" role="status"><span>Com as alavancas escolhidas, você chega a <b class="num" id="p-comb">${pct(combinado)}</b> da sua vida global.</span>
           <div class="ok-barra" aria-hidden="true"><i id="p-comb-b" style="width:${Math.min(1, combinado) * 100}%"></i>${k.ritmo < 1 ? `<em style="left:${k.ritmo * 100}%"></em>` : ""}</div></div>` : ""}
         <div class="nota"><span class="olho">E se você ficar no Brasil</span><span class="num">${k.numeroBrasil < k.numero ? `Só pelo câmbio, a sua vida global cai para ${usd(k.numeroBrasil)}, e o ritmo de hoje cobre ${pct(k.ritmoBrasil)} dela. A diferença entre os dois valores é a folga para viver onde quiser.` : `Só pelo câmbio, ficar no Brasil pede ${usd(k.numeroBrasil)}, e o ritmo de hoje cobre ${pct(k.ritmoBrasil)} disso. Medida em dólar, a sua vida ${esc(lugarEm(s.pais, s.st))} sai mais barata do que aqui.`}</span></div>
-        ${envio === "demo" ? `<p class="demo">Modo demonstração: o contato não foi enviado. Configure o endereço da planilha (ENDPOINT) na página para começar a receber leads.</p>` : ""}
-        ${envio === "pendente" ? `<p class="demo">A conexão falhou ao salvar seu contato. Vamos tentar de novo na próxima visita.</p>` : ""}
+        ${envio === "pendente" ? `<p class="demo">Não conseguimos registrar seu contato agora. Tentamos de novo na sua próxima visita; o relatório completo está nesta tela.</p>` : ""}
         <button type="button" class="sim-btn" id="btn-pdf">Baixar meu relatório em PDF</button>
         <div class="prox"><span class="olho">Próximo passo</span>${perfilConsultoria ? cartaoCons + cartao2050 : cartao2050 + cartaoCons}</div>
         <div style="display:grid;gap:4px;justify-items:center">
@@ -2270,7 +2269,7 @@ function fecharDlg(){
 }
 dlg.addEventListener("click", e => { if (e.target === dlg) fecharDlg(); });
 const dlgTopo = rotulo => `<div class="dlg-topo"><span class="olho">${rotulo}</span><button type="button" class="dlg-x" data-fechar aria-label="Fechar">${FECHAR}</button></div>`;
-const avisoEnvio = r => r === "demo" ? `<p class="demo">Modo demonstração: o contato não foi enviado. Configure o endereço da planilha (ENDPOINT) na página.</p>` : r === "pendente" ? `<p class="demo">A conexão falhou ao salvar seu contato. Vamos tentar de novo na próxima visita.</p>` : "";
+const avisoEnvio = r => r === "pendente" ? `<p class="demo">Não conseguimos registrar seu contato agora. Tentamos de novo na sua próxima visita.</p>` : "";
 
 function abrirLista(jovem){
   const titulo = jovem ? "Avisamos quando o Jovem 2050 abrir." : "Entre na lista de espera.";
