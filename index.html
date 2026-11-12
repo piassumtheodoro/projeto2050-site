@@ -1637,7 +1637,7 @@ function render(mover, sentido){
 /* Enquanto a transição dura (até 0,45 s), a API tira do teste de acerto as partes fotografadas, e a onda sem a API esconde o que ainda
    não foi coberto pelo círculo: um toque nesse intervalo cairia no vazio. Por isso qualquer toque encerra a troca na hora
    (a tela nova já está pronta por baixo), e o clique que começou durante ela é refeito no elemento que está sob o dedo.
-   Nenhum clique espera a animação. O giro da roda também encerra a transição, para a imagem não ficar parada com a página rolando. */
+   Nenhum clique espera a animação. O giro da roda e as teclas também encerram a transição, para a imagem não ficar parada com a página rolando. */
 if (!reduz){
   let toqueNaTroca = false;
   document.addEventListener("pointerdown", () => {
@@ -1646,15 +1646,18 @@ if (!reduz){
     if (transicao) transicao.skipTransition();
     if (naOnda) fimOnda();
   }, true);
+  document.addEventListener("pointercancel", () => { toqueNaTroca = false; }, true);   // o toque virou rolagem: não há clique para refazer
   window.addEventListener("wheel", () => { if (transicao) transicao.skipTransition(); }, { passive:true });
+  document.addEventListener("keydown", () => { if (transicao) transicao.skipTransition(); }, true);
   document.addEventListener("click", e => {
     const refaz = toqueNaTroca; toqueNaTroca = false;
-    if (!refaz || !e.isTrusted) return;
+    if (!refaz || !e.isTrusted || !e.detail) return;                      // só o clique de ponteiro: o do teclado (detail 0) já chega ao elemento certo
     const alvo = document.elementFromPoint(e.clientX, e.clientY);
     if (!alvo || alvo === e.target || alvo.contains(e.target)) return;   // o clique já acertou o elemento certo
     e.stopPropagation(); e.preventDefault();
     const foco = alvo.closest("input,select,textarea,button,a[href],summary,[tabindex]"); if (foco) foco.focus({ preventScroll:true });
     alvo.dispatchEvent(new MouseEvent("click", { bubbles:true, cancelable:true, composed:true, view:window, clientX:e.clientX, clientY:e.clientY }));
+    if (foco && foco.tagName === "SELECT" && foco.showPicker){ try { foco.showPicker(); } catch (err) {} }   // a lista do <select> não abre com clique refeito: pede-se ao navegador
   }, true);
 }
 function pinta(mover, sentido, comVT, origemVT){
