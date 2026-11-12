@@ -202,7 +202,8 @@ section{position:relative}
 .menu a{display:inline-flex;align-items:flex-start;min-height:44px;padding-top:11px;font-size:15px;font-weight:500;text-decoration:none;color:var(--texto);text-underline-offset:6px;text-decoration-thickness:2px}
 .menu a:hover,.menu a:focus-visible{text-decoration-line:underline}
 .menu sup{margin-left:3px;font-family:var(--serifa);font-size:12px;line-height:1;color:var(--apoio)}
-@media (max-width:339px){ .topo .extra{display:none} .topo{gap:10px} }
+/* celular: o cabeçalho leva só a pílula. A ação fica com o botão do topo, a barra fixa e o botão do fecho, um de cada vez; o rótulo do botão não cabe ao lado da pílula abaixo de ~385px. */
+@media (max-width:759px){ .topo .btn.peq{display:none} }
 @media (min-width:760px){ .marca{font-size:15px} }
 @media (min-width:980px){ .menu{display:flex;align-items:center} }
 /* celular, ao rolar para baixo: fica só a pílula */
@@ -210,9 +211,7 @@ section{position:relative}
 .sem-topo .topo[data-fundo]{background-color:transparent;border-bottom-color:transparent}
 .sem-topo .topo.solido[data-fundo]{background-color:#0B0D0E;border-bottom-color:var(--filete)}   /* sobre o simulador a barra fica, para o título não aparecer ao lado da pílula */
 .sem-topo .topo .marca{pointer-events:auto}
-.sem-topo .topo .btn.peq{opacity:0;transform:translateY(-8px);pointer-events:none}
-.topo .btn.peq{transition:opacity var(--d-saida) var(--sai-suave),transform var(--d-saida) var(--sai-suave),background-color var(--d-estado) var(--dado),color var(--d-estado) var(--dado),scale var(--d-toque) var(--dado)}
-@media (min-width:760px){ .sem-topo .topo{background-color:#0B0D0E;pointer-events:auto} .sem-topo .topo[data-fundo]{background-color:#0B0D0E;border-bottom-color:var(--filete);pointer-events:auto} .sem-topo .topo[data-fundo="papel"]{background-color:#F4F5F6} .sem-topo .topo .btn.peq{opacity:1;transform:none;pointer-events:auto} }
+@media (min-width:760px){ .sem-topo .topo{background-color:#0B0D0E;pointer-events:auto} .sem-topo .topo[data-fundo]{background-color:#0B0D0E;border-bottom-color:var(--filete);pointer-events:auto} .sem-topo .topo[data-fundo="papel"]{background-color:#F4F5F6} }
 
 /* ---------- herói (tinta) ---------- */
 .hero{position:relative;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto auto minmax(220px,1fr);align-content:stretch;min-height:calc(100svh - var(--topo));padding:16px var(--lat) 0;overflow-x:clip}
@@ -920,7 +919,7 @@ d.classList.add("js");if(!r)d.classList.add("mov");})();
     <a href="#consultoria">Consultoria<sup>03</sup></a>
     <a href="#sobre">Sobre<sup>04</sup></a>
   </nav>
-  <a class="btn peq" href="#sim"><span>Simular<span class="extra"> grátis</span></span><svg class="seta" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+  <a class="btn peq" href="#sim"><span>Fazer a minha conta</span><svg class="seta" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
 </header>
 
 <main>
@@ -950,7 +949,7 @@ d.classList.add("js");if(!r)d.classList.add("mov");})();
       <p class="txt">Trocar dinheiro é uma coisa. Encher o mesmo carrinho de supermercado é outra. O câmbio só responde à primeira.</p>
       <p class="txt">Para planejar a sua liberdade até 2050, a régua é o que o dinheiro compra em cada lugar. O simulador faz essa conta para 66 países e devolve três coisas: um número, uma data e o caminho até eles.</p>
       <p class="txt forte">Faça a conta.</p>
-      <a class="btn" href="#sim"><span>Fazer meu planejamento global</span><svg class="seta" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      <a class="btn" href="#sim" id="cta-intro"><span>Fazer a minha conta</span><svg class="seta" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
       <p class="legal">Poder de compra: Banco Mundial, Programa de Comparação Internacional, 2024, via Our World in Data. Média nacional de cada país; capitais costumam custar mais. Câmbio de referência: <span data-ex="fx">R$&nbsp;5,40</span>.</p>
     </div>
     <div class="fio rev" data-fio="corre" data-onda="b" aria-hidden="true"><svg viewBox="0 0 1000 40" preserveAspectRatio="none"><path pathLength="1" d="M0,20 C333,36 667,4 1000,20"/></svg></div>
@@ -999,7 +998,7 @@ d.classList.add("js");if(!r)d.classList.add("mov");})();
         <div class="cartao-c">
           <h3>Simulador Sua vida global</h3>
           <p>Sete perguntas para descobrir quanto custa a sua vida em dólar, o patrimônio que paga essa vida e quanto guardar por mês.</p>
-          <div class="acao"><a class="link" href="#sim">Fazer a simulação<span aria-hidden="true"><svg class="seta" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a></div>
+          <div class="acao"><a class="link" href="#sim">Fazer a minha conta<span aria-hidden="true"><svg class="seta" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a></div>
         </div>
       </article>
       <article class="cartao clicavel rev">
@@ -2299,7 +2298,7 @@ function abrirLista(jovem){
       <p>Avisamos você assim que as inscrições abrirem.${simulacaoCompleta() ? "" : " Enquanto isso, descubra a sua vida global: onde você quer viver e quanto custa, em dólar. São sete perguntas."}</p>
       ${avisoEnvio(r)}
       ${CONFIG.WHATSAPP_GRUPO ? `<a class="sim-btn claro" href="${esc(CONFIG.WHATSAPP_GRUPO)}" target="_blank" rel="noopener">Entrar no grupo do lançamento</a>` : ""}
-      ${simulacaoCompleta() ? `<button type="button" class="sim-btn" data-fechar>Fechar</button>` : `<a class="sim-btn" href="#sim" data-fechar>Fazer a simulação</a>`}`);
+      ${simulacaoCompleta() ? `<button type="button" class="sim-btn" data-fechar>Fechar</button>` : `<a class="sim-btn" href="#sim" data-fechar>Fazer a minha conta</a>`}`);
     if (atual === "vida") render();
   });
 }
@@ -2397,9 +2396,11 @@ document.addEventListener("click", e => {
   if ("IntersectionObserver" in window){
     const io = new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting){ en.target.classList.add("vis"); io.unobserve(en.target); } }), { rootMargin:"0px 0px -8% 0px" });
     $$(".rev").forEach(el => io.observe(el));
-    const fixo = $("#fixo"); let heroVisivel = true, simVisivel = false, fimVisivel = false, fechoVisivel = false;
-    const pinta = () => fixo.classList.toggle("on", !heroVisivel && !simVisivel && !fimVisivel && !fechoVisivel);
+    // barra fixa (celular): só aparece quando nenhum outro botão com a mesma ação está na tela
+    const fixo = $("#fixo"); let heroVisivel = true, introVisivel = false, simVisivel = false, fimVisivel = false, fechoVisivel = false;
+    const pinta = () => fixo.classList.toggle("on", !heroVisivel && !introVisivel && !simVisivel && !fimVisivel && !fechoVisivel);
     new IntersectionObserver(es => { heroVisivel = es[0].isIntersecting; pinta(); }).observe($("#cta-hero"));
+    new IntersectionObserver(es => { introVisivel = es[0].isIntersecting; pinta(); }).observe($("#cta-intro"));
     new IntersectionObserver(es => { simVisivel = es[0].isIntersecting; pinta(); }).observe($("#simulador"));
     new IntersectionObserver(es => { fimVisivel = es[0].isIntersecting; pinta(); }).observe($("#contato"));
     new IntersectionObserver(es => { fechoVisivel = es[0].isIntersecting; pinta(); }).observe($("#fecho"));
