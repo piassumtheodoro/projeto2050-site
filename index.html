@@ -895,6 +895,19 @@ section{position:relative}
 .mov .primeira .pilha i:nth-child(3){animation-delay:.55s}
 .mov .ok.nova{animation:surge .3s ease backwards}
 .mov .ok-barra i{transition:width .5s var(--dado)}
+/* onda: do claro para o escuro (a resposta e o resultado), a tela nova aparece dentro de um círculo que cresce de onde a pessoa clicou.
+   --onda-x, --onda-y e --onda-r vêm do JS. O fantasma é a lâmina clara que fica por baixo enquanto a onda passa. */
+@keyframes onda{from{clip-path:circle(0 at var(--onda-x,50%) var(--onda-y,50%))}to{clip-path:circle(var(--onda-r,150%) at var(--onda-x,50%) var(--onda-y,50%))}}
+.sim.sim-fantasma{position:absolute;inset:0;z-index:0;min-height:0;padding:0;pointer-events:none}
+.mov .sim.onda{animation:onda var(--d-virada) var(--dado) both}
+/* com a onda, as barras, as linhas e o sublinhado da tela esperam a onda passar (.42s) */
+.mov .apos-onda .barra{animation-delay:.62s}
+.mov .apos-onda .barra.forte{animation-delay:.97s}
+.mov .revela.apos-onda > :nth-child(3){animation-delay:.97s}
+.mov .revela.apos-onda > :nth-child(4){animation-delay:1.12s}
+.mov .revela.apos-onda > :nth-child(5){animation-delay:1.27s}
+.mov .revela.apos-onda > :nth-child(6){animation-delay:1.42s}
+.mov .revela.apos-onda .vida-n .risco path{animation-delay:1.27s}
 /* resposta ao toque, aceite desenhado e erro */
 .mov .check input:checked + .cx svg path{transition:stroke-dashoffset .28s ease .05s}
 .mov .alav button.recem[aria-pressed="true"] .cx svg path{animation:desenha .28s ease .05s backwards}
@@ -1480,10 +1493,10 @@ const ORDEM = ["onde","custo","chute","resposta","destino","estrada","partida","
 let animarVida = false, animarPlano = false, tAltura = null, alavRecente = null, combAnterior = null;
 // Faz um número subir de um valor a outro; sem movimento, mostra o valor final direto.
 const celulas = t => String(t).replace(/\d/g, '<span class="dg">$&</span>');   // cada algarismo numa célula de largura fixa: o número não treme
-function contar(el, de, ate, ms, formato){
+function contar(el, de, ate, ms, formato, atraso){
   if (!el) return;
   if (reduz){ el.textContent = formato(ate); return; }
-  const ini = performance.now();
+  const ini = performance.now() + (atraso || 0);   // com atraso, o número espera parado no valor de partida
   (function passo(t){
     if (!el.isConnected) return;
     const p = Math.min(1, Math.max(0, (t - ini) / ms)), suave = 1 - Math.pow(1 - p, 3);
@@ -1499,12 +1512,33 @@ function ir(passo){
   salvar();
   render(true, ORDEM.indexOf(atual) < ORDEM.indexOf(de) ? -1 : 1);
 }
+/* onda: quando a lâmina passa do claro para o escuro (a resposta e o resultado), a cor nova inunda o cartão a partir de onde a pessoa clicou.
+   Só existe com movimento ligado. O número da tela só começa a contar depois que a onda passa (ATRASO_ONDA). */
+const ATRASO_ONDA = 420;
+let toque = null, tOnda = null, ondaAgora = false, animarResposta = false;
+raiz.addEventListener("click", e => { toque = { x:e.clientX, y:e.clientY, alvo:e.target, t:performance.now() }; }, true);
+function origemOnda(){
+  const r = raiz.getBoundingClientRect();
+  const centro = el => { const b = el.getBoundingClientRect(); return { x: b.left + b.width / 2 - r.left, y: b.top + b.height / 2 - r.top }; };
+  if (toque && performance.now() - toque.t < 600){
+    if (toque.x || toque.y) return { x: toque.x - r.left, y: toque.y - r.top };
+    if (toque.alvo && toque.alvo.isConnected) return centro(toque.alvo);   // pelo teclado o clique chega sem coordenadas: vale o centro do botão
+  }
+  const n = $("#calc-n");                                                   // o resultado chega sozinho, depois do cálculo: a onda sai do "100%"
+  return n ? centro(n) : { x: r.width / 2, y: Math.min(r.height, window.innerHeight) / 2 };
+}
+function fimOnda(){ clearTimeout(tOnda); raiz.classList.remove("onda"); const f = $(".sim-fantasma"); if (f) f.remove(); }
+
 function render(mover, sentido){
-  const hAntes = raiz.getBoundingClientRect().height, nAntes = Number(raiz.dataset.n || 0);
+  fimOnda();
+  const hAntes = raiz.getBoundingClientRect().height, nAntes = Number(raiz.dataset.n || 0), tomAntes = raiz.dataset.tom;
+  const origem = !reduz && mover ? origemOnda() : null;   // medida antes de a tela antiga sair
   clearTimeout(tAltura); raiz.classList.remove("ajusta"); raiz.style.height = "";
   corpo.className = "sim-corpo"; acao.className = "sim-acao";
   const tela = TELAS[atual]();
   raiz.dataset.tom = AZUL[atual] ? "azul" : "papel";
+  ondaAgora = !!origem && tomAntes === "papel" && raiz.dataset.tom === "azul";
+  if (ondaAgora) corpo.classList.add("apos-onda");        // atrasa as barras e as linhas da tela até a onda passar
   const n = PROG[atual];
   raiz.dataset.n = n || 0;
   topo.innerHTML =
@@ -1515,7 +1549,16 @@ function render(mover, sentido){
   acao.innerHTML = tela.acao || "";
   acao.hidden = !tela.acao;
   if (tela.montar) tela.montar();
-  if (!reduz){
+  if (ondaAgora){
+    // a tela nova aparece dentro de um círculo que cresce do ponto clicado até o canto mais distante da parte visível da lâmina;
+    // por baixo fica um fantasma claro, do tamanho da lâmina, que some quando a onda termina
+    const r = raiz.getBoundingClientRect(), doc = document.documentElement;
+    const cima = Math.max(0, -r.top), baixo = Math.min(r.height, window.innerHeight - r.top);
+    const raio = Math.hypot(Math.max(origem.x, r.width - origem.x), Math.max(origem.y - cima, baixo - origem.y, 0));
+    doc.style.setProperty("--onda-x", origem.x.toFixed(1) + "px"); doc.style.setProperty("--onda-y", origem.y.toFixed(1) + "px"); doc.style.setProperty("--onda-r", Math.ceil(raio + 2) + "px");
+    const f = document.createElement("i"); f.className = "sim sim-fantasma"; f.dataset.tom = "papel"; f.setAttribute("aria-hidden", "true"); raiz.before(f);
+    raiz.classList.add("onda"); tOnda = setTimeout(fimOnda, 480);
+  } else if (!reduz){
     // o cartão muda de altura aos poucos, e a pergunta nova entra pelo lado para onde a pessoa está indo
     const hDepois = raiz.getBoundingClientRect().height;
     if (hAntes > 0 && Math.abs(hDepois - hAntes) > 6){
@@ -1614,7 +1657,7 @@ const TELAS = {
         <p class="sim-s q"><span class="num">${brl(s.custo)}</span> por mês ${esc(emBR(s.uf))} compram o mesmo padrão de vida que quantos dólares na Flórida?</p>
         <div class="opcoes">${op.map((o, i) => `<button type="button" class="opcao" data-chute="${i}"><span><b class="num">${usd(o.v)}</b><span>${o.t}</span></span>${SETA}</button>`).join("")}</div>
         <p class="sim-s">Não vale nota. O chute serve para a resposta fazer sentido.</p>`,
-      montar(){ $$("[data-chute]", corpo).forEach(b => b.addEventListener("click", () => { s.chute = Number(b.dataset.chute); evento("Chute", {}, true); ir("resposta"); })); }
+      montar(){ $$("[data-chute]", corpo).forEach(b => b.addEventListener("click", () => { s.chute = Number(b.dataset.chute); evento("Chute", {}, true); animarResposta = true; ir("resposta"); })); }
     };
   },
 
@@ -1626,7 +1669,7 @@ const TELAS = {
     return {
       html: `
         <span class="olho">A resposta</span>
-        <h3 class="sim-t num" tabindex="-1"><span class="resp-n">${usd(ppc)}</span><span class="resp-por"> por mês,</span> <span class="resp-nao">não ${usd(cambio)}.</span></h3>
+        <h3 class="sim-t num" tabindex="-1" aria-label="${usd(ppc)} por mês, não ${usd(cambio)}."><span class="resp-n">${usd(ppc)}</span><span class="resp-por"> por mês,</span> <span class="resp-nao">não ${usd(cambio)}.</span></h3>
         <p class="sim-s">Seu chute: <span class="num">${usd(op[s.chute].v)}</span>. ${s.chute === 2 ? "Você acertou, e pouca gente acerta." : "A maioria chuta perto do câmbio."}</p>
         <div class="barras">
           <div><div class="barra-l"><span>Pelo câmbio</span><b class="num">${usd(cambio)}</b></div><div class="barra" style="width:${(cambio/ppc*100).toFixed(1)}%"></div></div>
@@ -1635,7 +1678,13 @@ const TELAS = {
         <p class="sim-s c">O câmbio diz quanto o real vale no mercado de moedas. O poder de compra diz quanto custa viver. Morar, comer e se cuidar na Flórida custa mais do que a cotação sugere: ${vezTxt}.</p>
         <p class="sim-s dest">Para planejar aposentadoria, a régua certa é a segunda.</p>
         <p class="legal">Paridade de poder de compra ajustada pelo custo de vida de cada estado. Câmbio de referência: ${cambioTxt()}.${fontes}</p>`,
-      acao: btnSeguir(true, "Continuar", "destino")
+      acao: btnSeguir(true, "Continuar", "destino"),
+      montar(){
+        if (!animarResposta) return;      // só quando a pessoa acabou de chutar: o número sobe do valor do câmbio até a resposta
+        animarResposta = false;
+        if (reduz) return;
+        contar($(".resp-n", corpo), cambio, ppc, 700, usd, ondaAgora ? ATRASO_ONDA : 0);
+      }
     };
   },
 
@@ -1842,7 +1891,7 @@ const TELAS = {
         animarVida = false;
         if (reduz) return;
         corpo.classList.add("revela");
-        contar($(".vn", corpo), 0, k.numero, 850, usd);
+        contar($(".vn", corpo), 0, k.numero, 850, usd, ondaAgora ? ATRASO_ONDA : 0);
       }
     };
   },
