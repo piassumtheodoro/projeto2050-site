@@ -1453,6 +1453,13 @@ function payload(modo, textoAceite){
       // premissas da conta: o e-mail do plano cita estes números em vez de repeti-los à mão
       cambio: CONFIG.CAMBIO, retorno_real_pct: Math.round(CONFIG.RETORNO_REAL_ANO * 1e4) / 100, retirada_mes_pct: Math.round(CONFIG.RETIRADA_MES * 1e4) / 100
     });
+    // números do relatório: com eles o receptor desenha o mesmo PDF e o anexa ao e-mail do plano (o arquivo não sai daqui)
+    const al = alavancas(), rel = dadosRelatorio();
+    p.relatorio = {
+      estado_em: rel.estadoEm, usd_mes: k.mes, cambio_mes: k.cambioMes, numero: k.numero, inv: k.inv, ap: k.ap, proj: k.proj, ritmo: k.ritmo, extra_brl: k.extraBRL,
+      alav: al.lista.map(a => a.id === "mais" ? { id:a.id, r:a.r, extra:al.extra } : a.id === "regua" ? { id:a.id, r:a.r, de:lugarNome(s.pais, s.st), para:al.troca.nome } : { id:a.id, r:a.r }),
+      lugares: rel.lugares.map(l => ({ nome:l.nome, usd:l.usd, sel:!!l.sel }))
+    };
   }
   return p;
 }
@@ -2205,7 +2212,8 @@ function desenharRelatorio(doc, d){
 }
 /* PDF-FIM */
 
-/* A biblioteca que escreve o PDF só é baixada quando a pessoa pede o relatório. */
+/* A biblioteca que escreve o PDF só é baixada quando a pessoa pede o relatório. O PDF que vai anexado ao e-mail do plano
+   não sai daqui: o receptor desenha o dele com o mesmo código (apps-script-pdf.gs, gerado a partir do trecho PDF-INICIO…PDF-FIM). */
 let carregandoPDF = null;
 function carregarJsPDF(){
   if (window.jspdf) return Promise.resolve();
