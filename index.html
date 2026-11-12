@@ -206,7 +206,7 @@ section{position:relative}
 /* a seção em que a pessoa está: palavra sublinhada na cor do fio e número na cor de acento. O JS põe aria-current no item (data-menu da seção que cruza a linha de leitura). */
 .menu a[aria-current] span{text-decoration-line:underline;text-decoration-thickness:2px;text-decoration-color:var(--fio)}
 .menu a[aria-current] sup{color:var(--acento)}
-/* celular: o cabeçalho leva só a pílula. A ação fica com o botão do topo, a barra fixa e o botão do fecho, um de cada vez; o rótulo do botão não cabe ao lado da pílula abaixo de ~385px. */
+/* celular: o cabeçalho leva só a pílula. A ação fica com o botão do topo, a barra fixa e o botão do fecho, um de cada vez; o botão do cabeçalho (250px) não cabe ao lado da pílula. */
 @media (max-width:759px){ .topo .btn.peq{display:none} }
 @media (min-width:760px){ .marca{font-size:15px} }
 @media (min-width:980px){ .menu{display:flex;align-items:center} }
@@ -535,6 +535,10 @@ section{position:relative}
 .fixo a:active{background:#B3ADF8;color:#0B0D0E;scale:.97}
 @media (hover:hover){ .fixo a:hover{background:#B3ADF8;color:#0B0D0E} }
 @media (min-width:760px){ .fixo{display:none} .rodape{padding-bottom:var(--e6)} }
+/* celular estreito: o rótulo "Fazer meu planejamento global" pede 319px de botão com a letra de 17px. Abaixo de 390px de tela o texto dos botões
+   encolhe aos poucos (até 14px em 320px) e, abaixo de 340px, a margem interna cai para 16px e o cartão do carrossel alarga, para o rótulo ficar numa linha só. */
+@media (max-width:389px){ :root{ --t-botao:clamp(14px,4.4vw,17px) } }
+@media (max-width:339px){ .btn,.sim-btn,.fixo a{padding-inline:16px} .grade > .cartao{flex-basis:88%} }
 
 /* ---------- simulador: topo, controles e as doze telas ---------- */
 .sim-voltar{flex:none;display:grid;place-items:center;width:44px;height:44px;margin-left:-6px;border:1.5px solid var(--filete);border-radius:50%;background:transparent;color:var(--texto);transition:background-color var(--d-estado) var(--dado),color var(--d-estado) var(--dado),scale var(--d-toque) var(--dado)}
@@ -956,7 +960,7 @@ d.classList.add("js");if(!r)d.classList.add("mov");})();
     <a href="#consultoria"><span>Consultoria</span><sup>03</sup></a>
     <a href="#sobre"><span>Sobre</span><sup>04</sup></a>
   </nav>
-  <a class="btn peq" href="#sim"><span>Fazer a minha conta</span><svg class="seta" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+  <a class="btn peq" href="#sim"><span>Fazer meu planejamento global</span><svg class="seta" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
 </header>
 
 <main>
@@ -968,7 +972,7 @@ d.classList.add("js");if(!r)d.classList.add("mov");})();
     <div class="hero-oferta">
       <p class="olho">Entenda como planejar sua liberdade financeira de forma global.</p>
       <p class="hero-def">Quanto você precisa poupar ao mês para atingir sua independência em dólar?</p>
-      <a class="btn" href="#sim" id="cta-hero"><span>Fazer a minha conta</span><svg class="seta" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      <a class="btn" href="#sim" id="cta-hero"><span>Fazer meu planejamento global</span><svg class="seta" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
       <p class="hero-meta" id="hero-meta">Sete perguntas · 2 minutos · relatório completo no seu <span class="nq">e-mail</span></p>
     </div>
     <div class="fio rev" data-fio="inicio" data-onda="a" aria-hidden="true"><svg viewBox="0 0 1000 40" preserveAspectRatio="none"><path pathLength="1" d="M0,20 C333,4 667,36 1000,20"/></svg></div>
@@ -986,7 +990,7 @@ d.classList.add("js");if(!r)d.classList.add("mov");})();
       <p class="txt">Trocar dinheiro é uma coisa. Encher o mesmo carrinho de supermercado é outra. O câmbio só responde à primeira.</p>
       <p class="txt">Para planejar a sua liberdade até 2050, a régua é o que o dinheiro compra em cada lugar. O simulador faz essa conta para 66 países e devolve três coisas: um número, uma data e o caminho até eles.</p>
       <p class="txt forte">Faça a conta.</p>
-      <a class="btn" href="#sim" id="cta-intro"><span>Fazer a minha conta</span><svg class="seta" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      <a class="btn" href="#sim" id="cta-intro"><span>Fazer meu planejamento global</span><svg class="seta" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
       <p class="legal">Poder de compra: Banco Mundial, Programa de Comparação Internacional, 2024, via Our World in Data. Média nacional de cada país; capitais costumam custar mais. Câmbio de referência: <span data-ex="fx">R$&nbsp;5,40</span>.</p>
     </div>
     <div class="fio rev" data-fio="corre" data-onda="b" aria-hidden="true"><svg viewBox="0 0 1000 40" preserveAspectRatio="none"><path pathLength="1" d="M0,20 C333,36 667,4 1000,20"/></svg></div>
@@ -1037,7 +1041,7 @@ d.classList.add("js");if(!r)d.classList.add("mov");})();
         <div class="cartao-c">
           <h3>Simulador Sua vida global</h3>
           <p>Sete perguntas para descobrir quanto custa a sua vida em dólar, o patrimônio que paga essa vida e quanto guardar por mês.</p>
-          <div class="acao"><a class="link" href="#sim">Fazer a minha conta<span aria-hidden="true"><svg class="seta" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a></div>
+          <div class="acao"><a class="link" href="#sim">Fazer meu planejamento global<span aria-hidden="true"><svg class="seta" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a></div>
         </div>
       </article>
       <article class="cartao clicavel rev">
@@ -1231,7 +1235,7 @@ d.classList.add("js");if(!r)d.classList.add("mov");})();
   <section class="bloco fecho" id="fecho" aria-labelledby="fecho-titulo" data-fundo="papel">
     <h2 class="titulo rev" id="fecho-titulo"><span class="t-forte">Qual é o seu</span> <span class="t-virada g">número?<svg class="risco" viewBox="0 0 300 12" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M2,8 C60,2 140,3 298,6"/></svg></span></h2>
     <p class="sub rev">Pelo câmbio, a resposta é a mesma em qualquer país. Na vida real, não é. A régua certa muda o plano inteiro.</p>
-    <a class="btn rev" href="#sim"><span>Fazer a minha conta</span><svg class="seta" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+    <a class="btn rev" href="#sim"><span>Fazer meu planejamento global</span><svg class="seta" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
     <p class="legal rev">Sete perguntas · 2 minutos · gratuito</p>
     <figure class="colagem fecho-col rev" style="--giro:4deg;--pr:-5deg;--px:-6%;--py:14%;--ps:72%">
       <img class="col-pardo" src="img/papel-pardo-a.webp" alt="" width="640" height="316" loading="lazy" decoding="async" onerror="this.remove()">
@@ -1262,7 +1266,7 @@ d.classList.add("js");if(!r)d.classList.add("mov");})();
   <p class="legal">Conteúdo educativo. Não é recomendação de investimento. Simulação com hipóteses de retorno real em dólar, regra de retirada e câmbio de referência informados no relatório. Rendimento variável, não garantido. Investimentos internacionais envolvem risco, inclusive de perda. O Projeto 2050 não faz custódia, não executa ordens e não substitui consultoria regulada.</p>
 </footer>
 
-<div class="fixo" id="fixo"><a href="#sim"><span>Fazer a minha conta</span><svg class="seta" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
+<div class="fixo" id="fixo"><a href="#sim"><span>Fazer meu planejamento global</span><svg class="seta" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
 
 <dialog class="dlg" id="dlg" aria-labelledby="dlg-t" data-fundo="papel"><div class="dlg-c" id="dlg-c"></div></dialog>
 <div class="toast" id="toast" role="status" hidden></div>
@@ -2337,7 +2341,7 @@ function abrirLista(jovem){
       <p>Avisamos você assim que as inscrições abrirem.${simulacaoCompleta() ? "" : " Enquanto isso, descubra a sua vida global: onde você quer viver e quanto custa, em dólar. São sete perguntas."}</p>
       ${avisoEnvio(r)}
       ${CONFIG.WHATSAPP_GRUPO ? `<a class="sim-btn claro" href="${esc(CONFIG.WHATSAPP_GRUPO)}" target="_blank" rel="noopener">Entrar no grupo do lançamento</a>` : ""}
-      ${simulacaoCompleta() ? `<button type="button" class="sim-btn" data-fechar>Fechar</button>` : `<a class="sim-btn" href="#sim" data-fechar>Fazer a minha conta</a>`}`);
+      ${simulacaoCompleta() ? `<button type="button" class="sim-btn" data-fechar>Fechar</button>` : `<a class="sim-btn" href="#sim" data-fechar>Fazer meu planejamento global</a>`}`);
     if (atual === "vida") render();
   });
 }
