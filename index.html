@@ -859,6 +859,17 @@ section{position:relative}
 .mov .hero-def{animation:surge .38s var(--sai-suave) .55s backwards}
 .mov #cta-hero{animation:surge .38s var(--sai-suave) .61s backwards}
 .mov .hero-meta{animation:surge .38s var(--sai-suave) .67s backwards}
+/* herói, depois da entrada: a foto afunda de leve (28px) enquanto o topo sai da tela, como os papéis das colagens.
+   Onde o CSS tem linha do tempo de rolagem ele faz isso sozinho; nos outros navegadores o JS passa o avanço em --hp (0 a 1). */
+@keyframes foto-afunda{from{translate:0 0}to{translate:0 28px}}
+.mov .hero{overflow-y:clip}                                   /* a foto afunda por trás da borda de baixo, sem invadir a seção seguinte */
+.mov .hero-foto img{translate:0 calc(var(--hp,0) * 28px)}
+@supports (animation-timeline:scroll()){
+  .mov .hero-foto img{animation:cam .9s var(--camera) backwards,foto-afunda linear both;animation-timeline:auto,scroll(root block);animation-range:normal,0px 100vh}
+}
+/* computador: uma luz de fundo acompanha o cursor dentro do topo. O elemento é criado pelo JS, só onde há mouse. */
+.hero-luz{position:absolute;left:0;top:0;z-index:0;width:640px;height:640px;margin:-320px 0 0 -320px;border-radius:50%;pointer-events:none;background:radial-gradient(circle,rgba(255,255,255,.07),transparent 62%);opacity:0;transition:opacity .4s var(--dado),transform .25s var(--sai-suave)}
+.hero-luz.on{opacity:1}
 
 /* números que contam fora do simulador (o JS conta; aqui só o tipo): os algarismos da contagem herdam a letra do número,
    e não a das legendas ao lado, que também são span */
@@ -2570,11 +2581,31 @@ document.addEventListener("click", e => {
   }
 
   if (!reduz){
-    const deg = $(".degraus"), raizDoc = document.documentElement;
-    let ultimoY = Math.max(0, window.scrollY), marcado = false;
+    const deg = $(".degraus"), raizDoc = document.documentElement, heroi = $(".hero");
+    const cssRola = !!(window.CSS && CSS.supports && CSS.supports("animation-timeline: scroll()"));   // o CSS acompanha a rolagem sozinho: o JS não precisa
+    let ultimoY = Math.max(0, window.scrollY), marcado = false, hpPosto = -1;
+
+    // computador: luz de fundo que acompanha o cursor no topo. Só com mouse, e só enquanto o cursor está sobre o topo (um quadro por movimento, sem laço).
+    if (heroi && window.matchMedia("(hover:hover) and (pointer:fine)").matches){
+      const luz = document.createElement("i"); luz.className = "hero-luz"; luz.setAttribute("aria-hidden", "true"); heroi.prepend(luz);
+      let ox = 0, oy = 0, px = 0, py = 0, pedido = false;
+      const poe = () => { pedido = false; luz.style.transform = `translate3d(${px}px,${py}px,0)`; };
+      heroi.addEventListener("pointerenter", e => {
+        if (e.pointerType !== "mouse") return;
+        const r = heroi.getBoundingClientRect(); ox = r.left + window.scrollX; oy = r.top + window.scrollY;
+        px = e.pageX - ox; py = e.pageY - oy;
+        luz.style.transition = "none"; poe(); void luz.offsetWidth; luz.style.transition = "";   // nasce já debaixo do cursor, sem vir deslizando do canto
+        luz.classList.add("on");
+      });
+      heroi.addEventListener("pointermove", e => { if (e.pointerType !== "mouse") return; px = e.pageX - ox; py = e.pageY - oy; if (!pedido){ pedido = true; requestAnimationFrame(poe); } }, { passive:true });
+      heroi.addEventListener("pointerleave", () => luz.classList.remove("on"));
+    }
+
     const aoRolar = () => {
       marcado = false;
       const y = Math.max(0, window.scrollY), vh = window.innerHeight;
+      // topo: a foto afunda de leve enquanto o topo sai da tela (só onde o CSS não faz isso sozinho; depois que o topo saiu, não mexe mais)
+      if (!cssRola && heroi){ const hp = Math.min(1, y / vh); if (hp !== hpPosto){ hpPosto = hp; heroi.style.setProperty("--hp", hp.toFixed(3)); } }
       // degraus: crescem conforme a faixa sobe pela tela
       if (deg){ const r = deg.getBoundingClientRect(); if (r.top < vh + 60 && r.bottom > -60) deg.style.setProperty("--p", Math.min(1, Math.max(0, (vh - r.top) / (vh * 0.55))).toFixed(3)); }
       // cabeçalho: some ao rolar para baixo e volta ao rolar para cima (o CSS só aplica isso no celular)
