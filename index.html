@@ -860,6 +860,9 @@ section{position:relative}
 .mov #cta-hero{animation:surge .38s var(--sai-suave) .61s backwards}
 .mov .hero-meta{animation:surge .38s var(--sai-suave) .67s backwards}
 
+/* números que contam fora do simulador (o JS conta; aqui só o tipo): os algarismos da contagem herdam a letra do número,
+   e não a das legendas ao lado, que também são span */
+.mov .fatos b .dg,.mov .preco b .dg{font-size:inherit;color:inherit}
 /* intro: a frase */
 .mov .frase.vis b{animation:vira var(--d-virada) var(--virada) .4s backwards}
 .mov .frase.vis b + b{animation-delay:.48s}
@@ -1528,12 +1531,13 @@ function contar(el, de, ate, ms, formato, atraso){
   if (!el) return;
   if (reduz){ el.textContent = formato(ate); return; }
   const ini = performance.now() + (atraso || 0);   // com atraso, o número espera parado no valor de partida
+  let ultimo = null;
   (function passo(t){
     if (!el.isConnected) return;
     const p = Math.min(1, Math.max(0, (t - ini) / ms)), suave = 1 - Math.pow(1 - p, 3);
-    if (p < 1){ el.innerHTML = celulas(formato(de + (ate - de) * suave)); requestAnimationFrame(passo); }
+    if (p < 1){ const txt = formato(de + (ate - de) * suave); if (txt !== ultimo){ ultimo = txt; el.innerHTML = celulas(txt); } requestAnimationFrame(passo); }   // só mexe na página quando o texto muda
     else el.textContent = formato(ate);   // no último quadro, texto puro
-  })(ini);
+  })(performance.now());
 }
 
 function ir(passo){
@@ -2582,8 +2586,31 @@ document.addEventListener("click", e => {
     aoRolar();
   }
 
+  // números que contam quando entram na tela, com a mesma contagem do simulador (só com movimento):
+  // na frase de abertura os dois valores sobem a partir do câmbio enquanto ele é riscado; no Sobre, do zero ao bilhão; no Projeto 2050, o preço.
+  // A largura do número fica presa no tamanho final enquanto ele conta, para o texto em volta não andar.
+  const contaAoEntrar = el => {
+    if (reduz) return;
+    const conta = (b, de, ate, ms, formato, atraso, prende) => {
+      if (!b) return;
+      if (prende){ b.style.width = b.offsetWidth + "px"; setTimeout(() => { b.style.width = ""; }, atraso + ms + 120); }
+      contar(b, de, ate, ms, formato, atraso);
+    };
+    if (el.classList.contains("frase")){
+      const cambio = ex.custo / CONFIG.CAMBIO;
+      conta($('b[data-ex="ppcPT"]', el), cambio, ex.custo / CONFIG.PPC * PAISES.PRT[2], 850, usd, 400, true);    // 400 e 480 ms: o instante em que cada número vira azul
+      conta($('b[data-ex="ppcEUA"]', el), cambio, ex.custo / CONFIG.PPC, 850, usd, 480, true);
+    } else if (el.classList.contains("fatos")){
+      const b = $("li b", el), fim = b ? b.textContent : "";   // termina sempre no texto que está na página
+      conta(b, 0, 1e9, 900, v => { const m = Math.round(v / 1e6); return v >= 999.5e6 ? fim : "R$ " + m + (m === 1 ? " milhão" : " milhões"); }, 150, false);
+    } else if (el.classList.contains("preco")){
+      const b = $("b", el), fim = b ? b.textContent : "", ate = Number(digitos(fim)) || 0;
+      conta(b, 0, ate, 700, v => v >= ate ? fim : "R$ " + Math.round(v), 150, true);
+    }
+  };
+
   if ("IntersectionObserver" in window){
-    const io = new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting){ en.target.classList.add("vis"); io.unobserve(en.target); } }), { rootMargin:"0px 0px -8% 0px" });
+    const io = new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting){ en.target.classList.add("vis"); io.unobserve(en.target); contaAoEntrar(en.target); } }), { rootMargin:"0px 0px -8% 0px" });
     $$(".rev").forEach(el => io.observe(el));
     // barra fixa (celular): só aparece quando nenhum outro botão com a mesma ação está na tela
     const fixo = $("#fixo"); let heroVisivel = true, introVisivel = false, simVisivel = false, fimVisivel = false, fechoVisivel = false;
