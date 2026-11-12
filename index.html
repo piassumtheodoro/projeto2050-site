@@ -1024,6 +1024,21 @@ section{position:relative}
   .cartao:hover .link span[aria-hidden]{transform:translateX(4px)}
   .link:hover span[aria-hidden]{transform:translateX(4px)}
 }
+/* cartões de produto: a palavra grande ("US$", "20/50", "Global.", "12–25") entra com a mesma virada dos títulos */
+.mov .cartao:not(.vis) .cartao-v b{visibility:hidden}
+.mov .cartao.vis .cartao-v b{transform-origin:0 60%;animation:vira var(--d-virada) var(--virada) .22s backwards}
+/* computador: o quadro do cartão inclina de leve na direção do cursor. O JS põe .inclina e passa --ix e --iy (de -1 a 1), só onde há mouse. */
+.mov .cartao-v{transition:transform .35s var(--dado)}
+.mov .cartao.inclina .cartao-v{transform:perspective(900px) rotateX(calc(var(--iy,0) * -3deg)) rotateY(calc(var(--ix,0) * 4deg));transition-duration:.12s}
+/* botões: a seta dos botões principais avança 4px com o mouse em cima, como já acontece nos links de texto */
+.mov .btn .seta,.mov .fixo a .seta{transition:transform .2s var(--dado)}
+@media (hover:hover){ .mov .btn:hover .seta,.mov .fixo a:hover .seta{transform:translateX(4px)} }
+/* degraus: quando o último termina de crescer, o "2050" entra com a virada dos títulos e o degrau azul pulsa uma vez (o JS põe .completo) */
+@keyframes pulso{from{opacity:.5;transform:scale(1)}to{opacity:0;transform:scale(1.9,1.1)}}
+.mov .degraus:not(.completo) b{visibility:hidden}
+.mov .degraus.completo b{transform-origin:100% 60%;animation:vira var(--d-virada) var(--virada) backwards}
+.mov .degraus i:nth-child(5)::after{content:"";position:absolute;inset:0;border-radius:inherit;background:#2716E9;opacity:0;transform-origin:50% 100%;pointer-events:none}
+.mov .degraus.completo i:nth-child(5)::after{animation:pulso var(--d-barra) var(--dado) .12s}
 </style>
 </head>
 <body>
@@ -2609,7 +2624,24 @@ document.addEventListener("click", e => {
   if (!reduz){
     const deg = $(".degraus"), raizDoc = document.documentElement, heroi = $(".hero"), cabecalho = $(".topo");
     const cssRola = !!(window.CSS && CSS.supports && CSS.supports("animation-timeline: scroll()"));   // o CSS acompanha a rolagem sozinho: o JS não precisa
-    let ultimoY = Math.max(0, window.scrollY), marcado = false, hpPosto = -1, alturaPagina = 1, tPagina = -1e9;
+    let ultimoY = Math.max(0, window.scrollY), marcado = false, hpPosto = -1, alturaPagina = 1, tPagina = -1e9, degCompleto = false;
+
+    // computador: o quadro dos cartões de produto inclina de leve na direção do cursor. Só com mouse; a caixa é medida uma vez, ao entrar.
+    if (window.matchMedia("(hover:hover) and (pointer:fine)").matches){
+      $$(".cartao").forEach(c => {
+        const v = $(".cartao-v", c); if (!v) return;
+        let cx = 0, cy = 0, lw = 1, lh = 1, ix = 0, iy = 0, dentro = false, pedido = false;
+        const poe = () => { pedido = false; v.style.setProperty("--ix", ix.toFixed(3)); v.style.setProperty("--iy", iy.toFixed(3)); };
+        const mede = e => { ix = Math.max(-1, Math.min(1, (e.pageX - cx) / lw * 2 - 1)); iy = Math.max(-1, Math.min(1, (e.pageY - cy) / lh * 2 - 1)); if (!pedido){ pedido = true; requestAnimationFrame(poe); } };
+        c.addEventListener("pointerenter", e => {
+          if (e.pointerType !== "mouse") return;
+          const r = v.getBoundingClientRect(); cx = r.left + window.scrollX; cy = r.top + window.scrollY; lw = r.width || 1; lh = r.height || 1;
+          dentro = true; mede(e); c.classList.add("inclina");
+        });
+        c.addEventListener("pointermove", e => { if (dentro) mede(e); }, { passive:true });
+        c.addEventListener("pointerleave", () => { dentro = false; c.classList.remove("inclina"); });
+      });
+    }
 
     // computador: luz de fundo que acompanha o cursor no topo. Só com mouse, e só enquanto o cursor está sobre o topo (um quadro por movimento, sem laço).
     if (heroi && window.matchMedia("(hover:hover) and (pointer:fine)").matches){
@@ -2637,8 +2669,14 @@ document.addEventListener("click", e => {
         const agora = performance.now(); if (agora - tPagina > 500){ alturaPagina = Math.max(1, raizDoc.scrollHeight - vh); tPagina = agora; }
         cabecalho.style.setProperty("--lido", Math.min(1, y / alturaPagina).toFixed(4));
       }
-      // degraus: crescem conforme a faixa sobe pela tela
-      if (deg){ const r = deg.getBoundingClientRect(); if (r.top < vh + 60 && r.bottom > -60) deg.style.setProperty("--p", Math.min(1, Math.max(0, (vh - r.top) / (vh * 0.55))).toFixed(3)); }
+      // degraus: crescem conforme a faixa sobe pela tela. Quando o último termina (ou a faixa já ficou para cima), marca .completo uma vez:
+      // o "2050" entra e o degrau azul pulsa (CSS)
+      if (deg){
+        const r = deg.getBoundingClientRect(); let p = -1;
+        if (r.bottom <= -60) p = 1;
+        else if (r.top < vh + 60){ p = Math.min(1, Math.max(0, (vh - r.top) / (vh * 0.55))); deg.style.setProperty("--p", p.toFixed(3)); }
+        if (p >= 1 && !degCompleto){ degCompleto = true; deg.classList.add("completo"); }
+      }
       // cabeçalho: some ao rolar para baixo e volta ao rolar para cima (o CSS só aplica isso no celular)
       if (y <= 160 || y < ultimoY - 6) raizDoc.classList.remove("sem-topo");
       else if (y > ultimoY + 6) raizDoc.classList.add("sem-topo");
