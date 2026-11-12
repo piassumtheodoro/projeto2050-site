@@ -1,0 +1,88 @@
+# Publica o receptor de leads (pasta receptor/) no Apps Script a cada mudança que entra na main.
+# Atualiza a implantação que já existe, a do endereço /exec que a página usa: o endereço não muda.
+# Detalhes, e o que continua manual, em receptor/LEIA-ME.md.
+name: Publicar receptor
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'receptor/**'
+      - '.clasp.json'
+      - '.claspignore'
+      - '.github/workflows/publicar-receptor.yml'
+  workflow_dispatch:
+# De propósito, sem pull_request nem pull_request_target: este fluxo usa uma credencial do Google
+# e só pode rodar código que já entrou na main.
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publicar-receptor
+  cancel-in-progress: false
+
+env:
+  CLASP_VERSAO: 3.4.1
+
+jobs:
+  publicar:
+    name: Testar e publicar
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+
+      - name: Testes do receptor
+        run: node receptor/testes/testa-receptor.js
+
+      - name: Confere a configuração do repositório
+        env:
+          CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}
+          IMPLANTACAO: ${{ vars.RECEPTOR_IMPLANTACAO_ID }}
+        run: |
+          test -n "$CLASPRC_JSON" || { echo "::error::Falta o segredo CLASPRC_JSON (veja receptor/LEIA-ME.md)."; exit 1; }
+          test -n "$IMPLANTACAO" || { echo "::error::Falta a variável RECEPTOR_IMPLANTACAO_ID (veja receptor/LEIA-ME.md)."; exit 1; }
+
+      - name: Instala o clasp
+        run: npm install --global --no-fund --no-audit "@google/clasp@${CLASP_VERSAO}"
+
+      - name: Credencial do clasp
+        env:
+          CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}
+        run: |
+          umask 077
+          printf '%s' "$CLASPRC_JSON" > "$HOME/.clasprc.json"
+
+      - name: Arquivos que serão enviados
+        run: clasp show-file-status
+
+      - name: Envia o código
+        run: clasp push --force
+
+      - name: Atualiza a implantação existente
+        env:
+          IMPLANTACAO: ${{ vars.RECEPTOR_IMPLANTACAO_ID }}
+        run: clasp update-deployment "$IMPLANTACAO" --description "main ${GITHUB_SHA::7}"
+
+      - name: Lista as implantações
+        run: clasp list-deployments
+
+      - name: Confere o endereço em uso
+        env:
+          IMPLANTACAO: ${{ vars.RECEPTOR_IMPLANTACAO_ID }}
+        run: |
+          # só um GET, que responde "ok". Nada de POST: ele grava na planilha e manda e-mail de verdade.
+          resposta="$(curl --silent --show-error --location --max-time 60 "https://script.google.com/macros/s/${IMPLANTACAO}/exec")"
+          test "$resposta" = "ok" || { echo "::error::O endereço /exec não respondeu ok."; exit 1; }
+          echo "O endereço /exec respondeu ok."
+
+      - name: Apaga a credencial
+        if: always()
+        run: rm -f "$HOME/.clasprc.json"
