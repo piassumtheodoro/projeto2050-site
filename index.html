@@ -1634,15 +1634,21 @@ function render(mover, sentido){
   const fim = () => { if (transicao === t){ transicao = null; doc.classList.remove("volta", "onda"); } };   // uma troca nova no meio desta herda as classes dela
   t.finished.then(fim, fim); if (t.ready) t.ready.catch(() => {});
 }
-/* Enquanto a transição dura (até 0,45 s), a API tira do teste de acerto as partes fotografadas: um toque nesse intervalo cairia no vazio.
-   Por isso qualquer toque ou giro da roda encerra a transição na hora (a tela nova já está pronta por baixo),
-   e o clique que começou durante ela é refeito no elemento que está sob o dedo. Nenhum clique espera a animação. */
-if (podeVT){
-  let toqueNaTransicao = false;
-  document.addEventListener("pointerdown", () => { toqueNaTransicao = !!transicao; if (transicao) transicao.skipTransition(); }, true);
+/* Enquanto a transição dura (até 0,45 s), a API tira do teste de acerto as partes fotografadas, e a onda sem a API esconde o que ainda
+   não foi coberto pelo círculo: um toque nesse intervalo cairia no vazio. Por isso qualquer toque encerra a troca na hora
+   (a tela nova já está pronta por baixo), e o clique que começou durante ela é refeito no elemento que está sob o dedo.
+   Nenhum clique espera a animação. O giro da roda também encerra a transição, para a imagem não ficar parada com a página rolando. */
+if (!reduz){
+  let toqueNaTroca = false;
+  document.addEventListener("pointerdown", () => {
+    const naOnda = raiz.classList.contains("onda");
+    toqueNaTroca = !!transicao || naOnda;
+    if (transicao) transicao.skipTransition();
+    if (naOnda) fimOnda();
+  }, true);
   window.addEventListener("wheel", () => { if (transicao) transicao.skipTransition(); }, { passive:true });
   document.addEventListener("click", e => {
-    const refaz = toqueNaTransicao; toqueNaTransicao = false;
+    const refaz = toqueNaTroca; toqueNaTroca = false;
     if (!refaz || !e.isTrusted) return;
     const alvo = document.elementFromPoint(e.clientX, e.clientY);
     if (!alvo || alvo === e.target || alvo.contains(e.target)) return;   // o clique já acertou o elemento certo
