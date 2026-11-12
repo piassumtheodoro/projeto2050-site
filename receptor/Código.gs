@@ -1,6 +1,6 @@
 /**
  * Projeto 2050 · Receptor de leads do simulador "Descubra a sua vida global"
- * Cole em Extensões → Apps Script da sua planilha e implante como App da Web (veja o LEIA-ME).
+ * A fonte deste arquivo é a pasta receptor/ do repositório projeto2050-site: mude por PR, e o merge na main publica sozinho (veja receptor/LEIA-ME.md).
  * Cada pessoa vira uma linha na aba "Leads". Se ela voltar (lista de espera e depois simulação), a mesma linha é atualizada.
  */
 
@@ -24,7 +24,7 @@ const AGENDA_CHAMADA_PADRAO = 'Quer conversar sobre o seu plano? Fale com uma es
 const AGENDA_BOTAO = 'Agendar reunião com especialista';
 
 // Relatório completo em PDF, anexado ao e-mail do plano. O PDF é desenhado aqui, com os números que a página manda,
-// pelo mesmo código da página: precisa do arquivo Pdf.gs no projeto (gerado por apps-script-montar-pdf.js).
+// pelo mesmo código da página: precisa do arquivo Pdf.gs no projeto (gerado por receptor/ferramentas/montar-pdf.js).
 // false, ou projeto sem o Pdf.gs = o e-mail vai sem anexo.
 const ANEXAR_PDF = true;
 const PDF_CONTA_GLOBAL_URL = 'https://rivool.finance/app/link-advisor/tiago-piassum';   // botão "Abra sua conta global" do PDF: o mesmo CONTA_GLOBAL_URL da página

@@ -1,8 +1,8 @@
 /**
  * Projeto 2050 · Relatório em PDF dentro do receptor de leads.
- * ARQUIVO GERADO por apps-script-montar-pdf.js em 2026-11-12. Não edite à mão: mude a página e rode o montador de novo.
+ * ARQUIVO GERADO por receptor/ferramentas/montar-pdf.js. Não edite à mão: mude a página e rode o montador de novo.
  * Conteúdo: ambiente mínimo, jsPDF 2.5.1 (sha384-JcnsjUPPylna1s1fvi1u12X5qjY5OL56iySh75FdtrwhO/SWXgMjoVqcKyIIWOLk), fontes e avatar (pdf-fontes.js) e o desenho do relatório (index.html).
- * Quem usa: gerarPdfDoPlano(), no arquivo do receptor.
+ * Quem usa: gerarPdfDoPlano(), no Código.gs.
  */
 /* Ambiente mínimo para o jsPDF rodar no Apps Script, que não é um navegador: o objeto global e o base64. */
 var global = this;
