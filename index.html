@@ -908,6 +908,37 @@ section{position:relative}
 .mov .revela.apos-onda > :nth-child(5){animation-delay:1.27s}
 .mov .revela.apos-onda > :nth-child(6){animation-delay:1.42s}
 .mov .revela.apos-onda .vida-n .risco path{animation-delay:1.27s}
+
+/* ---------- troca de tela com a API de transição (View Transitions): melhoria progressiva ----------
+   O JS só chama a API com movimento ligado e quando o navegador a tem; sem ela vale tudo o que está acima.
+   A página fica viva (o html não entra na transição) e só as partes nomeadas viram imagem:
+   lamina = o cartão; tela = o conteúdo da pergunta; acao = a barra do botão; numero = o valor do resultado; cabecalho = o topo da página,
+   que entra só para continuar por cima da lâmina enquanto ela desliza. */
+.mov{view-transition-name:none}
+.mov #sim{view-transition-name:lamina}
+.mov #sim-corpo{view-transition-name:tela}
+.mov #sim-acao{view-transition-name:acao}
+.mov .topo{view-transition-name:cabecalho}
+.mov .vn{display:inline-block}
+.mov .vn,.mov .resumo b{view-transition-name:numero}                 /* o mesmo nome nas duas telas: o número viaja do resultado para o resumo do contato */
+.mov.onda #sim-corpo,.mov.onda #sim-acao,.mov.onda .vn,.mov.onda .resumo b{view-transition-name:none}   /* na onda a lâmina é uma imagem só */
+.mov::view-transition{pointer-events:none}                           /* as imagens não seguram o toque; o JS encerra a transição ao primeiro toque e refaz o clique na tela viva */
+.mov::view-transition-group(*){animation-duration:.32s;animation-timing-function:cubic-bezier(.2,.7,.2,1)}
+.mov::view-transition-old(lamina),.mov::view-transition-new(lamina),.mov::view-transition-old(acao),.mov::view-transition-new(acao){animation-duration:.32s}
+@keyframes tela-sai{to{opacity:0;transform:translateX(-24px)}}
+@keyframes tela-sai-volta{to{opacity:0;transform:translateX(24px)}}
+.mov::view-transition-old(tela){animation:tela-sai .12s var(--saida) both;mix-blend-mode:normal}             /* a antiga sai depressa... */
+.mov::view-transition-new(tela){animation:entra .28s var(--sai-suave) .1s both;mix-blend-mode:normal}        /* ...e a nova só entra quando ela já saiu, para as duas não se misturarem */
+.mov.volta::view-transition-old(tela){animation-name:tela-sai-volta}
+.mov.volta::view-transition-new(tela){animation-name:entra-volta}
+.mov::view-transition-group(numero){animation-duration:var(--d-virada);animation-timing-function:var(--virada)}
+.mov::view-transition-old(numero),.mov::view-transition-new(numero){animation-duration:var(--d-virada)}
+.mov::view-transition-old(cabecalho){display:none}
+.mov::view-transition-new(cabecalho){animation:none}
+/* a onda com a API: a tela antiga fica parada por baixo e a nova cresce no círculo */
+.mov.onda::view-transition-group(lamina){animation-duration:var(--d-virada)}
+.mov.onda::view-transition-old(lamina){animation:none;mix-blend-mode:normal}
+.mov.onda::view-transition-new(lamina){animation:onda var(--d-virada) var(--dado) both;mix-blend-mode:normal}
 /* resposta ao toque, aceite desenhado e erro */
 .mov .check input:checked + .cx svg path{transition:stroke-dashoffset .28s ease .05s}
 .mov .alav button.recem[aria-pressed="true"] .cx svg path{animation:desenha .28s ease .05s backwards}
@@ -1529,10 +1560,45 @@ function origemOnda(){
 }
 function fimOnda(){ clearTimeout(tOnda); raiz.classList.remove("onda"); const f = $(".sim-fantasma"); if (f) f.remove(); }
 
+/* troca de tela: com a API de transição do navegador (View Transitions) ele guarda a tela antiga e a nova como imagens.
+   A antiga sai, a nova entra, a lâmina muda de altura sem corte, a onda passa por cima da tela antiga (e não de uma lâmina vazia)
+   e o número do resultado viaja até o resumo do contato. É melhoria progressiva: sem a API, ou com movimento reduzido,
+   vale o caminho de sempre, em pinta(..., false). As regras das imagens ficam no CSS, em "troca de tela com a API de transição". */
+const podeVT = !reduz && typeof document.startViewTransition === "function";
+let transicao = null;
 function render(mover, sentido){
+  if (!mover || !podeVT){ pinta(mover, sentido, false); return; }
+  const doc = document.documentElement, origem = origemOnda();   // medida antes de a tela antiga sair
+  doc.classList.toggle("volta", sentido < 0);                     // voltando, as telas correm para o outro lado
+  doc.classList.toggle("onda", raiz.dataset.tom === "papel" && !!AZUL[atual]);   // do claro para o escuro, a lâmina inteira vira uma imagem só, revelada pela onda
+  let t;
+  try { t = document.startViewTransition(() => pinta(true, sentido, true, origem)); }
+  catch (e) { doc.classList.remove("volta", "onda"); pinta(true, sentido, false); return; }
+  transicao = t;
+  const fim = () => { if (transicao === t){ transicao = null; doc.classList.remove("volta", "onda"); } };   // uma troca nova no meio desta herda as classes dela
+  t.finished.then(fim, fim); if (t.ready) t.ready.catch(() => {});
+}
+/* Enquanto a transição dura (até 0,45 s), a API tira do teste de acerto as partes fotografadas: um toque nesse intervalo cairia no vazio.
+   Por isso qualquer toque ou giro da roda encerra a transição na hora (a tela nova já está pronta por baixo),
+   e o clique que começou durante ela é refeito no elemento que está sob o dedo. Nenhum clique espera a animação. */
+if (podeVT){
+  let toqueNaTransicao = false;
+  document.addEventListener("pointerdown", () => { toqueNaTransicao = !!transicao; if (transicao) transicao.skipTransition(); }, true);
+  window.addEventListener("wheel", () => { if (transicao) transicao.skipTransition(); }, { passive:true });
+  document.addEventListener("click", e => {
+    const refaz = toqueNaTransicao; toqueNaTransicao = false;
+    if (!refaz || !e.isTrusted) return;
+    const alvo = document.elementFromPoint(e.clientX, e.clientY);
+    if (!alvo || alvo === e.target || alvo.contains(e.target)) return;   // o clique já acertou o elemento certo
+    e.stopPropagation(); e.preventDefault();
+    const foco = alvo.closest("input,select,textarea,button,a[href],summary,[tabindex]"); if (foco) foco.focus({ preventScroll:true });
+    alvo.dispatchEvent(new MouseEvent("click", { bubbles:true, cancelable:true, composed:true, view:window, clientX:e.clientX, clientY:e.clientY }));
+  }, true);
+}
+function pinta(mover, sentido, comVT, origemVT){
   fimOnda();
   const hAntes = raiz.getBoundingClientRect().height, nAntes = Number(raiz.dataset.n || 0), tomAntes = raiz.dataset.tom;
-  const origem = !reduz && mover ? origemOnda() : null;   // medida antes de a tela antiga sair
+  const origem = comVT ? origemVT : (!reduz && mover ? origemOnda() : null);   // medida antes de a tela antiga sair
   clearTimeout(tAltura); raiz.classList.remove("ajusta"); raiz.style.height = "";
   corpo.className = "sim-corpo"; acao.className = "sim-acao";
   const tela = TELAS[atual]();
@@ -1549,16 +1615,26 @@ function render(mover, sentido){
   acao.innerHTML = tela.acao || "";
   acao.hidden = !tela.acao;
   if (tela.montar) tela.montar();
+  if (mover){
+    const r = raiz.getBoundingClientRect();
+    const alturaTopo = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--topo"), 10) || 60;
+    // no celular a lâmina tem a altura da tela: ela é posta logo abaixo do cabeçalho a cada troca, para a pergunta inteira ficar à vista.
+    // Com a API de transição o salto é na hora: quem desliza é a imagem da lâmina, da posição antiga para a nova.
+    const celular = window.innerWidth < 980;
+    if (celular ? Math.abs(r.top - alturaTopo) > 6 : (r.top < alturaTopo || r.top > window.innerHeight * 0.45 || r.bottom > window.innerHeight)) window.scrollTo({ top: window.scrollY + r.top - alturaTopo - (celular ? 0 : 12), behavior: comVT ? "instant" : (reduz ? "auto" : "smooth") });
+  }
   if (ondaAgora){
-    // a tela nova aparece dentro de um círculo que cresce do ponto clicado até o canto mais distante da parte visível da lâmina;
-    // por baixo fica um fantasma claro, do tamanho da lâmina, que some quando a onda termina
+    // a tela nova aparece dentro de um círculo que cresce do ponto clicado até o canto mais distante da parte visível da lâmina
     const r = raiz.getBoundingClientRect(), doc = document.documentElement;
     const cima = Math.max(0, -r.top), baixo = Math.min(r.height, window.innerHeight - r.top);
     const raio = Math.hypot(Math.max(origem.x, r.width - origem.x), Math.max(origem.y - cima, baixo - origem.y, 0));
     doc.style.setProperty("--onda-x", origem.x.toFixed(1) + "px"); doc.style.setProperty("--onda-y", origem.y.toFixed(1) + "px"); doc.style.setProperty("--onda-r", Math.ceil(raio + 2) + "px");
-    const f = document.createElement("i"); f.className = "sim sim-fantasma"; f.dataset.tom = "papel"; f.setAttribute("aria-hidden", "true"); raiz.before(f);
-    raiz.classList.add("onda"); tOnda = setTimeout(fimOnda, 480);
-  } else if (!reduz){
+    if (!comVT){
+      // sem a API não há imagem da tela antiga: por baixo da onda fica um fantasma claro, do tamanho da lâmina, que some quando ela termina
+      const f = document.createElement("i"); f.className = "sim sim-fantasma"; f.dataset.tom = "papel"; f.setAttribute("aria-hidden", "true"); raiz.before(f);
+      raiz.classList.add("onda"); tOnda = setTimeout(fimOnda, 480);
+    }
+  } else if (!reduz && !comVT){
     // o cartão muda de altura aos poucos, e a pergunta nova entra pelo lado para onde a pessoa está indo
     const hDepois = raiz.getBoundingClientRect().height;
     if (hAntes > 0 && Math.abs(hDepois - hAntes) > 6){
@@ -1567,14 +1643,7 @@ function render(mover, sentido){
     }
     if (mover){ const cls = sentido < 0 ? "entra-volta" : "entra"; corpo.classList.add(cls); acao.classList.add(cls); }
   }
-  if (mover){
-    const r = raiz.getBoundingClientRect();
-    const alturaTopo = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--topo"), 10) || 60;
-    // no celular a lâmina tem a altura da tela: ela é posta logo abaixo do cabeçalho a cada troca, para a pergunta inteira ficar à vista
-    const celular = window.innerWidth < 980;
-    if (celular ? Math.abs(r.top - alturaTopo) > 6 : (r.top < alturaTopo || r.top > window.innerHeight * 0.45 || r.bottom > window.innerHeight)) window.scrollTo({ top: window.scrollY + r.top - alturaTopo - (celular ? 0 : 12), behavior: reduz ? "auto" : "smooth" });
-    const h = $(".sim-t", corpo); if (h) h.focus({ preventScroll:true });
-  }
+  if (mover){ const h = $(".sim-t", corpo); if (h) h.focus({ preventScroll:true }); }
 }
 const btnSeguir = (ok, rotulo, destino) => `<button type="button" class="sim-btn" id="btn-seguir" data-ir="${destino}" ${ok ? "" : "disabled"}>${rotulo || "Continuar"}</button>`;
 function chips(opcoes, valor, outro, extra){
