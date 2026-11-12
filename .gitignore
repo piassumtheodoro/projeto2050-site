@@ -1,2 +1,5 @@
-apps-script.gs
+# cópias locais antigas do receptor, na raiz (a fonte agora é a pasta receptor/)
+/apps-script*
+# credencial do clasp: nunca vai para o repositório
+.clasprc.json
 .DS_Store
