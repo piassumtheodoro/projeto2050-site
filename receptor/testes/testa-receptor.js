@@ -30,12 +30,33 @@ for (const pdfPrimeiro of [true, false]) {
   ok(plano && plano.anexos.length === 1 && plano.anexos[0].tipo === 'application/pdf' && plano.anexos[0].buffer.slice(0, 5).toString('latin1') === '%PDF-' && plano.anexos[0].buffer.length > 30000, 'com 1 anexo PDF de verdade (' + (plano && plano.anexos[0] ? plano.anexos[0].buffer.length + ' bytes' : 'sem anexo') + ')');
   ok(plano && /O relatório completo vai em anexo, em PDF\./.test(plano.corpo) && /vai em anexo/.test(plano.html), 'o e-mail avisa do anexo, no texto e no HTML');
   ok(plano && plano.html.includes('href="https://wa.me/5500000000000"') && plano.html.includes('Agendar reunião com especialista') && plano.html.includes('A Fulana de Tal') && plano.corpo.includes(CHAMADA + ' Agendar reunião com especialista: https://wa.me/5500000000000'), 'bloco da agenda com o link da aba Config e a frase da propriedade AGENDA_CHAMADA');
+  ok(plano && ['Tiago Piassum', 'Sua vida global', 'Seu ritmo de hoje', 'Se você ficar no Brasil'].every(t => plano.html.includes(t)), 'o HTML tem o cabeçalho e os rótulos do desenho novo');
+  ok(plano && plano.html.split('Se você ficar no Brasil').length === 2 && /Só pelo câmbio, o valor é US\$(&nbsp;| )925\.926\./.test(plano.html) && /Se você ficar no Brasil, só pelo câmbio/.test(plano.corpo), 'a linha do Brasil não repete o rótulo no HTML; o texto puro segue com a frase inteira');
+  ok(plano && /#2716E9/i.test(plano.html) && !plano.html.includes('#0541fe') && !plano.html.includes('#090909'), 'cores do site: o azul novo entra, o azul e o preto antigos saem');
+  ok(plano && plano.html.includes('Georgia') && plano.html.includes('Arial'), 'as fontes têm Georgia e Arial como reserva');
+  ok(plano && !/<script|display:\s*flex|display:\s*grid/i.test(plano.html), 'o HTML não tem script, flex nem grid');
+  ok(plano && !plano.html.includes('Baixar meu relatório em PDF'), 'sem botão de PDF: o relatório vai anexado');
   ok(!!aviso && aviso.anexos.length === 0 && /^Novo Plano de Voo: Ana Souza/.test(aviso.assunto), 'aviso interno para os endereços da propriedade AVISAR_EMAIL, sem anexo');
   ok(a.dados[0].indexOf('relatorio') < 0 && a.dados[0].indexOf('pdf_base64') < 0, 'a planilha não ganha coluna com os números do PDF');
   ok(a.dados.length === 2 && a.dados[1][a.dados[0].indexOf('email')] === 'ana@exemplo.com' && !!a.dados[1][a.dados[0].indexOf('email_enviado')], 'uma linha na aba Leads, com o envio do e-mail marcado');
   ok(a.erros.length === 0, 'sem erro no registro' + (a.erros.length ? ': ' + a.erros.join(' | ').slice(0, 300) : ''));
   if (pdfPrimeiro && amostras) { fs.mkdirSync(amostras, { recursive: true }); fs.writeFileSync(path.join(amostras, 'email-plano.pdf'), plano.anexos[0].buffer); fs.writeFileSync(path.join(amostras, 'email-plano.html'), plano.html); fs.writeFileSync(path.join(amostras, 'email-plano.txt'), plano.corpo); }
 }
+
+secao('nome com HTML é escapado no e-mail');
+{ const a = criar({ receptor, pdf, propriedades: PROPS });
+  a.post(simulador('S7', { nome: '<b>Ana</b> Souza' }));
+  const h = doPlano(a) ? doPlano(a).html : '';
+  ok(h.includes('&lt;b&gt;Ana&lt;/b&gt;') && !h.includes('<b>Ana</b>'), 'nome com tags aparece escapado, nunca como HTML'); }
+
+secao('e-mail em casos de borda');
+{ const a = criar({ receptor, pdf, propriedades: PROPS });
+  a.post(simulador('S80', { custo_mensal_brl: '' }));
+  ok(doPlano(a) && doPlano(a).html.includes('Patrimônio em dólar que paga a sua vida em Portugal.'), 'sem custo mensal: o destino continua no HTML, na frase grande'); }
+{ const a = criar({ receptor, pdf, propriedades: PROPS });
+  a.post(simulador('S81'));
+  const estiloDoNumero = (doPlano(a).html.match(/class="numero" style="([^"]+)"/) || [])[1] || '';
+  ok(/font-size:40px/.test(estiloDoNumero) && doPlano(a).html.includes('src="https://www.projeto2050.com/img/'), 'o número cabe num celular sem o <style> (40px na própria tag) e a foto vem do endereço com www'); }
 
 secao('propriedades do script');
 { const a = criar({ receptor, pdf });   // nenhuma propriedade definida

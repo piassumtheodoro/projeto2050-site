@@ -169,8 +169,8 @@ function numero(v, min, max) {
 // "4" ou "0,4": até duas casas, sem zeros à direita, com vírgula.
 function decimal(n) { return String(Math.round(n * 100) / 100).replace('.', ','); }
 
-// E-mail do plano, no visual da página e do PDF: faixa escura, faixa azul com o número, corpo claro.
-// Tabelas e estilos escritos na própria tag, como os programas de e-mail pedem.
+// E-mail do plano, no visual da página e do PDF: fundo de papel, pílula do Tiago no alto, o número grande em azul na serifa, filetes e botão em tinta.
+// Tabelas e estilos escritos na própria tag, como os programas de e-mail pedem; o <style> só traz as fontes da marca e a regra de celular.
 function enviarPlano(d) {
   try {
     const vida = inteiro(d.vida_global_usd, 1, 1e10);
@@ -216,45 +216,55 @@ function enviarPlano(d) {
     const tLista = 'Você está na lista de espera do Projeto 2050. Quando abrir, seu plano já vai estar na sua conta.';
     const tRodape = premissas + ' Não é recomendação de investimento. Para sair da lista, responda este e-mail.';
 
-    const F = 'font-family:Arial,Helvetica,sans-serif;';
-    const rotulo = function (t, cor) { return '<p style="' + F + 'margin:0;font-size:11px;line-height:16px;font-weight:bold;letter-spacing:1.2px;color:' + cor + '">' + t.toUpperCase() + '</p>'; };
-    const p = function (t, extraCss) { return t ? '<p style="' + F + 'margin:0 0 16px;font-size:16px;line-height:24px;color:#090909;' + (extraCss || '') + '">' + t + '</p>' : ''; };
+    // Cores e fontes do site e do PDF. As fontes da marca entram pelo <style>; sem ele (o Gmail o descarta), valem Arial e Georgia.
+    const PAPEL = '#F4F5F6', TINTA = '#0B0D0E', APOIO = '#63696E', FILETE = '#DBDEE1', AZUL = '#2716E9';
+    const SANS = 'font-family:Figtree,Arial,Helvetica,sans-serif;';
+    const SERIF = "font-family:'Hedvig Letters Serif',Georgia,'Times New Roman',serif;";
+    const linhaTd = function (css, conteudo, classe) { return '<tr><td' + (classe ? ' class="' + classe + '"' : '') + ' style="' + css + '">' + conteudo + '</td></tr>'; };
+    const bloco = function (rot, texto) {   // rótulo pequeno em cima, texto embaixo, filete acima
+      return '<tr><td style="padding:14px 0;border-top:1px solid ' + FILETE + '">' +
+        '<div style="' + SANS + 'font-size:15px;line-height:18px;font-weight:600;color:' + APOIO + ';padding-bottom:4px">' + rot + '</div>' +
+        '<div style="' + SANS + 'font-size:16px;line-height:24px;font-weight:400;color:' + TINTA + '">' + texto + '</div></td></tr>';
+    };
+    const tabela = function (conteudo, css) { return '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;' + (css || '') + '">' + conteudo + '</table>'; };
+    const tRitmo = chegou ? tRitmoA + tRitmoB
+      : tRitmoA + '<b style="font-weight:700">' + ritmo + '%</b>' + tRitmoB + (tExtraA ? ' ' + tExtraA + '<b style="font-weight:700">R$ ' + fmt(extra) + ' a mais por mês</b>' + tExtraB : '');
     const corpo =
-      '<div style="margin:0;padding:0;background:#f5f4f3">' +
-      '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f5f4f3" style="background:#f5f4f3"><tr><td align="center" style="padding:24px 12px">' +
-      '<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="width:100%;max-width:600px;background:#ffffff">' +
-      '<tr><td bgcolor="#090909" style="background:#090909;padding:26px 24px 22px">' +
-        rotulo('Projeto 2050 · por Tiago Piassum', '#8ea4ff') +
-        '<p style="' + F + 'margin:8px 0 0;font-size:28px;line-height:32px;font-weight:bold;color:#ffffff">Sua vida global</p>' +
-      '</td></tr>' +
-      '<tr><td bgcolor="#0541fe" style="background:#0541fe;padding:22px 24px 24px">' +
-        rotulo(tRotulo, '#ffffff') +
-        '<p style="' + F + 'margin:8px 0 6px;font-size:36px;line-height:42px;font-weight:bold;color:#ffffff">' + tNumero + '</p>' +
-        '<p style="' + F + 'margin:0;font-size:14px;line-height:21px;color:#ffffff">' + tQuando + '</p>' +
-      '</td></tr>' +
-      '<tr><td style="padding:26px 24px 8px">' +
-        p(tAbertura, 'font-weight:bold;') +
-        p(tVida) +
-        p(chegou ? tRitmoA + tRitmoB : tRitmoA + '<b>' + ritmo + '%</b>' + tRitmoB + (tExtraA ? ' ' + tExtraA + '<b>R$ ' + fmt(extra) + ' a mais por mês</b>' + tExtraB : '')) +
-        p(tBrasil) +
-        p(tAnexo, 'font-weight:bold;') +
-      '</td></tr>' +
-      (agendaUrl ? '<tr><td style="padding:0 24px 16px">' +
-        '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>' +
-        '<td bgcolor="#090909" style="background:#090909;padding:20px 20px 22px">' +
-          '<p style="' + F + 'margin:0;font-size:16px;line-height:24px;color:#ffffff">' + esc(agendaChamada, 300) + '</p>' +
-          '<p style="' + F + 'margin:16px 0 0"><a href="' + esc(agendaUrl, 500) + '" style="' + F + 'display:inline-block;background:#ffffff;color:#090909;font-size:15px;line-height:20px;font-weight:bold;text-decoration:none;padding:12px 24px;border-radius:999px">' + esc(AGENDA_BOTAO, 80) + '</a></p>' +
-        '</td></tr></table>' +
-      '</td></tr>' : '') +
-      '<tr><td style="padding:0 24px 24px">' +
-        '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>' +
-        '<td width="4" bgcolor="#0541fe" style="background:#0541fe;font-size:0;line-height:0">&nbsp;</td>' +
-        '<td bgcolor="#f5f4f3" style="background:#f5f4f3;padding:16px 18px">' +
-          '<p style="' + F + 'margin:0;font-size:15px;line-height:22px;color:#090909">' + tLista + '</p>' +
-          (SITE_URL ? '<p style="' + F + 'margin:14px 0 0"><a href="' + esc(SITE_URL, 300) + '" style="' + F + 'display:inline-block;background:#0541fe;color:#ffffff;font-size:14px;line-height:20px;font-weight:bold;text-decoration:none;padding:11px 22px;border-radius:999px">Conheça o Projeto 2050</a></p>' : '') +
-        '</td></tr></table>' +
-      '</td></tr>' +
-      '<tr><td style="padding:0 24px 26px"><p style="' + F + 'margin:0;border-top:1px solid #d6d5d2;padding-top:16px;font-size:12px;line-height:18px;color:#5c5c5c">' + tRodape + '</p></td></tr>' +
+      '<style>@import url("https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;700&family=Hedvig+Letters+Serif&display=swap");' +
+      '@media (max-width:480px){.lado{padding-left:20px !important;padding-right:20px !important}.frase{font-size:24px !important}}' +
+      '@media (min-width:481px){.numero{font-size:60px !important;line-height:64px !important}}</style>' +
+      '<div style="margin:0;padding:0;background-color:' + PAPEL + '">' +
+      '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="' + PAPEL + '" style="width:100%;background-color:' + PAPEL + '"><tr><td align="center" style="padding:0">' +
+      '<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" bgcolor="' + PAPEL + '" style="width:100%;max-width:600px;background-color:' + PAPEL + '">' +
+      // cabeçalho: pílula com a foto à esquerda, "Projeto 2050" à direita
+      '<tr><td class="lado" style="padding:32px 32px 0 32px">' + tabela('<tr>' +
+        '<td align="left" valign="middle" style="font-size:0;line-height:0"><table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:separate"><tr>' +
+          '<td bgcolor="#1B1E21" style="background-color:#1B1E21;border:1px solid #33383E;border-radius:999px;padding:4px 14px 4px 4px">' +
+          '<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>' +
+            '<td valign="middle" style="padding:0 8px 0 0;font-size:0;line-height:0"><img src="https://www.projeto2050.com/img/tiago-avatar-pdf.jpg" alt="Tiago Piassum" width="28" height="28" style="display:block;width:28px;height:28px;border:0;border-radius:14px;background-color:#33383E;font-size:0;line-height:0;color:#33383E"></td>' +
+            '<td valign="middle" style="' + SANS + 'font-size:14px;line-height:20px;font-weight:700;color:' + PAPEL + ';white-space:nowrap">Tiago Piassum</td>' +
+          '</tr></table></td></tr></table></td>' +
+        '<td align="right" valign="middle" style="' + SANS + 'font-size:14px;line-height:20px;font-weight:600;color:' + APOIO + ';white-space:nowrap">Projeto&nbsp;2050</td>' +
+      '</tr>') + '</td></tr>' +
+      // número, com o sublinhado, e o "quando" embaixo
+      linhaTd('padding:40px 32px 0 32px;' + SANS + 'font-size:15px;line-height:18px;font-weight:600;color:' + APOIO, 'Sua vida global', 'lado') +
+      linhaTd('padding:12px 32px 0 32px', '<span class="numero" style="display:inline-block;' + SERIF + 'font-size:40px;line-height:46px;font-weight:400;letter-spacing:-1px;color:' + AZUL + ';white-space:nowrap;border-bottom:4px solid #3D2EEB;padding-bottom:2px">' + tNumero + '</span>', 'lado') +
+      linhaTd('padding:16px 32px 0 32px;' + SANS + 'font-size:17px;line-height:25px;font-weight:400;color:' + APOIO, tQuando, 'lado') +
+      linhaTd('padding:24px 32px 0 32px;' + SERIF + 'font-size:28px;line-height:32px;font-weight:400;letter-spacing:-0.4px;color:' + TINTA, tVida || tRotulo + '.', 'lado frase') +
+      linhaTd('padding:24px 32px 0 32px;' + SANS + 'font-size:17px;line-height:25px;font-weight:600;color:' + TINTA, tAbertura, 'lado') +
+      // ritmo e Brasil, cada um com rótulo e filete
+      linhaTd('padding:24px 32px 0 32px', tabela(bloco('Seu ritmo de hoje', tRitmo) + (tBrasil ? bloco('Se você ficar no Brasil', 'Só pelo câmbio, o valor é US$ ' + fmt(brasil) + '.') : ''), 'border-bottom:1px solid ' + FILETE), 'lado') +
+      // o PDF vai anexado: só o aviso
+      (tAnexo ? linhaTd('padding:32px 32px 0 32px;' + SANS + 'font-size:16px;line-height:24px;font-weight:700;color:' + TINTA, tAnexo, 'lado') : '') +
+      // agenda: a chamada e o botão em tinta, de largura inteira
+      (agendaUrl ? linhaTd('padding:32px 32px 0 32px', tabela(
+        '<tr><td style="' + SANS + 'font-size:16px;line-height:24px;color:' + TINTA + ';padding-bottom:16px">' + esc(agendaChamada, 300) + '</td></tr>' +
+        '<tr><td align="center" bgcolor="' + TINTA + '" style="background-color:' + TINTA + ';border-radius:6px"><a href="' + esc(agendaUrl, 500) + '" style="display:block;padding:18px 24px;' + SANS + 'font-size:17px;line-height:20px;font-weight:700;color:#FFFFFF;text-decoration:none;text-align:center">' + esc(AGENDA_BOTAO, 80) + '</a></td></tr>'), 'lado') : '') +
+      // lista de espera
+      linhaTd('padding:32px 32px 0 32px', tabela('<tr><td style="padding:20px 0 0 0;border-top:1px solid ' + FILETE + ';' + SANS + 'font-size:16px;line-height:24px;font-weight:400;color:' + TINTA + '">' + tLista +
+        (SITE_URL ? '<br><a href="' + esc(SITE_URL, 300) + '" style="display:inline-block;padding-top:10px;' + SANS + 'font-size:16px;line-height:24px;font-weight:700;color:' + AZUL + ';text-decoration:underline">Conheça o Projeto 2050</a>' : '') + '</td></tr>'), 'lado') +
+      // rodapé
+      linhaTd('padding:28px 32px 40px 32px', tabela('<tr><td style="padding:16px 0 0 0;border-top:1px solid ' + FILETE + ';' + SANS + 'font-size:13px;line-height:19px;font-weight:400;color:' + APOIO + '">' + tRodape + '</td></tr>'), 'lado') +
       '</table></td></tr></table></div>';
     // "R$ 20.000" e "US$ 925.926" não se partem em duas linhas
     const html = corpo.replace(/(R\$|US\$) (?=\d)/g, function (m, moeda) { return moeda + '&nbsp;'; });
