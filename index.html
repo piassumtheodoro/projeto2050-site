@@ -956,8 +956,10 @@ section{position:relative}
 .mov.volta::view-transition-new(tela){animation-name:entra-volta}
 .mov::view-transition-group(numero){animation-duration:var(--d-virada);animation-timing-function:var(--virada)}
 .mov::view-transition-old(numero),.mov::view-transition-new(numero){animation-duration:var(--d-virada)}
-.mov::view-transition-old(cabecalho){display:none}
-.mov::view-transition-new(cabecalho){animation:none}
+.mov .toast{view-transition-name:aviso}                              /* o aviso do pé da tela ("Link copiado") também segue por cima da lâmina */
+.mov::view-transition-old(cabecalho),.mov::view-transition-old(aviso){display:none}
+.mov::view-transition-new(cabecalho),.mov::view-transition-new(aviso){animation:none}
+.mov::view-transition-group(cabecalho),.mov::view-transition-group(aviso){z-index:1}   /* sempre acima das partes da lâmina, mesmo das que só existem na tela nova (a barra do botão) */
 /* a onda com a API: a tela antiga fica parada por baixo e a nova cresce no círculo */
 .mov.onda::view-transition-group(lamina){animation-duration:var(--d-virada)}
 .mov.onda::view-transition-old(lamina){animation:none;mix-blend-mode:normal}
@@ -1623,7 +1625,9 @@ function fimOnda(){ clearTimeout(tOnda); raiz.classList.remove("onda"); const f 
 const podeVT = !reduz && typeof document.startViewTransition === "function";
 let transicao = null;
 function render(mover, sentido){
-  if (!mover || !podeVT){ pinta(mover, sentido, false); return; }
+  // com uma janela aberta por cima (o resultado pode chegar sozinho enquanto a pessoa preenche a lista de espera), vale o caminho sem a API:
+  // as imagens da transição são desenhadas acima de tudo, inclusive da janela
+  if (!mover || !podeVT || $("dialog[open]")){ pinta(mover, sentido, false); return; }
   const doc = document.documentElement, origem = origemOnda();   // medida antes de a tela antiga sair
   doc.classList.toggle("volta", sentido < 0);                     // voltando, as telas correm para o outro lado
   doc.classList.toggle("onda", raiz.dataset.tom === "papel" && !!AZUL[atual]);   // do claro para o escuro, a lâmina inteira vira uma imagem só, revelada pela onda
