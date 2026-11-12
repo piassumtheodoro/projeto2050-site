@@ -363,6 +363,11 @@ section{position:relative}
 .seg i.on{background:#2716E9;box-shadow:none}
 .trilho{height:10px;border-radius:var(--r-s);background:#1B1E21;box-shadow:inset 0 0 0 1px #33383E;overflow:hidden}
 .trilho i{display:block;height:100%;width:21%;background:#2716E9}
+/* o valor de cada barra fica escrito ao lado dela: os números grandes (20 e 50) são o nome da medida, não o valor */
+.medida{display:flex;align-items:center;flex-wrap:wrap;gap:8px 14px}
+.medida .seg{flex:none}
+.medida .trilho{flex:1 1 140px}
+.medida-v{flex:none;font-size:var(--t-rotulo);font-weight:600;line-height:1.2;color:var(--texto);white-space:nowrap}
 .duo-col{width:100%;margin-right:-6%;max-width:420px;margin-bottom:var(--e2)}
 .pilares{display:grid;width:100%;border-top:1px solid var(--filete)}
 .pilares li{display:grid;grid-template-columns:minmax(0,116px) 1fr;gap:4px 14px;padding:15px 0;border-bottom:1px solid var(--filete)}
@@ -1062,12 +1067,12 @@ d.classList.add("js");if(!r)d.classList.add("mov");})();
       <div class="metodo rev" aria-label="Método 20/50, com valores de exemplo">
         <div class="metodo-c">
           <div class="n">20<span>Formação</span></div>
-          <div class="seg" role="img" aria-label="Exemplo: 7 de 20 trilhas concluídas"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          <div class="medida"><div class="seg" role="img" aria-label="Exemplo: 7 de 20 trilhas concluídas"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><span class="medida-v num" aria-hidden="true">7 de 20 trilhas</span></div>
           <p>Trilhas concluídas de 20. Mede o que você aprendeu e praticou.</p>
         </div>
         <div class="metodo-c">
           <div class="n">50<span>Patrimônio</span></div>
-          <div class="trilho" role="img" aria-label="Exemplo: 21% da meta"><i></i></div>
+          <div class="medida"><div class="trilho" role="img" aria-label="Exemplo: 21% da meta"><i></i></div><span class="medida-v num" aria-hidden="true">21% da meta</span></div>
           <p>Patrimônio atual comparado à sua meta para 2050, em valores de hoje.</p>
         </div>
         <p class="exemplo">Valores de exemplo. As duas medidas são independentes: concluir as 20 trilhas não significa atingir a liberdade financeira.</p>
