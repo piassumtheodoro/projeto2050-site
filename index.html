@@ -867,6 +867,15 @@ section{position:relative}
 @supports (animation-timeline:scroll()){
   .mov .hero-foto img{animation:cam .9s var(--camera) backwards,foto-afunda linear both;animation-timeline:auto,scroll(root block);animation-range:normal,0px 100vh}
 }
+/* menu: com movimento, o sublinhado do item ativo vira um traço só, criado pelo JS, que desliza de um item para o outro */
+.mov .menu{position:relative}
+.mov .menu a[aria-current] span,.mov .menu a[aria-current]:hover span,.mov .menu a[aria-current]:focus-visible span{text-decoration-line:none}
+.menu-traco{position:absolute;left:0;top:0;width:100px;height:2px;background:var(--fio);transform-origin:0 50%;opacity:0;pointer-events:none;transition:transform var(--d-virada) var(--virada),opacity var(--d-estado) var(--dado)}
+.menu-traco.on{opacity:1}
+/* barra fina de leitura, no alto da tela: cresce com a rolagem da página. Com linha do tempo de rolagem no CSS ela anda sozinha; senão o JS passa o avanço em --lido (0 a 1). */
+@keyframes leitura{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.mov .topo::after{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:var(--fio);transform-origin:0 50%;transform:scaleX(var(--lido,0));pointer-events:none}
+@supports (animation-timeline:scroll()){ .mov .topo::after{animation:leitura linear both;animation-timeline:scroll(root block)} }
 /* computador: uma luz de fundo acompanha o cursor dentro do topo. O elemento é criado pelo JS, só onde há mouse. */
 .hero-luz{position:absolute;left:0;top:0;z-index:0;width:640px;height:640px;margin:-320px 0 0 -320px;border-radius:50%;pointer-events:none;background:radial-gradient(circle,rgba(255,255,255,.07),transparent 62%);opacity:0;transition:opacity .4s var(--dado),transform .25s var(--sai-suave)}
 .hero-luz.on{opacity:1}
@@ -2581,9 +2590,9 @@ document.addEventListener("click", e => {
   }
 
   if (!reduz){
-    const deg = $(".degraus"), raizDoc = document.documentElement, heroi = $(".hero");
+    const deg = $(".degraus"), raizDoc = document.documentElement, heroi = $(".hero"), cabecalho = $(".topo");
     const cssRola = !!(window.CSS && CSS.supports && CSS.supports("animation-timeline: scroll()"));   // o CSS acompanha a rolagem sozinho: o JS não precisa
-    let ultimoY = Math.max(0, window.scrollY), marcado = false, hpPosto = -1;
+    let ultimoY = Math.max(0, window.scrollY), marcado = false, hpPosto = -1, alturaPagina = 1, tPagina = -1e9;
 
     // computador: luz de fundo que acompanha o cursor no topo. Só com mouse, e só enquanto o cursor está sobre o topo (um quadro por movimento, sem laço).
     if (heroi && window.matchMedia("(hover:hover) and (pointer:fine)").matches){
@@ -2606,6 +2615,11 @@ document.addEventListener("click", e => {
       const y = Math.max(0, window.scrollY), vh = window.innerHeight;
       // topo: a foto afunda de leve enquanto o topo sai da tela (só onde o CSS não faz isso sozinho; depois que o topo saiu, não mexe mais)
       if (!cssRola && heroi){ const hp = Math.min(1, y / vh); if (hp !== hpPosto){ hpPosto = hp; heroi.style.setProperty("--hp", hp.toFixed(3)); } }
+      // barra de leitura no alto da tela (de novo, só onde o CSS não acompanha a rolagem sozinho). A altura da página é relida no máximo duas vezes por segundo.
+      if (!cssRola && cabecalho){
+        const agora = performance.now(); if (agora - tPagina > 500){ alturaPagina = Math.max(1, raizDoc.scrollHeight - vh); tPagina = agora; }
+        cabecalho.style.setProperty("--lido", Math.min(1, y / alturaPagina).toFixed(4));
+      }
       // degraus: crescem conforme a faixa sobe pela tela
       if (deg){ const r = deg.getBoundingClientRect(); if (r.top < vh + 60 && r.bottom > -60) deg.style.setProperty("--p", Math.min(1, Math.max(0, (vh - r.top) / (vh * 0.55))).toFixed(3)); }
       // cabeçalho: some ao rolar para baixo e volta ao rolar para cima (o CSS só aplica isso no celular)
@@ -2659,8 +2673,24 @@ document.addEventListener("click", e => {
     $$("main > [data-fundo], footer[data-fundo]").forEach(s => ioCab.observe(s));
     // menu: marca o item da seção que cruza a linha a 30% da altura da tela (data-menu). Seção sem data-menu não marca nenhum.
     // A linha fica abaixo do cabeçalho de propósito: ao clicar num item, a seção para a 12px do cabeçalho e já conta como a atual.
-    const itensMenu = $$(".menu a");
-    const marcaMenu = alvo => itensMenu.forEach(a => { if (alvo && a.getAttribute("href") === "#" + alvo) a.setAttribute("aria-current", "location"); else a.removeAttribute("aria-current"); });
+    const itensMenu = $$(".menu a"), menu = $(".menu");
+    // com movimento, um traço só marca o item ativo e desliza de um para o outro; sem movimento vale o sublinhado do próprio item.
+    // A posição é lida só quando o item ativo muda ou a janela muda de tamanho, nunca a cada quadro.
+    let traco = null;
+    if (!reduz && menu){ traco = document.createElement("i"); traco.className = "menu-traco"; traco.setAttribute("aria-hidden", "true"); menu.append(traco); }
+    const poeTraco = desliza => {
+      if (!traco) return;
+      const a = itensMenu.find(x => x.hasAttribute("aria-current")), palavra = a && $("span", a);
+      if (!palavra || !menu.offsetWidth){ traco.classList.remove("on"); return; }
+      const m = menu.getBoundingClientRect(), p = palavra.getBoundingClientRect();
+      const direto = !desliza || !traco.classList.contains("on");          // quando nasce, ou quando a janela muda de tamanho, aparece no lugar, sem vir deslizando
+      if (direto) traco.style.transition = "opacity var(--d-estado) var(--dado)";
+      traco.style.transform = `translate3d(${(p.left - m.left).toFixed(1)}px,${Math.round(p.bottom - m.top - 0.7)}px,0) scaleX(${(p.width / 100).toFixed(4)})`;   // na altura em que o sublinhado parado fica
+      if (direto){ void traco.offsetWidth; traco.style.transition = ""; }
+      traco.classList.add("on");
+    };
+    const marcaMenu = alvo => { itensMenu.forEach(a => { if (alvo && a.getAttribute("href") === "#" + alvo) a.setAttribute("aria-current", "location"); else a.removeAttribute("aria-current"); }); poeTraco(true); };
+    if (traco){ window.addEventListener("resize", () => poeTraco(false)); if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => poeTraco(false)); }
     const ioMenu = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) marcaMenu(e.target.dataset.menu); }), { rootMargin:"-30% 0px -69% 0px" });
     $$("main > [data-fundo], footer[data-fundo]").forEach(s => ioMenu.observe(s));
   } else {
