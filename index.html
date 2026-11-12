@@ -113,7 +113,8 @@
 /* ---------- base ---------- */
 *,*::before,*::after{box-sizing:border-box}
 [hidden]{display:none!important}
-html{scroll-behavior:smooth;scroll-padding-top:calc(var(--topo) + 12px);-webkit-text-size-adjust:100%}
+html{scroll-padding-top:calc(var(--topo) + 12px);-webkit-text-size-adjust:100%}
+html.mov{scroll-behavior:smooth}   /* rolagem suave só com movimento ligado; sem ele, os links da página saltam direto */
 body{margin:0;background:var(--tinta);color:#F4F5F6;font-family:var(--sans);font-weight:500;font-size:var(--t-corpo);line-height:1.5;-webkit-font-smoothing:antialiased;font-synthesis:none;overflow-x:hidden}
 img{display:block;max-width:100%;height:auto}
 h1,h2,h3,h4,p,ol,ul,figure{margin:0}
@@ -148,7 +149,7 @@ section{position:relative}
 .rotulo{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-bottom:14px;margin-bottom:var(--e6);border-bottom:1px solid var(--filete)}
 .rotulo span:first-child{display:inline-flex;align-items:center;gap:10px;color:var(--texto)}
 .rotulo span:first-child::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--texto)}
-.rotulo span:last-child{font-family:var(--serifa);font-size:14px;color:var(--apoio)}
+.rotulo span + span{font-family:var(--serifa);font-size:14px;color:var(--apoio)}   /* o número, quando a seção tem um: são as quatro seções do menu */
 .tag{display:inline-flex;align-items:center;gap:10px;color:var(--texto)}
 .tag::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--texto)}
 
@@ -200,9 +201,13 @@ section{position:relative}
 .topo .marca{transition:background-color .15s var(--camera),box-shadow .15s var(--camera),color .15s var(--camera)}
 .menu{display:none;gap:28px}
 .menu a{display:inline-flex;align-items:flex-start;min-height:44px;padding-top:11px;font-size:15px;font-weight:500;text-decoration:none;color:var(--texto);text-underline-offset:6px;text-decoration-thickness:2px}
-.menu a:hover,.menu a:focus-visible{text-decoration-line:underline}
+.menu a:hover span,.menu a:focus-visible span{text-decoration-line:underline;text-decoration-thickness:2px}   /* o sublinhado vai só na palavra: posto no link, ele passava também por baixo do número */
 .menu sup{margin-left:3px;font-family:var(--serifa);font-size:12px;line-height:1;color:var(--apoio)}
-@media (max-width:339px){ .topo .extra{display:none} .topo{gap:10px} }
+/* a seção em que a pessoa está: palavra sublinhada na cor do fio e número na cor de acento. O JS põe aria-current no item (data-menu da seção que cruza a linha de leitura). */
+.menu a[aria-current] span{text-decoration-line:underline;text-decoration-thickness:2px;text-decoration-color:var(--fio)}
+.menu a[aria-current] sup{color:var(--acento)}
+/* celular: o cabeçalho leva só a pílula. A ação fica com o botão do topo, a barra fixa e o botão do fecho, um de cada vez; o botão do cabeçalho (250px) não cabe ao lado da pílula. */
+@media (max-width:759px){ .topo .btn.peq{display:none} }
 @media (min-width:760px){ .marca{font-size:15px} }
 @media (min-width:980px){ .menu{display:flex;align-items:center} }
 /* celular, ao rolar para baixo: fica só a pílula */
@@ -210,15 +215,14 @@ section{position:relative}
 .sem-topo .topo[data-fundo]{background-color:transparent;border-bottom-color:transparent}
 .sem-topo .topo.solido[data-fundo]{background-color:#0B0D0E;border-bottom-color:var(--filete)}   /* sobre o simulador a barra fica, para o título não aparecer ao lado da pílula */
 .sem-topo .topo .marca{pointer-events:auto}
-.sem-topo .topo .btn.peq{opacity:0;transform:translateY(-8px);pointer-events:none}
-.topo .btn.peq{transition:opacity var(--d-saida) var(--sai-suave),transform var(--d-saida) var(--sai-suave),background-color var(--d-estado) var(--dado),color var(--d-estado) var(--dado),scale var(--d-toque) var(--dado)}
-@media (min-width:760px){ .sem-topo .topo{background-color:#0B0D0E;pointer-events:auto} .sem-topo .topo[data-fundo]{background-color:#0B0D0E;border-bottom-color:var(--filete);pointer-events:auto} .sem-topo .topo[data-fundo="papel"]{background-color:#F4F5F6} .sem-topo .topo .btn.peq{opacity:1;transform:none;pointer-events:auto} }
+@media (min-width:760px){ .sem-topo .topo{background-color:#0B0D0E;pointer-events:auto} .sem-topo .topo[data-fundo]{background-color:#0B0D0E;border-bottom-color:var(--filete);pointer-events:auto} .sem-topo .topo[data-fundo="papel"]{background-color:#F4F5F6} }
 
 /* ---------- herói (tinta) ---------- */
 .hero{position:relative;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto auto minmax(220px,1fr);align-content:stretch;min-height:calc(100svh - var(--topo));padding:16px var(--lat) 0;overflow-x:clip}
 .hero::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse 60% 50% at 55% 40%,rgba(255,255,255,.07),transparent 70%)}
 .hero-oferta{display:contents}
-.hero .olho{grid-row:1;grid-column:1;position:relative;z-index:2;max-width:30ch;margin:0;font-size:var(--t-fina);font-weight:300;line-height:1.3;letter-spacing:-.01em;color:var(--apoio)}
+/* hierarquia do topo: título > pergunta (.hero-def) > linha de apoio (.olho). A linha de apoio usa o tamanho de apoio, sempre abaixo da pergunta. */
+.hero .olho{grid-row:1;grid-column:1;position:relative;z-index:2;max-width:30ch;margin:0;font-size:var(--t-apoio);font-weight:500;line-height:1.4;color:var(--apoio)}
 .hero-t{grid-row:2;grid-column:1;position:relative;z-index:2;margin-top:10px;font-weight:800;line-height:1}
 .hero-t .l{display:block}
 .hero-t .l:first-of-type{font-size:var(--t-heroi-forte);letter-spacing:-.03em;color:var(--texto)}
@@ -293,6 +297,10 @@ section{position:relative}
 #sim-corpo:has(.calc){align-content:center}
 #sim-acao{position:sticky;bottom:0;z-index:5;margin-inline:calc(-1 * var(--sim-pad));padding:12px var(--sim-pad) max(12px,env(safe-area-inset-bottom));background-color:var(--fundo);border-top:1px solid var(--filete)}
 #sim-acao[hidden]{display:none}
+/* enquanto o fim da lâmina está abaixo da tela, a barra do botão fica presa na base e cobre o que vem depois: um degradê avisa que a tela continua. O JS põe .cobre na lâmina. */
+#sim-acao::before{content:"";position:absolute;left:0;right:0;bottom:100%;height:40px;margin-bottom:1px;background:linear-gradient(to top,var(--fundo),transparent);opacity:0;pointer-events:none;transition:opacity var(--d-estado) var(--dado)}
+#sim.cobre #sim-acao::before{opacity:1}
+#sim-fim{display:block;height:1px;margin-top:-1px;pointer-events:none}   /* marca o fim da lâmina para o observador */
 /* computador: o título cabe em uma linha e deixa de disputar com a lâmina; sobre a tinta fica branco */
 @media (min-width:980px){ #sim-titulo .t-virada{font-size:clamp(56px,6.2vw,80px)} }
 #simulador:has(#sim[data-tom="azul"]) #sim-titulo .t-virada{color:var(--texto)}
@@ -348,6 +356,18 @@ section{position:relative}
   .cartao.largo .cartao-v.capa > img:not(.col-pardo){width:170px}
   .cartao.largo .cartao-c{justify-content:center}
 }
+/* celular: os produtos correm de lado, um cartão por vez, com o próximo aparecendo na borda. Não há avanço automático: quem move é a pessoa. */
+.grade-pos{display:none}
+@media (max-width:759px){
+  .grade{display:flex;gap:16px;margin:-10px calc(-1 * var(--lat));padding:10px 0 10px var(--lat);overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scroll-padding-inline:var(--lat);scrollbar-width:none}   /* os 10px de cima e de baixo dão lugar ao contorno de foco dos cartões */
+  .grade::-webkit-scrollbar{display:none}
+  .grade::after{content:"";flex:0 0 calc(var(--lat) - 16px)}   /* folga do fim: somada ao vão de 16px, dá a margem lateral */
+  .grade > .cartao{flex:0 0 min(82%,340px);scroll-snap-align:start}
+  .grade:focus-visible{outline-offset:-3px}
+  .grade-pos{display:flex;justify-content:center;gap:6px;margin-top:var(--e4)}
+  .grade-pos i{width:18px;height:3px;border-radius:var(--r-s);background:var(--trilho);transition:background-color var(--d-estado) var(--dado)}
+  .grade-pos i.on{background:var(--texto)}
+}
 
 /* ---------- projeto 2050 (tinta) ---------- */
 .duo{display:grid;gap:var(--e6);grid-template-columns:minmax(0,1fr)}
@@ -363,6 +383,11 @@ section{position:relative}
 .seg i.on{background:#2716E9;box-shadow:none}
 .trilho{height:10px;border-radius:var(--r-s);background:#1B1E21;box-shadow:inset 0 0 0 1px #33383E;overflow:hidden}
 .trilho i{display:block;height:100%;width:21%;background:#2716E9}
+/* o valor de cada barra fica escrito ao lado dela: os números grandes (20 e 50) são o nome da medida, não o valor */
+.medida{display:flex;align-items:center;flex-wrap:wrap;gap:8px 14px}
+.medida .seg{flex:none}
+.medida .trilho{flex:1 1 140px}
+.medida-v{flex:none;font-size:var(--t-rotulo);font-weight:600;line-height:1.2;color:var(--texto);white-space:nowrap}
 .duo-col{width:100%;margin-right:-6%;max-width:420px;margin-bottom:var(--e2)}
 .pilares{display:grid;width:100%;border-top:1px solid var(--filete)}
 .pilares li{display:grid;grid-template-columns:minmax(0,116px) 1fr;gap:4px 14px;padding:15px 0;border-bottom:1px solid var(--filete)}
@@ -447,8 +472,13 @@ section{position:relative}
 .faq details{border-top:1px solid var(--filete)}
 .faq summary{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:56px;padding:16px 0;cursor:pointer;font-weight:700;font-size:18px;line-height:1.3;list-style:none}
 .faq summary::-webkit-details-marker{display:none}
-.faq summary::after{content:"";flex:none;width:32px;height:32px;border:1.5px solid var(--filete);border-radius:50%;background:linear-gradient(var(--texto),var(--texto)) center/14px 2px no-repeat,linear-gradient(var(--texto),var(--texto)) center/2px 14px no-repeat;transition:border-color var(--d-estado) var(--dado)}
+.faq summary::after{content:"";flex:none;width:32px;height:32px;border:1.5px solid var(--filete);border-radius:50%;background:linear-gradient(var(--texto),var(--texto)) center/14px 2px no-repeat,linear-gradient(var(--texto),var(--texto)) center/2px 14px no-repeat;transition:border-color var(--d-estado) var(--dado),background-color var(--d-estado) var(--dado)}
 .faq details[open] summary::after{border-color:var(--texto);background:linear-gradient(var(--texto),var(--texto)) center/14px 2px no-repeat}
+/* passar do mouse: o círculo do sinal inverte, como os botões redondos de contorno (voltar, fechar) */
+@media (hover:hover){
+  .faq summary:hover::after{border-color:var(--texto);background:linear-gradient(var(--fundo),var(--fundo)) center/14px 2px no-repeat,linear-gradient(var(--fundo),var(--fundo)) center/2px 14px no-repeat var(--texto)}
+  .faq details[open] summary:hover::after{background:linear-gradient(var(--fundo),var(--fundo)) center/14px 2px no-repeat var(--texto)}
+}
 .faq p{padding:0 0 20px;max-width:70ch;font-size:16px;line-height:1.5;color:var(--texto)}
 
 /* ---------- fecho (papel) ---------- */
@@ -505,6 +535,10 @@ section{position:relative}
 .fixo a:active{background:#B3ADF8;color:#0B0D0E;scale:.97}
 @media (hover:hover){ .fixo a:hover{background:#B3ADF8;color:#0B0D0E} }
 @media (min-width:760px){ .fixo{display:none} .rodape{padding-bottom:var(--e6)} }
+/* celular estreito: o rótulo "Fazer meu planejamento global" pede 319px de botão com a letra de 17px. Abaixo de 390px de tela o texto dos botões
+   encolhe aos poucos (até 14px em 320px) e, abaixo de 340px, a margem interna cai para 16px e o cartão do carrossel alarga, para o rótulo ficar numa linha só. */
+@media (max-width:389px){ :root{ --t-botao:clamp(14px,4.4vw,17px) } }
+@media (max-width:339px){ .btn,.sim-btn,.fixo a{padding-inline:16px} .grade > .cartao{flex-basis:88%} }
 
 /* ---------- simulador: topo, controles e as doze telas ---------- */
 .sim-voltar{flex:none;display:grid;place-items:center;width:44px;height:44px;margin-left:-6px;border:1.5px solid var(--filete);border-radius:50%;background:transparent;color:var(--texto);transition:background-color var(--d-estado) var(--dado),color var(--d-estado) var(--dado),scale var(--d-toque) var(--dado)}
@@ -547,6 +581,10 @@ section{position:relative}
 .chip{min-height:48px;padding:6px 12px;border:1.5px solid var(--texto);border-radius:var(--r-p);background:var(--campo);font-size:15px;font-weight:700;line-height:1.15;text-wrap:balance;color:var(--texto);transition:background-color var(--d-estado) var(--dado),color var(--d-estado) var(--dado),border-color var(--d-estado) var(--dado),scale var(--d-toque) var(--dado)}
 .chip[aria-pressed="true"]{background:var(--azul);border-color:var(--azul);color:#fff}
 .chip:active{scale:.97}
+@media (hover:hover){ .chip:not([aria-pressed="true"]):hover{background:var(--texto);color:var(--fundo)} }   /* o mesmo passar do mouse das opções e dos botões de contorno; o escolhido segue azul */
+/* países: duas colunas, três quando a lâmina tem largura. "Estados Unidos" cabe numa linha só e as seis opções fecham fileiras inteiras */
+.chips.paises{grid-template-columns:repeat(2,minmax(0,1fr))}
+@container (min-width:470px){ .chips.paises{grid-template-columns:repeat(3,minmax(0,1fr))} }
 .opcoes{display:grid;gap:10px}
 .opcao{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:76px;padding:12px 16px;border:1.5px solid var(--texto);border-radius:var(--r);background:var(--campo);text-align:left;color:var(--texto);transition:background-color var(--d-estado) var(--dado),color var(--d-estado) var(--dado),scale var(--d-toque) var(--dado)}
 .opcao b{display:block;font-family:var(--serifa);font-weight:400;font-size:30px;line-height:1.1}
@@ -572,6 +610,7 @@ section{position:relative}
 .passo-num div{flex:none;display:flex;align-items:center;gap:4px}
 .passo-num button{display:grid;place-items:center;width:48px;height:48px;border:1.5px solid var(--texto);border-radius:50%;background:transparent;color:var(--texto);transition:background-color var(--d-estado) var(--dado),color var(--d-estado) var(--dado),scale var(--d-toque) var(--dado)}
 .passo-num button:active{background:var(--texto);color:var(--fundo);scale:.95}
+@media (hover:hover){ .passo-num button:not(:disabled):hover{background:var(--texto);color:var(--fundo)} }
 .passo-num button:disabled{opacity:.38}
 .passo-num output{min-width:2ch;text-align:center;font-family:var(--serifa);font-size:40px;line-height:1}
 .check{position:relative;display:grid;grid-template-columns:24px 1fr;gap:12px;align-items:start;min-height:44px;padding-block:4px;font-size:15px;font-weight:500;line-height:1.45;cursor:pointer}
@@ -762,6 +801,8 @@ section{position:relative}
 .mov :is(.grade,.tres,.etapas) > .rev:nth-child(3){transition-delay:.12s}
 .mov :is(.grade,.tres,.etapas) > .rev:nth-child(4){transition-delay:.18s}
 .mov :is(.grade,.tres,.etapas) > .rev:nth-child(n+5){transition-delay:.24s}
+/* celular: no carrossel de produtos os cartões entram na tela pelo lado, então só surgem, sem subir e sem fila */
+@media (max-width:759px){ .mov .grade > .rev{transform:none} .mov .grade > .rev:nth-child(n){transition-delay:0s} }
 /* quem tem movimento próprio não usa o surge padrão */
 .mov .fio.rev,.mov .colagem.rev,.mov .titulo.rev,.mov .duo-foto.rev,.mov .print.rev{opacity:1;transform:none;transition:none}
 
@@ -914,12 +955,12 @@ d.classList.add("js");if(!r)d.classList.add("mov");})();
 <header class="topo" data-fundo="tinta">
   <a class="marca" href="#inicio" aria-label="Tiago Piassum, início da página"><img src="img/tiago-avatar.webp" alt="" width="28" height="28" decoding="async"><span>Tiago Piassum</span></a>
   <nav class="menu" aria-label="Seções da página">
-    <a href="#simulador">Simulador<sup>01</sup></a>
-    <a href="#produtos">Produtos<sup>02</sup></a>
-    <a href="#consultoria">Consultoria<sup>03</sup></a>
-    <a href="#sobre">Sobre<sup>04</sup></a>
+    <a href="#simulador"><span>Simulador</span><sup>01</sup></a>
+    <a href="#produtos"><span>Produtos</span><sup>02</sup></a>
+    <a href="#consultoria"><span>Consultoria</span><sup>03</sup></a>
+    <a href="#sobre"><span>Sobre</span><sup>04</sup></a>
   </nav>
-  <a class="btn peq" href="#sim"><span>Simular<span class="extra"> grátis</span></span><svg class="seta" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+  <a class="btn peq" href="#sim"><span>Fazer meu planejamento global</span><svg class="seta" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
 </header>
 
 <main>
@@ -929,9 +970,9 @@ d.classList.add("js");if(!r)d.classList.add("mov");})();
     <div class="hero-foto"><img src="img/tiago-heroi-1040.webp" srcset="img/tiago-heroi-560.webp 560w, img/tiago-heroi-1040.webp 820w" sizes="(min-width:980px) 480px, 62vw" width="820" height="1075" alt="Tiago Piassum, de óculos e suéter claro, olhando para a câmera" fetchpriority="high" decoding="async" onerror="this.remove()"></div>
     <h1 class="hero-t"><span class="l"><span>Planeje sua</span></span><span class="l virada"><span>vida global</span><svg class="risco" viewBox="0 0 300 12" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M2,8 C60,2 140,3 298,6"/></svg></span></h1>
     <div class="hero-oferta">
-      <p class="olho">Entenda como planejar sua liberdade financeira de forma Global.</p>
+      <p class="olho">Entenda como planejar sua liberdade financeira de forma global.</p>
       <p class="hero-def">Quanto você precisa poupar ao mês para atingir sua independência em dólar?</p>
-      <a class="btn" href="#sim" id="cta-hero"><span>Fazer a minha conta</span><svg class="seta" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      <a class="btn" href="#sim" id="cta-hero"><span>Fazer meu planejamento global</span><svg class="seta" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
       <p class="hero-meta" id="hero-meta">Sete perguntas · 2 minutos · relatório completo no seu <span class="nq">e-mail</span></p>
     </div>
     <div class="fio rev" data-fio="inicio" data-onda="a" aria-hidden="true"><svg viewBox="0 0 1000 40" preserveAspectRatio="none"><path pathLength="1" d="M0,20 C333,4 667,36 1000,20"/></svg></div>
@@ -949,14 +990,14 @@ d.classList.add("js");if(!r)d.classList.add("mov");})();
       <p class="txt">Trocar dinheiro é uma coisa. Encher o mesmo carrinho de supermercado é outra. O câmbio só responde à primeira.</p>
       <p class="txt">Para planejar a sua liberdade até 2050, a régua é o que o dinheiro compra em cada lugar. O simulador faz essa conta para 66 países e devolve três coisas: um número, uma data e o caminho até eles.</p>
       <p class="txt forte">Faça a conta.</p>
-      <a class="btn" href="#sim"><span>Fazer meu planejamento global</span><svg class="seta" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      <a class="btn" href="#sim" id="cta-intro"><span>Fazer meu planejamento global</span><svg class="seta" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
       <p class="legal">Poder de compra: Banco Mundial, Programa de Comparação Internacional, 2024, via Our World in Data. Média nacional de cada país; capitais costumam custar mais. Câmbio de referência: <span data-ex="fx">R$&nbsp;5,40</span>.</p>
     </div>
     <div class="fio rev" data-fio="corre" data-onda="b" aria-hidden="true"><svg viewBox="0 0 1000 40" preserveAspectRatio="none"><path pathLength="1" d="M0,20 C333,36 667,4 1000,20"/></svg></div>
   </section>
 
   <!-- SIMULADOR (tinta, com a lâmina) -->
-  <section class="bloco" id="simulador" aria-labelledby="sim-titulo" data-fundo="tinta">
+  <section class="bloco" id="simulador" aria-labelledby="sim-titulo" data-fundo="tinta" data-menu="simulador">
     <div class="rotulo"><span>Planejamento global · gratuito</span><span>01</span></div>
     <div class="sim-grid">
       <div class="sim-intro">
@@ -973,15 +1014,17 @@ d.classList.add("js");if(!r)d.classList.add("mov");})();
         <div class="sim-top" id="sim-top"></div>
         <div class="sim-corpo" id="sim-corpo"><noscript><p class="sim-s">O simulador precisa de JavaScript. Ative no navegador e recarregue a página.</p></noscript></div>
         <div class="sim-acao" id="sim-acao"></div>
+        <i id="sim-fim" aria-hidden="true"></i>
       </div>
       </div>
     </div>
   </section>
 
-  <div class="degraus" aria-hidden="true" data-fundo="tinta"><i></i><i></i><i></i><i></i><i></i><b>2050</b></div>
+  <div class="degraus" aria-hidden="true" data-fundo="tinta" data-menu="simulador"><i></i><i></i><i></i><i></i><i></i><b>2050</b></div>
 
   <!-- PRODUTOS (papel) -->
-  <section class="bloco" id="produtos" aria-labelledby="prod-titulo" data-fundo="papel">
+  <section class="bloco" id="produtos" aria-labelledby="prod-titulo" data-fundo="papel" data-menu="produtos">
+    <div class="rotulo"><span>Produtos</span><span>02</span></div>
     <div class="produtos-topo">
       <h2 class="titulo rev" id="prod-titulo"><span class="t-forte">Do primeiro número ao</span> <span class="t-virada">plano inteiro</span></h2>
       <p class="sub rev">O que você encontra aqui, do gratuito ao acompanhamento individual.</p>
@@ -998,7 +1041,7 @@ d.classList.add("js");if(!r)d.classList.add("mov");})();
         <div class="cartao-c">
           <h3>Simulador Sua vida global</h3>
           <p>Sete perguntas para descobrir quanto custa a sua vida em dólar, o patrimônio que paga essa vida e quanto guardar por mês.</p>
-          <div class="acao"><a class="link" href="#sim">Fazer a simulação<span aria-hidden="true"><svg class="seta" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a></div>
+          <div class="acao"><a class="link" href="#sim">Fazer meu planejamento global<span aria-hidden="true"><svg class="seta" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a></div>
         </div>
       </article>
       <article class="cartao clicavel rev">
@@ -1056,18 +1099,18 @@ d.classList.add("js");if(!r)d.classList.add("mov");})();
   </section>
 
   <!-- PROJETO 2050 (tinta) -->
-  <section class="bloco" id="projeto" aria-labelledby="proj-titulo" data-fundo="tinta">
-    <div class="rotulo"><span>Projeto 2050</span><span>02</span></div>
+  <section class="bloco" id="projeto" aria-labelledby="proj-titulo" data-fundo="tinta" data-menu="produtos">
+    <div class="rotulo"><span>Projeto 2050</span></div>
     <div class="duo alto">
       <div class="metodo rev" aria-label="Método 20/50, com valores de exemplo">
         <div class="metodo-c">
           <div class="n">20<span>Formação</span></div>
-          <div class="seg" role="img" aria-label="Exemplo: 7 de 20 trilhas concluídas"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          <div class="medida"><div class="seg" role="img" aria-label="Exemplo: 7 de 20 trilhas concluídas"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><span class="medida-v num" aria-hidden="true">7 de 20 trilhas</span></div>
           <p>Trilhas concluídas de 20. Mede o que você aprendeu e praticou.</p>
         </div>
         <div class="metodo-c">
           <div class="n">50<span>Patrimônio</span></div>
-          <div class="trilho" role="img" aria-label="Exemplo: 21% da meta"><i></i></div>
+          <div class="medida"><div class="trilho" role="img" aria-label="Exemplo: 21% da meta"><i></i></div><span class="medida-v num" aria-hidden="true">21% da meta</span></div>
           <p>Patrimônio atual comparado à sua meta para 2050, em valores de hoje.</p>
         </div>
         <p class="exemplo">Valores de exemplo. As duas medidas são independentes: concluir as 20 trilhas não significa atingir a liberdade financeira.</p>
@@ -1094,7 +1137,7 @@ d.classList.add("js");if(!r)d.classList.add("mov");})();
   </section>
 
   <!-- CONSULTORIA GLOBAL (papel) -->
-  <section class="bloco" id="consultoria" aria-labelledby="cons-titulo" data-fundo="papel">
+  <section class="bloco" id="consultoria" aria-labelledby="cons-titulo" data-fundo="papel" data-menu="consultoria">
     <div class="rotulo"><span>Consultoria Global</span><span>03</span></div>
     <div class="duo inv alto">
       <figure class="duo-foto rev"><img src="img/tiago-reuniao-pb.webp" alt="Tiago Piassum apresenta em uma sala de reunião" width="600" height="1000" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='img/tiago-reuniao.jpg'"></figure>
@@ -1151,7 +1194,7 @@ d.classList.add("js");if(!r)d.classList.add("mov");})();
   </section>
 
   <!-- SOBRE (papel) -->
-  <section class="bloco" id="sobre" aria-labelledby="sobre-titulo" data-fundo="papel">
+  <section class="bloco" id="sobre" aria-labelledby="sobre-titulo" data-fundo="papel" data-menu="sobre">
     <div class="rotulo"><span>Sobre</span><span>04</span></div>
     <div class="duo alto">
       <div class="print rev">
@@ -1162,7 +1205,7 @@ d.classList.add("js");if(!r)d.classList.add("mov");})();
         <h2 class="titulo rev" id="sobre-titulo"><span class="t-forte">Quem faz a conta</span> <span class="t-virada">com você</span></h2>
         <div class="rev">
           <p class="txt">Tiago Piassum é economista, empreendedor e especialista financeiro. Fundou a Marco Investimentos, assessoria que saiu do zero ao bilhão de custódia em três anos, e hoje está à frente da Rivool, fintech global de investimentos globais em dólar.</p>
-          <p class="txt">É autor do livro “Declare Independência” e criou o Projeto 2050 para dar método a quem quer construir liberdade real: um número, uma data e o caminho até eles.</p>
+          <p class="txt">É autor do livro “Declare Independência” e criou o Projeto&nbsp;2050 para dar método a quem quer construir liberdade real e global. 20&nbsp;trilhas de 20&nbsp;temas para você ser livre globalmente até&nbsp;2050.</p>
         </div>
         <ul class="fatos rev">
           <li><b>R$&nbsp;1 bilhão</b><span>sob custódia em três anos, na Marco Investimentos</span></li>
@@ -1192,7 +1235,7 @@ d.classList.add("js");if(!r)d.classList.add("mov");})();
   <section class="bloco fecho" id="fecho" aria-labelledby="fecho-titulo" data-fundo="papel">
     <h2 class="titulo rev" id="fecho-titulo"><span class="t-forte">Qual é o seu</span> <span class="t-virada g">número?<svg class="risco" viewBox="0 0 300 12" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M2,8 C60,2 140,3 298,6"/></svg></span></h2>
     <p class="sub rev">Pelo câmbio, a resposta é a mesma em qualquer país. Na vida real, não é. A régua certa muda o plano inteiro.</p>
-    <a class="btn rev" href="#sim"><span>Fazer a minha conta</span><svg class="seta" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+    <a class="btn rev" href="#sim"><span>Fazer meu planejamento global</span><svg class="seta" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
     <p class="legal rev">Sete perguntas · 2 minutos · gratuito</p>
     <figure class="colagem fecho-col rev" style="--giro:4deg;--pr:-5deg;--px:-6%;--py:14%;--ps:72%">
       <img class="col-pardo" src="img/papel-pardo-a.webp" alt="" width="640" height="316" loading="lazy" decoding="async" onerror="this.remove()">
@@ -1223,7 +1266,7 @@ d.classList.add("js");if(!r)d.classList.add("mov");})();
   <p class="legal">Conteúdo educativo. Não é recomendação de investimento. Simulação com hipóteses de retorno real em dólar, regra de retirada e câmbio de referência informados no relatório. Rendimento variável, não garantido. Investimentos internacionais envolvem risco, inclusive de perda. O Projeto 2050 não faz custódia, não executa ordens e não substitui consultoria regulada.</p>
 </footer>
 
-<div class="fixo" id="fixo"><a href="#sim"><span>Fazer a minha conta</span><svg class="seta" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
+<div class="fixo" id="fixo"><a href="#sim"><span>Fazer meu planejamento global</span><svg class="seta" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
 
 <dialog class="dlg" id="dlg" aria-labelledby="dlg-t" data-fundo="papel"><div class="dlg-c" id="dlg-c"></div></dialog>
 <div class="toast" id="toast" role="status" hidden></div>
@@ -1622,7 +1665,7 @@ const TELAS = {
         <span class="olho">Ato 2 · Sua vida global</span>
         <h3 class="sim-t" tabindex="-1">Onde você quer viver?</h3>
         <p class="sim-s">Não precisa se mudar: o lugar serve para medir a sua vida em dólar.</p>
-        <div class="chips">${DESTINOS_RAPIDOS.map(k => `<button type="button" class="chip" data-pais="${k}" aria-pressed="${sel === k}">${PAISES[k][0]}</button>`).join("")}</div>
+        <div class="chips paises">${DESTINOS_RAPIDOS.map(k => `<button type="button" class="chip" data-pais="${k}" aria-pressed="${sel === k}">${PAISES[k][0]}</button>`).join("")}</div>
         <div class="campo"><label for="s-pais">Ou escolha entre 66 países</label>
           <select id="s-pais"><option value="">Escolha um país</option>${CONTINENTES.map(([c, nome]) => `<optgroup label="${nome}">${Object.keys(PAISES).filter(k => PAISES[k][3] === c).sort((a, b) => PAISES[a][0].localeCompare(PAISES[b][0], "pt-BR")).map(k => `<option value="${k}"${k === sel ? " selected" : ""}>${PAISES[k][0]}</option>`).join("")}</optgroup>`).join("")}</select></div>
         ${sel === "USA" ? `<div class="campo"><label for="s-st">Estado nos EUA</label><select id="s-st">${Object.keys(NOME_US).sort((a, b) => NOME_US[a].localeCompare(NOME_US[b], "pt-BR")).map(k => `<option value="${k}"${k === s.st ? " selected" : ""}>${NOME_US[k]}</option>`).join("")}</select></div>` : ""}
@@ -2298,7 +2341,7 @@ function abrirLista(jovem){
       <p>Avisamos você assim que as inscrições abrirem.${simulacaoCompleta() ? "" : " Enquanto isso, descubra a sua vida global: onde você quer viver e quanto custa, em dólar. São sete perguntas."}</p>
       ${avisoEnvio(r)}
       ${CONFIG.WHATSAPP_GRUPO ? `<a class="sim-btn claro" href="${esc(CONFIG.WHATSAPP_GRUPO)}" target="_blank" rel="noopener">Entrar no grupo do lançamento</a>` : ""}
-      ${simulacaoCompleta() ? `<button type="button" class="sim-btn" data-fechar>Fechar</button>` : `<a class="sim-btn" href="#sim" data-fechar>Fazer a simulação</a>`}`);
+      ${simulacaoCompleta() ? `<button type="button" class="sim-btn" data-fechar>Fechar</button>` : `<a class="sim-btn" href="#sim" data-fechar>Fazer meu planejamento global</a>`}`);
     if (atual === "vida") render();
   });
 }
@@ -2376,6 +2419,34 @@ document.addEventListener("click", e => {
   liga("#news-link", CONFIG.NEWSLETTER_URL);
   liga("#politica-link", CONFIG.POLITICA_URL);
 
+  // produtos no celular: a lista corre de lado. Os traços dizem em qual cartão a pessoa está, e a lista entra na ordem do teclado só enquanto rola.
+  const grade = $(".grade"), cartoes = $$(".grade > .cartao");
+  if (grade && cartoes.length){
+    const pos = document.createElement("div"); pos.className = "grade-pos"; pos.setAttribute("aria-hidden", "true");
+    pos.innerHTML = cartoes.map(() => "<i></i>").join(""); grade.after(pos);
+    const tracos = $$("i", pos); let posMarcada = false;
+    const pintaPos = () => {
+      posMarcada = false;
+      const a = grade.getBoundingClientRect(); let melhor = 0, maior = -1;
+      cartoes.forEach((c, i) => { const r = c.getBoundingClientRect(), v = Math.min(r.right, a.right) - Math.max(r.left, a.left); if (v > maior + 1){ maior = v; melhor = i; } });
+      tracos.forEach((el, i) => el.classList.toggle("on", i === melhor));
+    };
+    grade.addEventListener("scroll", () => { if (!posMarcada){ posMarcada = true; requestAnimationFrame(pintaPos); } }, { passive:true });
+    const celular = window.matchMedia("(max-width:759px)");
+    // pelo teclado, o cartão que recebe o foco vem para a frente (o navegador não rola a lista se uma ponta do botão já aparece)
+    grade.addEventListener("focusin", e => {
+      const c = e.target.closest(".cartao");
+      if (c && celular.matches && e.target.matches(":focus-visible")) c.scrollIntoView({ inline:"start", block:"nearest", behavior: reduz ? "auto" : "smooth" });
+    });
+    const ajustaGrade = () => {
+      if (celular.matches){ grade.tabIndex = 0; grade.setAttribute("role", "group"); grade.setAttribute("aria-label", "Produtos"); }
+      else ["tabindex", "role", "aria-label"].forEach(n => grade.removeAttribute(n));
+      pintaPos();
+    };
+    if (celular.addEventListener) celular.addEventListener("change", ajustaGrade); else if (celular.addListener) celular.addListener(ajustaGrade);
+    ajustaGrade();
+  }
+
   if (!reduz){
     const deg = $(".degraus"), raizDoc = document.documentElement;
     let ultimoY = Math.max(0, window.scrollY), marcado = false;
@@ -2396,16 +2467,26 @@ document.addEventListener("click", e => {
   if ("IntersectionObserver" in window){
     const io = new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting){ en.target.classList.add("vis"); io.unobserve(en.target); } }), { rootMargin:"0px 0px -8% 0px" });
     $$(".rev").forEach(el => io.observe(el));
-    const fixo = $("#fixo"); let heroVisivel = true, simVisivel = false, fimVisivel = false, fechoVisivel = false;
-    const pinta = () => fixo.classList.toggle("on", !heroVisivel && !simVisivel && !fimVisivel && !fechoVisivel);
+    // barra fixa (celular): só aparece quando nenhum outro botão com a mesma ação está na tela
+    const fixo = $("#fixo"); let heroVisivel = true, introVisivel = false, simVisivel = false, fimVisivel = false, fechoVisivel = false;
+    const pinta = () => fixo.classList.toggle("on", !heroVisivel && !introVisivel && !simVisivel && !fimVisivel && !fechoVisivel);
     new IntersectionObserver(es => { heroVisivel = es[0].isIntersecting; pinta(); }).observe($("#cta-hero"));
+    new IntersectionObserver(es => { introVisivel = es[0].isIntersecting; pinta(); }).observe($("#cta-intro"));
     new IntersectionObserver(es => { simVisivel = es[0].isIntersecting; pinta(); }).observe($("#simulador"));
     new IntersectionObserver(es => { fimVisivel = es[0].isIntersecting; pinta(); }).observe($("#contato"));
     new IntersectionObserver(es => { fechoVisivel = es[0].isIntersecting; pinta(); }).observe($("#fecho"));
+    // simulador: enquanto o fim da lâmina está abaixo da tela, a barra do botão está presa na base e cobre conteúdo
+    new IntersectionObserver(es => { const e = es[0]; raiz.classList.toggle("cobre", !e.isIntersecting && e.boundingClientRect.top >= (e.rootBounds ? e.rootBounds.bottom : window.innerHeight)); }).observe($("#sim-fim"));
     // cabeçalho: a pílula troca de cor conforme a seção (papel ou tinta) que passa por baixo dele
     const cab = $(".topo");
     const ioCab = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting){ cab.dataset.fundo = e.target.dataset.fundo; cab.classList.toggle("solido", e.target.id === "simulador"); } }), { rootMargin:"0px 0px -92% 0px" });
     $$("main > [data-fundo], footer[data-fundo]").forEach(s => ioCab.observe(s));
+    // menu: marca o item da seção que cruza a linha a 30% da altura da tela (data-menu). Seção sem data-menu não marca nenhum.
+    // A linha fica abaixo do cabeçalho de propósito: ao clicar num item, a seção para a 12px do cabeçalho e já conta como a atual.
+    const itensMenu = $$(".menu a");
+    const marcaMenu = alvo => itensMenu.forEach(a => { if (alvo && a.getAttribute("href") === "#" + alvo) a.setAttribute("aria-current", "location"); else a.removeAttribute("aria-current"); });
+    const ioMenu = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) marcaMenu(e.target.dataset.menu); }), { rootMargin:"-30% 0px -69% 0px" });
+    $$("main > [data-fundo], footer[data-fundo]").forEach(s => ioMenu.observe(s));
   } else {
     $$(".rev").forEach(el => el.classList.add("vis"));
   }
