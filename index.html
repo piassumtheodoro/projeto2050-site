@@ -979,8 +979,25 @@ section{position:relative}
 }
 .mov .toast:not([hidden]){animation:aviso-entra .22s var(--sai-suave)}
 
-/* perguntas frequentes */
-.mov .faq details[open] p{animation:resposta-abre .25s var(--sai-suave)}
+/* perguntas frequentes: abrir e fechar sem salto. A altura da página muda de uma vez só (uma conta); quem vem depois desliza até o lugar
+   com transform, pelo JS, e a resposta se revela com clip-path. Nada anima altura. */
+@keyframes faq-revela{from{clip-path:inset(0 0 100% 0)}to{clip-path:inset(0 0 0 0)}}
+@keyframes faq-esconde{to{clip-path:inset(0 0 100% 0);opacity:0}}
+.mov .faq details[open] p{animation:resposta-abre .28s var(--sai-suave),faq-revela .28s var(--sai-suave)}
+.mov .faq details.fechando p{animation:faq-esconde .28s var(--sai-suave) forwards}   /* mesma duração e curva do deslize das perguntas de baixo: a borda do recorte anda junto com elas */
+.mov .faq{border-bottom:0}                                    /* o fio de baixo da lista vira um elemento (.faq-fim, posto pelo JS) para deslizar junto com as perguntas */
+.faq-fim{display:block;height:1px;background:var(--filete)}
+/* o sinal: o traço em pé do "+" passa a ser um ::before, que gira até deitar sobre o outro e formar o "−" */
+.mov .faq summary{position:relative}
+.mov .faq summary::after{background:linear-gradient(var(--texto),var(--texto)) center/14px 2px no-repeat}
+.mov .faq summary::before{content:"";position:absolute;right:15px;top:50%;width:2px;height:14px;margin-top:-7px;background:var(--texto);transition:rotate var(--d-saida) var(--sai-suave),background-color var(--d-estado) var(--dado)}
+.mov .faq details[open]:not(.fechando) summary::before{rotate:90deg}
+.mov .faq details.fechando summary::after{border-color:var(--filete)}
+@media (hover:hover){
+  .mov .faq summary:hover::after{background:linear-gradient(var(--fundo),var(--fundo)) center/14px 2px no-repeat var(--texto)}
+  .mov .faq details.fechando summary:hover::after{border-color:var(--texto)}
+  .mov .faq summary:hover::before{background:var(--fundo)}
+}
 
 /* página: degraus, método 20/50, cartões, rodapé */
 .mov .degraus i{transform-origin:bottom;transform:scaleY(clamp(0,calc(var(--p,1) * 1.5 - var(--d,0)),1))}
@@ -2629,6 +2646,39 @@ document.addEventListener("click", e => {
     };
     window.addEventListener("scroll", () => { if (!marcado){ marcado = true; requestAnimationFrame(aoRolar); } }, { passive:true });
     aoRolar();
+  }
+
+  // perguntas frequentes: com movimento, abrir e fechar sem salto. A altura muda de uma vez só; o que vem depois na página volta ao lugar antigo
+  // e desliza até o novo com transform, enquanto a resposta se revela (CSS). Sem movimento vale o <details> do navegador, sem este código.
+  const faq = $(".faq");
+  if (!reduz && faq){
+    const DUR = 280, secaoFaq = faq.closest("section");
+    const fimLista = document.createElement("i"); fimLista.className = "faq-fim"; fimLista.setAttribute("aria-hidden", "true"); faq.append(fimLista);
+    const irmaos = el => { const l = []; for (let x = el && el.nextElementSibling; x; x = x.nextElementSibling) l.push(x); return l; };
+    let terminar = null;
+    faq.addEventListener("click", e => {
+      const sum = e.target.closest("summary"), d = sum && sum.parentElement;
+      if (!d || d.parentElement !== faq) return;
+      e.preventDefault();
+      if (terminar) terminar();                                     // uma troca no meio da outra: a anterior termina na hora
+      const resp = $("p", d), depois = irmaos(d).concat(irmaos(faq), irmaos(secaoFaq), $$("footer.rodape"));   // tudo o que muda de lugar
+      const poe = (t, tr) => depois.forEach(el => { el.style.transition = tr; el.style.transform = t; });
+      let t0;
+      if (!d.open){
+        const antes = depois[0].getBoundingClientRect().top;
+        d.open = true;
+        const h = depois[0].getBoundingClientRect().top - antes;   // quanto a página cresceu
+        poe(`translateY(${-h}px)`, "none"); void faq.offsetHeight;    // todos de volta ao lugar antigo...
+        poe("", `transform ${DUR}ms var(--sai-suave)`);               // ...e deslizam até o novo
+        terminar = () => { clearTimeout(t0); terminar = null; poe("", ""); };
+      } else {
+        const h = resp ? resp.getBoundingClientRect().height : 0;     // quanto a página vai encolher
+        d.classList.add("fechando");
+        poe(`translateY(${-h}px)`, `transform ${DUR}ms var(--sai-suave)`);
+        terminar = () => { clearTimeout(t0); terminar = null; d.open = false; d.classList.remove("fechando"); poe("", "none"); void faq.offsetHeight; poe("", ""); };
+      }
+      t0 = setTimeout(() => { if (terminar) terminar(); }, DUR + 30);
+    });
   }
 
   // números que contam quando entram na tela, com a mesma contagem do simulador (só com movimento):
