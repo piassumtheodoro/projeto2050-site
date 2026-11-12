@@ -348,6 +348,18 @@ section{position:relative}
   .cartao.largo .cartao-v.capa > img:not(.col-pardo){width:170px}
   .cartao.largo .cartao-c{justify-content:center}
 }
+/* celular: os produtos correm de lado, um cartão por vez, com o próximo aparecendo na borda. Não há avanço automático: quem move é a pessoa. */
+.grade-pos{display:none}
+@media (max-width:759px){
+  .grade{display:flex;gap:16px;margin:-10px calc(-1 * var(--lat));padding:10px 0 10px var(--lat);overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scroll-padding-inline:var(--lat);scrollbar-width:none}   /* os 10px de cima e de baixo dão lugar ao contorno de foco dos cartões */
+  .grade::-webkit-scrollbar{display:none}
+  .grade::after{content:"";flex:0 0 calc(var(--lat) - 16px)}   /* folga do fim: somada ao vão de 16px, dá a margem lateral */
+  .grade > .cartao{flex:0 0 min(82%,340px);scroll-snap-align:start}
+  .grade:focus-visible{outline-offset:-3px}
+  .grade-pos{display:flex;justify-content:center;gap:6px;margin-top:var(--e4)}
+  .grade-pos i{width:18px;height:3px;border-radius:var(--r-s);background:var(--trilho);transition:background-color var(--d-estado) var(--dado)}
+  .grade-pos i.on{background:var(--texto)}
+}
 
 /* ---------- projeto 2050 (tinta) ---------- */
 .duo{display:grid;gap:var(--e6);grid-template-columns:minmax(0,1fr)}
@@ -767,6 +779,8 @@ section{position:relative}
 .mov :is(.grade,.tres,.etapas) > .rev:nth-child(3){transition-delay:.12s}
 .mov :is(.grade,.tres,.etapas) > .rev:nth-child(4){transition-delay:.18s}
 .mov :is(.grade,.tres,.etapas) > .rev:nth-child(n+5){transition-delay:.24s}
+/* celular: no carrossel de produtos os cartões entram na tela pelo lado, então só surgem, sem subir e sem fila */
+@media (max-width:759px){ .mov .grade > .rev{transform:none} .mov .grade > .rev:nth-child(n){transition-delay:0s} }
 /* quem tem movimento próprio não usa o surge padrão */
 .mov .fio.rev,.mov .colagem.rev,.mov .titulo.rev,.mov .duo-foto.rev,.mov .print.rev{opacity:1;transform:none;transition:none}
 
@@ -2380,6 +2394,34 @@ document.addEventListener("click", e => {
   if (CONFIG.LIVRO_URL) $("#livro").classList.add("clicavel");
   liga("#news-link", CONFIG.NEWSLETTER_URL);
   liga("#politica-link", CONFIG.POLITICA_URL);
+
+  // produtos no celular: a lista corre de lado. Os traços dizem em qual cartão a pessoa está, e a lista entra na ordem do teclado só enquanto rola.
+  const grade = $(".grade"), cartoes = $$(".grade > .cartao");
+  if (grade && cartoes.length){
+    const pos = document.createElement("div"); pos.className = "grade-pos"; pos.setAttribute("aria-hidden", "true");
+    pos.innerHTML = cartoes.map(() => "<i></i>").join(""); grade.after(pos);
+    const tracos = $$("i", pos); let posMarcada = false;
+    const pintaPos = () => {
+      posMarcada = false;
+      const a = grade.getBoundingClientRect(); let melhor = 0, maior = -1;
+      cartoes.forEach((c, i) => { const r = c.getBoundingClientRect(), v = Math.min(r.right, a.right) - Math.max(r.left, a.left); if (v > maior + 1){ maior = v; melhor = i; } });
+      tracos.forEach((el, i) => el.classList.toggle("on", i === melhor));
+    };
+    grade.addEventListener("scroll", () => { if (!posMarcada){ posMarcada = true; requestAnimationFrame(pintaPos); } }, { passive:true });
+    const celular = window.matchMedia("(max-width:759px)");
+    // pelo teclado, o cartão que recebe o foco vem para a frente (o navegador não rola a lista se uma ponta do botão já aparece)
+    grade.addEventListener("focusin", e => {
+      const c = e.target.closest(".cartao");
+      if (c && celular.matches && e.target.matches(":focus-visible")) c.scrollIntoView({ inline:"start", block:"nearest", behavior: reduz ? "auto" : "smooth" });
+    });
+    const ajustaGrade = () => {
+      if (celular.matches){ grade.tabIndex = 0; grade.setAttribute("role", "group"); grade.setAttribute("aria-label", "Produtos"); }
+      else ["tabindex", "role", "aria-label"].forEach(n => grade.removeAttribute(n));
+      pintaPos();
+    };
+    if (celular.addEventListener) celular.addEventListener("change", ajustaGrade); else if (celular.addListener) celular.addListener(ajustaGrade);
+    ajustaGrade();
+  }
 
   if (!reduz){
     const deg = $(".degraus"), raizDoc = document.documentElement;
