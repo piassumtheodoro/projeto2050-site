@@ -148,7 +148,7 @@ section{position:relative}
 .rotulo{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-bottom:14px;margin-bottom:var(--e6);border-bottom:1px solid var(--filete)}
 .rotulo span:first-child{display:inline-flex;align-items:center;gap:10px;color:var(--texto)}
 .rotulo span:first-child::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--texto)}
-.rotulo span:last-child{font-family:var(--serifa);font-size:14px;color:var(--apoio)}
+.rotulo span + span{font-family:var(--serifa);font-size:14px;color:var(--apoio)}   /* o número, quando a seção tem um: são as quatro seções do menu */
 .tag{display:inline-flex;align-items:center;gap:10px;color:var(--texto)}
 .tag::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--texto)}
 
@@ -200,8 +200,11 @@ section{position:relative}
 .topo .marca{transition:background-color .15s var(--camera),box-shadow .15s var(--camera),color .15s var(--camera)}
 .menu{display:none;gap:28px}
 .menu a{display:inline-flex;align-items:flex-start;min-height:44px;padding-top:11px;font-size:15px;font-weight:500;text-decoration:none;color:var(--texto);text-underline-offset:6px;text-decoration-thickness:2px}
-.menu a:hover,.menu a:focus-visible{text-decoration-line:underline}
+.menu a:hover span,.menu a:focus-visible span{text-decoration-line:underline;text-decoration-thickness:2px}   /* o sublinhado vai só na palavra: posto no link, ele passava também por baixo do número */
 .menu sup{margin-left:3px;font-family:var(--serifa);font-size:12px;line-height:1;color:var(--apoio)}
+/* a seção em que a pessoa está: palavra sublinhada na cor do fio e número na cor de acento. O JS põe aria-current no item (data-menu da seção que cruza a linha de leitura). */
+.menu a[aria-current] span{text-decoration-line:underline;text-decoration-thickness:2px;text-decoration-color:var(--fio)}
+.menu a[aria-current] sup{color:var(--acento)}
 /* celular: o cabeçalho leva só a pílula. A ação fica com o botão do topo, a barra fixa e o botão do fecho, um de cada vez; o rótulo do botão não cabe ao lado da pílula abaixo de ~385px. */
 @media (max-width:759px){ .topo .btn.peq{display:none} }
 @media (min-width:760px){ .marca{font-size:15px} }
@@ -933,10 +936,10 @@ d.classList.add("js");if(!r)d.classList.add("mov");})();
 <header class="topo" data-fundo="tinta">
   <a class="marca" href="#inicio" aria-label="Tiago Piassum, início da página"><img src="img/tiago-avatar.webp" alt="" width="28" height="28" decoding="async"><span>Tiago Piassum</span></a>
   <nav class="menu" aria-label="Seções da página">
-    <a href="#simulador">Simulador<sup>01</sup></a>
-    <a href="#produtos">Produtos<sup>02</sup></a>
-    <a href="#consultoria">Consultoria<sup>03</sup></a>
-    <a href="#sobre">Sobre<sup>04</sup></a>
+    <a href="#simulador"><span>Simulador</span><sup>01</sup></a>
+    <a href="#produtos"><span>Produtos</span><sup>02</sup></a>
+    <a href="#consultoria"><span>Consultoria</span><sup>03</sup></a>
+    <a href="#sobre"><span>Sobre</span><sup>04</sup></a>
   </nav>
   <a class="btn peq" href="#sim"><span>Fazer a minha conta</span><svg class="seta" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
 </header>
@@ -975,7 +978,7 @@ d.classList.add("js");if(!r)d.classList.add("mov");})();
   </section>
 
   <!-- SIMULADOR (tinta, com a lâmina) -->
-  <section class="bloco" id="simulador" aria-labelledby="sim-titulo" data-fundo="tinta">
+  <section class="bloco" id="simulador" aria-labelledby="sim-titulo" data-fundo="tinta" data-menu="simulador">
     <div class="rotulo"><span>Planejamento global · gratuito</span><span>01</span></div>
     <div class="sim-grid">
       <div class="sim-intro">
@@ -997,10 +1000,11 @@ d.classList.add("js");if(!r)d.classList.add("mov");})();
     </div>
   </section>
 
-  <div class="degraus" aria-hidden="true" data-fundo="tinta"><i></i><i></i><i></i><i></i><i></i><b>2050</b></div>
+  <div class="degraus" aria-hidden="true" data-fundo="tinta" data-menu="simulador"><i></i><i></i><i></i><i></i><i></i><b>2050</b></div>
 
   <!-- PRODUTOS (papel) -->
-  <section class="bloco" id="produtos" aria-labelledby="prod-titulo" data-fundo="papel">
+  <section class="bloco" id="produtos" aria-labelledby="prod-titulo" data-fundo="papel" data-menu="produtos">
+    <div class="rotulo"><span>Produtos</span><span>02</span></div>
     <div class="produtos-topo">
       <h2 class="titulo rev" id="prod-titulo"><span class="t-forte">Do primeiro número ao</span> <span class="t-virada">plano inteiro</span></h2>
       <p class="sub rev">O que você encontra aqui, do gratuito ao acompanhamento individual.</p>
@@ -1075,8 +1079,8 @@ d.classList.add("js");if(!r)d.classList.add("mov");})();
   </section>
 
   <!-- PROJETO 2050 (tinta) -->
-  <section class="bloco" id="projeto" aria-labelledby="proj-titulo" data-fundo="tinta">
-    <div class="rotulo"><span>Projeto 2050</span><span>02</span></div>
+  <section class="bloco" id="projeto" aria-labelledby="proj-titulo" data-fundo="tinta" data-menu="produtos">
+    <div class="rotulo"><span>Projeto 2050</span></div>
     <div class="duo alto">
       <div class="metodo rev" aria-label="Método 20/50, com valores de exemplo">
         <div class="metodo-c">
@@ -1113,7 +1117,7 @@ d.classList.add("js");if(!r)d.classList.add("mov");})();
   </section>
 
   <!-- CONSULTORIA GLOBAL (papel) -->
-  <section class="bloco" id="consultoria" aria-labelledby="cons-titulo" data-fundo="papel">
+  <section class="bloco" id="consultoria" aria-labelledby="cons-titulo" data-fundo="papel" data-menu="consultoria">
     <div class="rotulo"><span>Consultoria Global</span><span>03</span></div>
     <div class="duo inv alto">
       <figure class="duo-foto rev"><img src="img/tiago-reuniao-pb.webp" alt="Tiago Piassum apresenta em uma sala de reunião" width="600" height="1000" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='img/tiago-reuniao.jpg'"></figure>
@@ -1170,7 +1174,7 @@ d.classList.add("js");if(!r)d.classList.add("mov");})();
   </section>
 
   <!-- SOBRE (papel) -->
-  <section class="bloco" id="sobre" aria-labelledby="sobre-titulo" data-fundo="papel">
+  <section class="bloco" id="sobre" aria-labelledby="sobre-titulo" data-fundo="papel" data-menu="sobre">
     <div class="rotulo"><span>Sobre</span><span>04</span></div>
     <div class="duo alto">
       <div class="print rev">
@@ -2455,6 +2459,12 @@ document.addEventListener("click", e => {
     const cab = $(".topo");
     const ioCab = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting){ cab.dataset.fundo = e.target.dataset.fundo; cab.classList.toggle("solido", e.target.id === "simulador"); } }), { rootMargin:"0px 0px -92% 0px" });
     $$("main > [data-fundo], footer[data-fundo]").forEach(s => ioCab.observe(s));
+    // menu: marca o item da seção que cruza a linha a 30% da altura da tela (data-menu). Seção sem data-menu não marca nenhum.
+    // A linha fica abaixo do cabeçalho de propósito: ao clicar num item, a seção para a 12px do cabeçalho e já conta como a atual.
+    const itensMenu = $$(".menu a");
+    const marcaMenu = alvo => itensMenu.forEach(a => { if (alvo && a.getAttribute("href") === "#" + alvo) a.setAttribute("aria-current", "location"); else a.removeAttribute("aria-current"); });
+    const ioMenu = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) marcaMenu(e.target.dataset.menu); }), { rootMargin:"-30% 0px -69% 0px" });
+    $$("main > [data-fundo], footer[data-fundo]").forEach(s => ioMenu.observe(s));
   } else {
     $$(".rev").forEach(el => el.classList.add("vis"));
   }
