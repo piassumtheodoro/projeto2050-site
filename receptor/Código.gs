@@ -42,7 +42,7 @@ const COLUNAS = [
   'utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'ref', 'indicado_por',
   'referrer', 'pagina', 'dispositivo', 'instagram_app'
 ];
-const IGNORAR = ['empresa', 'relatorio'];   // "relatorio" são os números do PDF: servem ao anexo, não viram coluna
+const IGNORAR = ['empresa', 'relatorio', 'os_enviado_em', 'os_erro'];   // "relatorio" são os números do PDF: servem ao anexo, não viram coluna; as duas do OS só o Os.gs escreve
 // Origem do primeiro contato: um envio posterior sem esses campos não apaga o que já foi gravado.
 const PRIMEIRO_TOQUE = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'ref', 'indicado_por', 'referrer'];
 
@@ -76,7 +76,7 @@ function doPost(e) {
     }
     const tinhaPlano = !novo && !!valores[col('vida_global_usd')];   // esta pessoa já tinha feito a simulação antes deste envio
     cab.forEach(function (c, i) {
-      if (c === 'criado_em' || c === 'email_enviado') return;
+      if (c === 'criado_em' || c === 'email_enviado' || c === 'os_enviado_em' || c === 'os_erro') return;
       if (c === 'atualizado_em') { valores[i] = agora; return; }
       if (!Object.prototype.hasOwnProperty.call(d, c)) return;   // campo ausente: mantém o que já estava
       const v = d[c];
