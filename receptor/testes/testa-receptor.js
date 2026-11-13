@@ -121,6 +121,60 @@ secao('quem recebe o quê');
   ok(a.post(Object.assign(base('S71', 'Sem Email', 'semarroba'), { modo: 'lista de espera' })).erro === 'email' && a.correio.length === 0, 'e-mail inválido é recusado');
   ok(a.post(simulador('S72', { consentimento: 'não' })).ok === true && !doPlano(a) && doAviso(a).length === 1, 'sem aceite: a linha entra e o aviso sai, mas o plano não é enviado'); }
 
+secao('linha só do dono (o id aparece no link de compartilhar)');
+const linhas = a => a.dados.slice(1).map(l => Object.fromEntries(a.dados[0].map((c, i) => [c, l[i]])));
+const CHAVE = 'a1b2c3d4e5f60718293a4b5c6d7e8f90', OUTRA = '00112233445566778899aabbccddeeff';
+const vitima = (id, extra) => simulador(id, Object.assign({ nome: 'Vitória Dona', whatsapp: '48911112222' }, extra));
+const ataque = (id, extra) => Object.assign(base(id, '', 'ana@exemplo.com'), { modo: 'lista de espera' }, extra);
+{ const a = criar({ receptor, pdf, propriedades: PROPS });
+  a.post(vitima('D1', { chave: CHAVE }));
+  ok(linhas(a)[0].chave === CHAVE, 'linha nova com chave grava a chave');
+  a.post(vitima('D1', { chave: CHAVE, email: 'ana.nova@exemplo.com' }));
+  ok(linhas(a).length === 1 && linhas(a)[0].email === 'ana.nova@exemplo.com' && linhas(a)[0].id === 'D1', 'mesmo id e mesma chave, outro e-mail: atualiza a mesma linha'); }
+{ const a = criar({ receptor, pdf, propriedades: PROPS });
+  a.post(vitima('D2', { chave: CHAVE }));
+  const antes = JSON.stringify(a.dados.slice(1));
+  ok(a.post(ataque('D2', { chave: OUTRA })).ok === true, 'chave errada com o e-mail da vítima: o envio é aceito');
+  const [v, outra] = linhas(a);
+  ok(JSON.stringify(a.dados.slice(1, 2)) === antes, 'a linha da vítima fica idêntica');
+  ok(linhas(a).length === 2 && outra.id !== 'D2' && outra.nome !== 'Vitória Dona' && outra.whatsapp !== '48911112222' && outra.chave === OUTRA, 'nasce uma segunda linha, com outro id e sem o nome nem o WhatsApp da vítima');
+  a.post(ataque('D2', { chave: OUTRA }));
+  ok(linhas(a).length === 2, 'repetir o envio cai na mesma segunda linha');
+  a.post(ataque('D2'));
+  ok(linhas(a).length === 3 && JSON.stringify(a.dados.slice(1, 2)) === antes, 'sem chave, numa linha que tem chave: também não é dono'); }
+{ const a = criar({ receptor, pdf, propriedades: PROPS });
+  a.post(vitima('D4'));   // linha antiga, sem chave
+  ok(linhas(a)[0].chave === '', 'envio sem chave: a linha fica sem chave');
+  a.post(vitima('D4', { chave: CHAVE }));
+  ok(linhas(a).length === 1 && linhas(a)[0].chave === CHAVE, 'linha antiga, mesmo e-mail, com chave: atualiza e adota a chave');
+  a.post(ataque('D4'));
+  ok(linhas(a).length === 2 && linhas(a)[0].nome === 'Vitória Dona', 'depois da adoção, o mesmo e-mail sem chave não atualiza mais a linha'); }
+{ const a = criar({ receptor, pdf, propriedades: PROPS });
+  a.post(vitima('D5'));
+  const antes = JSON.stringify(a.dados.slice(1));
+  a.post(ataque('D5', { email: 'intruso@exemplo.com', interesse_consultoria: 'sim' }));
+  const [v, outra] = linhas(a);
+  ok(JSON.stringify(a.dados.slice(1, 2)) === antes && linhas(a).length === 2, 'linha antiga, outro e-mail: a linha da vítima fica intacta');
+  ok(outra.email === 'intruso@exemplo.com' && outra.nome === '' && outra.whatsapp !== '48911112222' && outra.id !== 'D5' && outra.interesse_consultoria === 'sim', 'a linha derivada não herda nome nem WhatsApp da vítima');
+  ok(/^S[0-9A-F]{14}$/.test(outra.id), 'o id derivado é S + 14 hexadecimais maiúsculos (' + outra.id + ')');
+  ok(doAviso(a).some(m => m.corpo.includes('intruso@exemplo.com') && m.corpo.includes('Consultoria')), 'o aviso da aplicação sai com o que o envio trouxe'); }
+{ const a = criar({ receptor, pdf, propriedades: PROPS });
+  a.post(vitima('D6', { chave: '=CMD()' }));
+  a.post(vitima('D7', { chave: 'abc12' }));
+  ok(linhas(a).length === 2 && linhas(a).every(l => l.chave === '') && !JSON.stringify(a.dados).includes('CMD') && !JSON.stringify(a.dados).includes('abc12'), 'chave fora do formato vale como ausente e não aparece em célula nenhuma');
+  ok(a.erros.length === 0, 'sem erro no registro'); }
+{ const a = criar({ receptor, pdf, propriedades: PROPS });   // alguém ocupa de antemão a linha derivada de uma página antiga do dono
+  a.post(vitima('D8', { chave: CHAVE }));
+  const derivado = 'S' + require('crypto').createHash('sha256').update('D8|ana@exemplo.com').digest('hex').slice(0, 14).toUpperCase();
+  a.post(ataque(derivado, { chave: OUTRA, email: 'intruso@exemplo.com' }));
+  const antes = JSON.stringify(a.dados.slice(1, 3));
+  ok(a.post(vitima('D8', { nome: 'Vitória Página Antiga' })).ok === true, 'linha derivada já ocupada por outro: o envio é aceito');
+  ok(linhas(a).length === 3 && JSON.stringify(a.dados.slice(1, 3)) === antes && linhas(a)[2].nome === 'Vitória Página Antiga' && /^S[0-9A-F]{14}$/.test(linhas(a)[2].id), 'e vira uma linha nova, sem tocar nas outras duas: o lead não se perde'); }
+{ const a = criar({ receptor, pdf, propriedades: PROPS });
+  a.post(Object.assign(vitima('D9'), { '=IMAGE("x")': 'a', 'Nome Com Espaço': 'b', campo_novo: 'c' }));
+  ok(a.dados[0].indexOf('campo_novo') >= 0 && linhas(a)[0].campo_novo === 'c', 'campo novo com nome simples vira coluna');
+  ok(a.dados[0].every(c => /^[a-z][a-z0-9_]*$/.test(c)), 'nome de campo fora do padrão não vira coluna (nada de fórmula no cabeçalho)'); }
+
 secao('o que está no repositório');
 { const codigo = fs.readFileSync(receptor, 'utf8'), pacote = fs.readFileSync(pdf, 'utf8');
   ok(!/[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+\.[A-Za-z]{2,}/.test(codigo), 'Código.gs não tem endereço de e-mail (o repositório é público)');
