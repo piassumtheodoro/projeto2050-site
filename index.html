@@ -326,14 +326,42 @@ section{position:relative}
   #sim-acao{border-radius:0 0 var(--r) var(--r)}
 }
 
-/* ---------- degraus: a estrada até 2050 (tinta) ---------- */
-.degraus{position:relative;display:flex;align-items:flex-end;justify-content:space-between;height:calc(clamp(96px,16vw,180px) + 48px + var(--secao));padding:48px calc(var(--lat) + min(8%,96px)) var(--secao);background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .07 0'/></filter><rect width='240' height='240' filter='url(%23g)'/></svg>");background-size:240px 240px;background-repeat:repeat}   /* mantém o grão e tira só o foco de luz, para não fazer emenda com o simulador */
-.degraus::before{content:"";position:absolute;left:var(--lat);right:var(--lat);bottom:var(--secao);height:2px;background:var(--fio)}
-.degraus::after{content:"";position:absolute;left:var(--lat);bottom:var(--secao);width:10px;height:10px;border-radius:50%;background:var(--fio);translate:0 50%}
-.degraus i{position:relative;z-index:1;width:clamp(18px,6vw,56px);border-radius:var(--r-s) var(--r-s) 0 0;background:#1B1E21;box-shadow:inset 0 0 0 1px #33383E}
-.degraus i:nth-child(1){height:22%;--d:0}.degraus i:nth-child(2){height:38%;--d:.1}.degraus i:nth-child(3){height:56%;--d:.2}.degraus i:nth-child(4){height:76%;--d:.3}
-.degraus i:nth-child(5){height:100%;--d:.42;background:#2716E9;box-shadow:none}
-.degraus b{position:absolute;right:calc(var(--lat) + min(8%,96px));top:6px;font-family:var(--serifa);font-weight:400;font-size:clamp(22px,5vw,36px);line-height:1;color:var(--texto)}
+/* ---------- degraus: o caminho até 2050 (tinta) ----------
+   Texto em cima, cinco barras de hoje a 2050 e o ano embaixo de cada uma. O JS (pintaDegraus) liga as barras ao simulador. */
+.degraus{position:relative;padding:48px var(--lat) var(--secao);background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .07 0'/></filter><rect width='240' height='240' filter='url(%23g)'/></svg>");background-size:240px 240px;background-repeat:repeat}   /* mantém o grão e tira só o foco de luz, para não fazer emenda com o simulador */
+.deg-topo{display:grid;gap:8px;max-width:720px}
+.deg-topo p{margin:0}
+.deg-frase{min-height:2.3em;font-family:var(--serifa);font-size:var(--t-destaque);line-height:1.15;letter-spacing:-.01em;color:var(--texto)}
+.deg-sub{max-width:52ch;min-height:4.35em;font-size:var(--t-apoio);line-height:1.45;color:var(--apoio)}   /* as alturas mínimas seguram o gráfico no lugar quando o texto troca */
+@media (min-width:760px){ .deg-frase{min-height:1.15em} .deg-sub{min-height:2.9em} }
+.degraus.aberto .deg-frase{min-height:0;font-size:clamp(34px,9vw,56px);line-height:1.05}   /* com o resultado, a frase é só o número */
+.deg-leg{display:flex;flex-wrap:wrap;gap:6px 20px;font-size:var(--t-fonte);font-weight:600;color:var(--apoio)}
+.deg-leg[hidden]{display:none}
+.deg-leg span{display:inline-flex;align-items:center;gap:6px}
+.deg-leg i{width:10px;height:10px;border-radius:var(--r-s);background:var(--texto)}
+.deg-leg span + span i{background:var(--azul)}
+.deg-palco{position:relative;display:flex;align-items:flex-end;justify-content:space-between;height:clamp(96px,16vw,180px);margin-top:56px;padding-inline:min(8%,96px)}
+.degraus.aberto .deg-palco{height:clamp(150px,22vw,240px)}
+.deg-palco::before{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--fio)}
+.deg-palco::after{content:"";position:absolute;left:0;bottom:0;width:10px;height:10px;border-radius:50%;background:var(--fio);translate:0 50%}
+.deg{position:relative;z-index:1;flex:none;width:clamp(18px,6vw,56px);height:100%;padding:0;border:0;background:none;-webkit-tap-highlight-color:transparent}
+.deg:disabled{cursor:default}
+.deg::before{content:"";position:absolute;inset:-8px -14px -44px}   /* área de toque: a barra, o ano e uma folga dos lados */
+.deg:nth-of-type(1){--h:22%;--d:0}.deg:nth-of-type(2){--h:38%;--d:.1}.deg:nth-of-type(3){--h:56%;--d:.2}.deg:nth-of-type(4){--h:76%;--d:.3}.deg:nth-of-type(5){--h:100%;--d:.42}
+.deg > i{position:absolute;left:0;right:0;bottom:0;display:flex;flex-direction:column;justify-content:flex-end;height:var(--h);min-height:2px;overflow:hidden;border-radius:var(--r-s) var(--r-s) 0 0;background:#1B1E21;box-shadow:inset 0 0 0 1px #33383E}
+.deg > i span{flex:none;height:0}
+.deg > i span + span{background:var(--cinza-dado)}                 /* sem resultado: o quanto das 7 perguntas já foi respondido */
+.deg:nth-of-type(5) > i{background:#2716E9;box-shadow:none}
+.degraus.aberto .deg > i{background:#33383E;box-shadow:none}
+.degraus.aberto .deg > i span{background:var(--azul)}               /* o que o dinheiro rendeu (em cima) */
+.degraus.aberto .deg > i span + span{background:var(--texto)}       /* o que a pessoa guardou (embaixo) */
+.degraus.aberto .deg{opacity:.6}
+.degraus.aberto .deg[aria-pressed="true"]{opacity:1}
+.deg-ano{position:absolute;top:100%;left:50%;translate:-50% 12px;white-space:nowrap;font-size:var(--t-fonte);font-weight:600;line-height:1;color:var(--apoio);font-variant-numeric:tabular-nums}
+.deg:nth-of-type(5) .deg-ano{translate:-50% 10px;font-family:var(--serifa);font-weight:400;font-size:clamp(22px,5vw,36px);color:var(--texto)}
+.deg-meta{position:absolute;z-index:2;left:0;right:0;bottom:var(--m,100%);height:0;border-top:1px dashed var(--fio);pointer-events:none}
+.deg-meta[hidden]{display:none}
+.deg-meta span{position:absolute;left:0;bottom:7px;white-space:nowrap;font-size:var(--t-fonte);font-weight:600;line-height:1;color:var(--acento);font-variant-numeric:tabular-nums}
 
 /* ---------- produtos (papel) ---------- */
 .produtos-topo{display:grid;gap:var(--e3);margin-bottom:var(--e7);max-width:60ch}
@@ -1016,7 +1044,10 @@ section{position:relative}
 }
 
 /* página: degraus, método 20/50, cartões, rodapé */
-.mov .degraus i{transform-origin:bottom;transform:scaleY(clamp(0,calc(var(--p,1) * 1.5 - var(--d,0)),1))}
+.mov .deg > i{transform-origin:bottom;transform:scaleY(clamp(0,calc(var(--p,1) * 1.5 - var(--d,0)),1));transition:height var(--d-barra) var(--dado)}
+.mov .deg > i span{transition:height var(--d-barra) var(--dado)}
+.mov .deg{transition:opacity var(--d-estado)}
+.mov .deg-meta{transition:bottom var(--d-barra) var(--dado)}
 .mov .metodo .seg i.on{opacity:0;transform:scaleY(.4)}
 .mov .metodo.vis .seg i.on{opacity:1;transform:none;transition:opacity .3s var(--dado),transform .3s var(--dado)}
 .mov .metodo.vis .seg i.on:nth-child(1){transition-delay:.1s}
@@ -1051,10 +1082,10 @@ section{position:relative}
 @media (hover:hover){ .mov .btn:hover .seta,.mov .fixo a:hover .seta{transform:translateX(4px)} }
 /* degraus: quando o último termina de crescer, o "2050" entra com a virada dos títulos e o degrau azul pulsa uma vez (o JS põe .completo) */
 @keyframes pulso{from{opacity:.5;transform:scale(1)}to{opacity:0;transform:scale(1.9,1.1)}}
-.mov .degraus:not(.completo) b{visibility:hidden}
-.mov .degraus.completo b{transform-origin:100% 60%;animation:vira var(--d-virada) var(--virada) backwards}
-.mov .degraus i:nth-child(5)::after{content:"";position:absolute;inset:0;border-radius:inherit;background:#2716E9;opacity:0;transform-origin:50% 100%;pointer-events:none}
-.mov .degraus.completo i:nth-child(5)::after{animation:pulso var(--d-barra) var(--dado) .12s}
+.mov .degraus:not(.completo) .deg:nth-of-type(5) .deg-ano{visibility:hidden}
+.mov .degraus.completo .deg:nth-of-type(5) .deg-ano{transform-origin:50% 60%;animation:vira var(--d-virada) var(--virada) backwards}
+.mov .deg:nth-of-type(5)::after{content:"";position:absolute;left:0;right:0;bottom:0;height:var(--h);border-radius:var(--r-s) var(--r-s) 0 0;background:#2716E9;opacity:0;transform-origin:50% 100%;pointer-events:none}
+.mov .degraus.completo:not(.aberto) .deg:nth-of-type(5)::after{animation:pulso var(--d-barra) var(--dado) .12s}
 </style>
 </head>
 <body>
@@ -1138,7 +1169,22 @@ d.classList.add("js");if(!r)d.classList.add("mov");})();
     </div>
   </section>
 
-  <div class="degraus" aria-hidden="true" data-fundo="tinta" data-menu="simulador"><i></i><i></i><i></i><i></i><i></i><b>2050</b></div>
+  <div class="degraus" id="degraus" role="group" aria-label="O caminho até 2050" data-fundo="tinta" data-menu="simulador">
+    <div class="deg-topo" id="deg-topo">
+      <p class="olho" id="deg-olho">O caminho até 2050</p>
+      <p class="deg-frase num" id="deg-frase">De hoje a 2050: 24 anos de juros compostos.</p>
+      <p class="deg-sub num" id="deg-sub">Responda às 7 perguntas do simulador e o seu número aparece aqui.</p>
+      <div class="deg-leg" id="deg-leg" hidden><span><i></i>O que você guardou</span><span><i></i>O que o dinheiro rendeu</span></div>
+    </div>
+    <div class="deg-palco" id="deg-palco" aria-hidden="true">
+      <div class="deg-meta num" id="deg-meta" hidden><span></span></div>
+      <button type="button" class="deg" disabled><i><span></span><span></span></i><span class="deg-ano">Hoje</span></button>
+      <button type="button" class="deg" disabled><i><span></span><span></span></i><span class="deg-ano">2032</span></button>
+      <button type="button" class="deg" disabled><i><span></span><span></span></i><span class="deg-ano">2038</span></button>
+      <button type="button" class="deg" disabled><i><span></span><span></span></i><span class="deg-ano">2044</span></button>
+      <button type="button" class="deg" disabled><i><span></span><span></span></i><span class="deg-ano">2050</span></button>
+    </div>
+  </div>
 
   <!-- PRODUTOS (papel) -->
   <section class="bloco" id="produtos" aria-labelledby="prod-titulo" data-fundo="papel" data-menu="produtos">
@@ -1618,6 +1664,74 @@ function contar(el, de, ate, ms, formato, atraso){
   })(performance.now());
 }
 
+/* ---------- degraus: o caminho até 2050, ligado ao simulador ----------
+   Sem as respostas, a faixa mostra o eixo (hoje → 2050) e as barras enchem conforme as 7 perguntas são respondidas.
+   Com as 7 respondidas e o resultado na tela, entra a linha da vida global, que a tela do resultado já mostra.
+   O caminho ano a ano (o que a pessoa guardou e o que o dinheiro rendeu, mantendo o aporte de hoje) só aparece depois do contato,
+   como o relatório: é a "segunda metade" que a tela do resultado promete. A conta é a mesma de calcular(). */
+const degEl = $("#degraus"), degBarras = degEl ? $$(".deg", degEl) : [];
+const DEG_ANOS = Math.max(1, 2050 - ANO), DEG_Y = [0, .25, .5, .75, 1].map(f => Math.round(DEG_ANOS * f));
+let degSel = 4, degPontos = null, degViuResultado = false;
+function degMostra(i){
+  if (!degPontos) return;
+  degSel = i;
+  const p = degPontos[i], parte = pct(p.total / degPontos.numero) + " da sua vida global";
+  degBarras.forEach((b, j) => b.setAttribute("aria-pressed", j === i ? "true" : "false"));
+  $("#deg-olho").textContent = (p.y ? "Em " + (ANO + p.y) : "Hoje") + ", aos " + (s.age + p.y) + " anos" + (p.y ? ", mantendo o ritmo de hoje" : "");
+  $("#deg-frase").textContent = usd(p.total);
+  $("#deg-sub").textContent = p.y ? `Você guardou ${usd(p.guardou)} e o dinheiro rendeu ${usd(p.rendeu)}. Isso cobre ${parte}.`
+    : p.total ? `É o que você já tem investido. Isso cobre ${parte}.` : "Você parte do zero. O caminho é feito de aporte e de tempo.";
+  if (!degPontos[4].total) $("#deg-sub").textContent = "Sem investimento e sem aporte, o caminho ainda não saiu do chão. Volte ao simulador e teste um valor de aporte.";
+}
+function pintaDegraus(){
+  if (!degEl) return;
+  const resp = [!!s.uf, !!s.custo, s.chute !== null, !!s.pais, s.investido !== null || ORDEM.indexOf(atual) > ORDEM.indexOf("estrada"),
+    s.investido !== null && (s.investido === 0 || s.dolar !== null), s.aporte !== null];
+  const n = resp.filter(Boolean).length;
+  // a vida global só entra aqui depois que a tela do resultado a mostrou: a faixa não se adianta ao simulador
+  if (n < 7) degViuResultado = false; else if (ORDEM.indexOf(atual) >= ORDEM.indexOf("vida")) degViuResultado = true;
+  const k = n === 7 && degViuResultado ? calcular(s) : null, pronto = !!k && k.numero > 0, aberto = pronto && !!contato.email;
+  const meta = $("#deg-meta"), palco = $("#deg-palco"), topoDeg = $("#deg-topo");
+  degEl.classList.toggle("aberto", aberto);
+  meta.hidden = !pronto;
+  if (pronto) $("span", meta).textContent = "Sua vida global · " + usd(k.numero);
+  $("#deg-leg").hidden = !aberto;
+  if (aberto){
+    const pts = DEG_Y.map(y => { const guardou = k.inv + k.ap * 12 * y, total = k.inv * fatorCapital(y) + k.ap * fatorAporte(y); return { y, guardou, total, rendeu: Math.max(0, total - guardou) }; });
+    const teto = Math.max(k.numero, pts[4].total);
+    pts.numero = k.numero; degPontos = pts;
+    degBarras.forEach((b, i) => {
+      const p = pts[i], [rendeu, guardou] = $$("i span", b);
+      b.disabled = false; b.style.setProperty("--h", (p.total / teto * 100).toFixed(2) + "%");
+      rendeu.style.height = (p.total ? p.rendeu / p.total * 100 : 0).toFixed(2) + "%";
+      guardou.style.height = (p.total ? p.guardou / p.total * 100 : 0).toFixed(2) + "%";
+      b.setAttribute("aria-label", (p.y ? ANO + p.y : "Hoje") + ": " + usd(p.total));
+    });
+    meta.style.setProperty("--m", (k.numero / teto * 100).toFixed(2) + "%");
+    palco.removeAttribute("aria-hidden"); topoDeg.setAttribute("aria-live", "polite");
+    degMostra(degSel);
+    return;
+  }
+  degPontos = null;
+  degBarras.forEach((b, i) => {
+    const [rendeu, guardou] = $$("i span", b);
+    b.disabled = true; b.removeAttribute("aria-pressed"); b.removeAttribute("aria-label"); b.style.removeProperty("--h");
+    rendeu.style.height = "0%"; guardou.style.height = Math.round(Math.min(1, Math.max(0, n / 7 * 4 - i)) * 100) + "%";
+  });
+  meta.style.setProperty("--m", "100%");
+  palco.setAttribute("aria-hidden", "true"); topoDeg.removeAttribute("aria-live");
+  $("#deg-olho").textContent = "O caminho até 2050";
+  $("#deg-frase").textContent = pronto ? "Sua vida global: " + usd(k.numero) : `De hoje a 2050: ${DEG_ANOS} anos de juros compostos.`;
+  $("#deg-sub").textContent = pronto ? "Quanto desse caminho o seu ritmo de hoje já cobre aparece aqui, ano a ano, junto com o relatório completo."
+    : n === 7 ? "Você respondeu às 7 perguntas. O seu número aparece aqui." : n ? `Você respondeu ${n} de 7 perguntas. O seu número aparece aqui.` : "Responda às 7 perguntas do simulador e o seu número aparece aqui.";
+}
+degBarras.forEach((b, i) => {
+  $(".deg-ano", b).textContent = i ? ANO + DEG_Y[i] : "Hoje";   // o primeiro rótulo é "Hoje" e os anos saem do calendário: nada fica velho na virada do ano
+  b.addEventListener("click", () => degMostra(i));
+  b.addEventListener("focus", () => degMostra(i));
+  b.addEventListener("pointerenter", e => { if (e.pointerType === "mouse") degMostra(i); });
+});
+
 function ir(passo){
   const f = faltando(passo), de = atual;
   atual = f || passo;
@@ -1649,6 +1763,7 @@ function fimOnda(){ clearTimeout(tOnda); raiz.classList.remove("onda"); const f 
 const podeVT = !reduz && typeof document.startViewTransition === "function";
 let transicao = null;
 function render(mover, sentido){
+  pintaDegraus();
   // com uma janela aberta por cima (o resultado pode chegar sozinho enquanto a pessoa preenche a lista de espera), vale o caminho sem a API:
   // as imagens da transição são desenhadas acima de tudo, inclusive da janela
   if (!mover || !podeVT || $("dialog[open]")){ pinta(mover, sentido, false); return; }
@@ -2493,6 +2608,7 @@ function ligarForm(pre, o, depois){
     contato = { nome: g("nome").value.trim(), email: g("email").value.trim().toLowerCase(), whatsapp: wd, aceite: true, empresa: g("empresa").value };
     if (!leadId) leadId = novoId();
     gravar("p2050_lead", { id: leadId, contato: { nome: contato.nome, email: contato.email, whatsapp: contato.whatsapp, aceite: true } });
+    pintaDegraus();
     const b = document.getElementById(pre + "enviar"); if (b){ b.disabled = true; b.textContent = "Enviando…"; }
     await depois();
   });
@@ -2708,7 +2824,7 @@ document.addEventListener("click", e => {
         cabecalho.style.setProperty("--lido", Math.min(1, y / alturaPagina).toFixed(4));
       }
       // degraus: crescem conforme a faixa sobe pela tela. Quando o último termina (ou a faixa já ficou para cima), marca .completo uma vez:
-      // o "2050" entra e o degrau azul pulsa (CSS)
+      // o "2050" do eixo entra e o degrau azul pulsa (CSS)
       if (deg){
         const r = deg.getBoundingClientRect(); let p = -1;
         if (r.bottom <= -60) p = 1;
