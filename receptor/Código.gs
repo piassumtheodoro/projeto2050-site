@@ -42,13 +42,14 @@ const COLUNAS = [
   'utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'ref', 'indicado_por',
   'referrer', 'pagina', 'dispositivo', 'instagram_app', 'chave'
 ];
-const IGNORAR = ['empresa', 'relatorio', 'chave'];   // "relatorio" são os números do PDF: servem ao anexo, não viram coluna
+const IGNORAR = ['empresa', 'relatorio', 'chave', 'os_enviado_em', 'os_erro'];   // "relatorio" são os números do PDF: servem ao anexo, não viram coluna; a chave só o doPost escreve, e as duas do OS só o Os.gs
 // Origem do primeiro contato: um envio posterior sem esses campos não apaga o que já foi gravado.
 const PRIMEIRO_TOQUE = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'ref', 'indicado_por', 'referrer'];
 
 function doPost(e) {
   const lock = LockService.getScriptLock();
   lock.waitLock(15000);
+  let saida, idGravado = '';
   try {
     const d = JSON.parse((e && e.postData && e.postData.contents) || '{}');
     if (d.empresa) return resposta({ ok: true });                       // robô: campo escondido preenchido
@@ -89,7 +90,7 @@ function doPost(e) {
     }
     const tinhaPlano = !novo && !!valores[col('vida_global_usd')];   // esta pessoa já tinha feito a simulação antes deste envio
     cab.forEach(function (c, i) {
-      if (c === 'criado_em' || c === 'email_enviado' || c === 'chave') return;
+      if (c === 'criado_em' || c === 'email_enviado' || c === 'chave' || c === 'os_enviado_em' || c === 'os_erro') return;
       if (c === 'atualizado_em') { valores[i] = agora; return; }
       if (!Object.prototype.hasOwnProperty.call(d, c)) return;   // campo ausente: mantém o que já estava
       const v = d[c];
@@ -107,18 +108,22 @@ function doPost(e) {
 
     if (novo) aba.appendRow(valores);
     else aba.getRange(linha, 1, 1, cab.length).setValues([valores]);
+    idGravado = String(d.id);
     // Avisa a cada contato novo, na primeira vez que a pessoa pede o plano (mesmo que já estivesse na lista de espera)
     // e a cada aplicação para a Consultoria Global. Refazer a simulação atualiza a linha, sem aviso novo.
     const pediuPlano = !!d.vida_global_usd && !tinhaPlano;
     const avisarEmail = propriedade('AVISAR_EMAIL', '');
     if (avisarEmail && (novo || pediuPlano || d.interesse_consultoria === 'sim')) avisarDono(d, pediuPlano, avisarEmail);
-    return resposta({ ok: true });
+    saida = resposta({ ok: true });
   } catch (err) {
     console.error(err);
-    return resposta({ ok: false, erro: 'interno' });
+    saida = resposta({ ok: false, erro: 'interno' });
   } finally {
     lock.releaseLock();
   }
+  // Com a trava já solta: avisa o OS (Os.gs). Projeto sem o Os.gs funciona igual, como com o Pdf.gs. Nunca lança.
+  if (idGravado && typeof avisarOS === 'function') avisarOS(idGravado);
+  return saida;
 }
 
 // Dono da linha: com chave gravada, quem manda a mesma chave (o e-mail pode ser outro: é a pessoa corrigindo o e-mail);
@@ -344,6 +349,7 @@ function conferirConfiguracao() {
   console.log('AGENDA_CHAMADA: ' + (propriedade('AGENDA_CHAMADA', '') ? 'definida' : 'não definida (vale o texto padrão)'));
   console.log('Link da agenda (aba Config): ' + (urlSegura(config('agenda_url', AGENDA_URL)) ? 'definido' : 'não definido (e-mail sem o botão)'));
   console.log('Arquivo Pdf.gs: ' + (typeof jspdf !== 'undefined' && typeof desenharRelatorio === 'function' ? 'presente' : 'ausente (e-mail sem anexo)'));
+  console.log('Aviso ao OS: ' + (typeof osConfig !== 'function' ? 'arquivo Os.gs ausente' : osConfig() ? 'configurado' : 'não configurado (faltam OS_URL e OS_SEGREDO, ou o endereço não começa com https)'));
 }
 
 // ===== Aba "Config": o que muda sem mexer no código =====

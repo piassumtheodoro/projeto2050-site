@@ -121,6 +121,235 @@ secao('quem recebe o quê');
   ok(a.post(Object.assign(base('S71', 'Sem Email', 'semarroba'), { modo: 'lista de espera' })).erro === 'email' && a.correio.length === 0, 'e-mail inválido é recusado');
   ok(a.post(simulador('S72', { consentimento: 'não' })).ok === true && !doPlano(a) && doAviso(a).length === 1, 'sem aceite: a linha entra e o aviso sai, mas o plano não é enviado'); }
 
+secao('aviso ao OS');
+{
+  const osGs = path.join(pasta, 'Os.gs'), URL_OS = 'https://os.exemplo.com/leads/projeto-2050', SEGREDO = 'segredo-de-mentira-123';
+  const PROPS_OS = { OS_URL: URL_OS, OS_SEGREDO: SEGREDO };
+  const CAMPOS = ['id', 'nome', 'email', 'whatsapp', 'consentimento', 'consentimento_texto', 'interesse_jovem', 'interesse_consultoria', 'baixou_pdf', 'estado_brasil', 'custo_mensal_brl', 'destino', 'estado_eua', 'idade', 'idade_renda', 'investido_brl', 'pct_dolar', 'aporte_brl', 'vida_global_usd', 'vida_global_brl', 'ritmo_pct', 'aporte_extra_brl', 'vida_global_brasil_usd', 'patrimonio_faixa', 'consultoria_mensagem', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'ref', 'indicado_por', 'referrer', 'dispositivo', 'instagram_app', 'criado_em', 'atualizado_em', 'email_enviado'];
+  const ISO = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/;
+  const todos = [];
+  const osOk = (url, op) => ({ codigo: 200, corpo: { gravadas: JSON.parse(op.payload).linhas.map(l => l.id), recusadas: [] } });
+  const novo = (props, os, extra) => { const a = criar(Object.assign({ receptor, pdf: null, osGs, os, propriedades: props }, extra)); todos.push(a); return a; };
+  const pessoa = (id, extra) => Object.assign(base(id, 'Pessoa ' + id, id.toLowerCase() + '@exemplo.com'), { modo: 'lista de espera' }, extra);
+  const celula = (a, linha, nome) => a.dados[linha][a.dados[0].indexOf(nome)] ?? '';   // célula não escrita lê como vazia, como no Sheets
+  const mesmoInstante = (x, y) => !!x && !!y && typeof x.getTime === 'function' && typeof y.getTime === 'function' && x.getTime() === y.getTime();
+  const ids = c => c.corpo.linhas.map(l => l.id);
+  const espera = ms => { const t = Date.now(); while (Date.now() - t < ms); };
+
+  { const a = novo({}, osOk);
+    ok(a.post(pessoa('N1')).ok === true && a.chamadas.length === 0 && a.registro.includes('log: OS não configurado') && a.erros.length === 0, 'sem as propriedades: o envio é aceito, nenhuma chamada, o registro diz "OS não configurado"'); }
+  for (const url of ['http://os.exemplo.com/leads', 'os.exemplo.com/leads']) {
+    const a = novo({ OS_URL: url, OS_SEGREDO: SEGREDO }, osOk);
+    a.post(pessoa('N2'));
+    ok(a.chamadas.length === 0 && a.erros.length === 0, 'OS_URL que não começa com https: nenhuma chamada (' + url + ')'); }
+  { const a = novo({ OS_URL: URL_OS }, osOk);
+    a.post(pessoa('N3'));
+    ok(a.chamadas.length === 0, 'só OS_URL, sem o segredo: nenhuma chamada'); }
+
+  { const a = novo(PROPS_OS, osOk);
+    ok(a.post(simulador('A1', { utm_medium: 'bio' })).ok === true && a.chamadas.length === 1, 'com as duas propriedades: uma chamada ao OS');
+    const c = a.chamadas[0] || { cabecalhos: {}, corpo: { linhas: [{}] } }, l = c.corpo.linhas[0];
+    ok(c.url === URL_OS && c.cabecalhos.Authorization === 'Bearer ' + SEGREDO, 'a URL é a da propriedade e o cabeçalho é Bearer com o segredo');
+    ok(c.corpo.linhas.length === 1 && l.id === 'A1', 'a linha enviada é a da pessoa');
+    ok(Object.keys(l).every(k => CAMPOS.includes(k)) && !['relatorio', 'empresa', 'pagina', 'modo'].some(k => k in l), 'só campos da lista do contrato: sem relatorio, empresa, pagina nem modo');
+    ok(Object.values(l).every(v => typeof v === 'string') && l.custo_mensal_brl === '20000' && l.consentimento === 'sim', 'todo valor é texto, número com ponto decimal como String() dá');
+    ok(ISO.test(l.atualizado_em) && ISO.test(l.criado_em), 'atualizado_em e criado_em em ISO');
+    ok(c.travaPresa === false, 'a chamada ao OS acontece sem a trava do script presa');
+    ok(mesmoInstante(celula(a, 1, 'os_enviado_em'), celula(a, 1, 'atualizado_em')) && celula(a, 1, 'os_erro') === '', 'na planilha: os_enviado_em é o atualizado_em enviado e os_erro está vazio');
+    ok(a.erros.length === 0, 'sem erro no registro'); }
+
+  { const a = novo(PROPS_OS, osOk);
+    ok(a.post(pessoa('Q1', { consentimento: 'não' })).ok === true && a.chamadas.length === 0, 'pessoa sem aceite: nenhuma chamada'); }
+
+  { let estado = 500;
+    const a = novo(PROPS_OS, (url, op) => { if (estado === 'cai') throw new Error('sem rede'); return estado === 500 ? { codigo: 500, corpo: 'erro' } : osOk(url, op); });
+    ok(a.post(pessoa('F1')).ok === true && a.chamadas.length === 1 && celula(a, 1, 'os_enviado_em') === '' && a.erros.length === 0, 'OS responde 500: o envio é aceito, nada é anotado, sem erro no registro');
+    estado = 'cai'; a.avancarCache(121);   // a falha anterior deixou o aviso em pausa
+    ok(a.post(pessoa('F2')).ok === true && a.chamadas.length === 2 && celula(a, 2, 'os_enviado_em') === '' && a.erros.length === 0, 'OS fora do ar (a chamada lança): o envio é aceito, nada é anotado, sem erro no registro');
+    estado = 200; a.avancarCache(121);
+    a.post(pessoa('F3'));
+    const c = a.chamadas[2];
+    ok(a.chamadas.length === 3 && ids(c)[0] === 'F3' && ids(c).slice().sort().join() === 'F1,F2,F3', 'no envio seguinte vão as três linhas, com a da vez em primeiro');
+    ok([1, 2, 3].every(i => mesmoInstante(celula(a, i, 'os_enviado_em'), celula(a, i, 'atualizado_em'))), 'e as três ficam anotadas'); }
+
+  for (const [rot, corpo] of [['texto que não é JSON', 'não é json'], ['JSON sem as listas', { gravadas: 'F4' }]]) {
+    const a = novo(PROPS_OS, () => ({ codigo: 200, corpo }));
+    a.post(pessoa('F4')); a.avancarCache(121);
+    ok(a.post(pessoa('F5')).ok === true && celula(a, 1, 'os_enviado_em') === '' && celula(a, 2, 'os_enviado_em') === '' && a.erros.length === 0 && a.chamadas.length === 2 && ids(a.chamadas[1]).length === 2, 'resposta 200 com ' + rot + ': é falha, nada anotado, as duas linhas vão de novo'); }
+
+  { let recusar = true;
+    const a = novo(PROPS_OS, (url, op) => { const g = JSON.parse(op.payload).linhas.map(l => l.id); return recusar && g.includes('R1') ? { codigo: 200, corpo: { gravadas: g.filter(i => i !== 'R1'), recusadas: [{ id: 'R1', motivo: 'email' }] } } : osOk(url, op); });
+    a.post(pessoa('R1'));
+    ok(celula(a, 1, 'os_erro') === 'email' && mesmoInstante(celula(a, 1, 'os_enviado_em'), celula(a, 1, 'atualizado_em')), 'linha recusada: o motivo vai para os_erro e o envio é anotado');
+    a.post(pessoa('R2'));
+    ok(a.chamadas.length === 2 && ids(a.chamadas[1]).join() === 'R2', 'o envio seguinte de outra pessoa não reenvia a recusada');
+    recusar = false; espera(3);
+    a.post(pessoa('R1', { nome: 'Pessoa R1 de novo' }));
+    ok(ids(a.chamadas[2]).join() === 'R1' && celula(a, 1, 'os_erro') === '', 'quando a própria pessoa manda de novo, ela vai outra vez'); }
+
+  { let mexer = true;
+    const a = novo(PROPS_OS, (url, op) => { if (mexer) { mexer = false; espera(3); a.post(pessoa('M1', { consultoria_mensagem: 'campo novo' })); } return osOk(url, op); });
+    a.post(pessoa('M1'));
+    ok(a.chamadas.length === 2 && !mesmoInstante(celula(a, 1, 'os_enviado_em'), celula(a, 1, 'atualizado_em')), 'a linha muda durante o envio: a anotação fica diferente de atualizado_em');
+    a.post(pessoa('M2'));
+    const c = a.chamadas[2], m = c && c.corpo.linhas.find(l => l.id === 'M1');
+    ok(!!m && m.consultoria_mensagem === 'campo novo' && ids(c)[0] === 'M2', 'o aviso seguinte manda essa linha de novo, já com a mudança');
+    ok(a.erros.length === 0, 'sem erro no registro'); }
+
+  { const a = novo(PROPS_OS, osOk);
+    a.travaOcupada = true;
+    ok(a.post(pessoa('T1')).ok === true && a.chamadas.length === 0 && a.erros.length === 0 && a.dados.length === 2, 'trava ocupada: o envio é gravado, nenhuma chamada, sem erro');
+    a.travaOcupada = false;
+    a.post(pessoa('T2'));
+    ok(a.chamadas.length === 1 && ids(a.chamadas[0]).join() === 'T2,T1', 'solta a trava, a linha que ficou para trás vai no aviso seguinte'); }
+
+  { const a = novo({}, osOk);
+    for (let i = 1; i <= 60; i++) a.post(pessoa('P' + i));
+    Object.assign(a.props, PROPS_OS);
+    a.ctx.mandarTudo();
+    ok(a.chamadas.map(c => c.corpo.linhas.length).join() === '25,25,10' && a.chamadas.every(c => !c.travaPresa), 'mandarTudo: três chamadas (25, 25 e 10), sem a trava presa');
+    ok(a.dados.slice(1).every((_, i) => mesmoInstante(celula(a, i + 1, 'os_enviado_em'), celula(a, i + 1, 'atualizado_em'))) && a.registro.includes('log: OS: 60 linhas enviadas, 0 recusadas'), 'as 60 ficam anotadas e o registro conta 60 enviadas');
+    a.ctx.mandarTudo();
+    ok(a.chamadas.length === 3 && a.erros.length === 0, 'um segundo mandarTudo não faz nenhuma chamada'); }
+
+  { const a = novo(Object.assign({}, PROPS, PROPS_OS), osOk);
+    a.post(simulador('PD1'));
+    const avisos = a.correio.length, antes = a.dados[1].slice(), cab = a.dados[0].slice();
+    espera(3);
+    ok(a.post({ id: 'PD1', email: 'ana@exemplo.com', baixou_pdf: 'sim' }).ok === true, 'o aviso do PDF é aceito');
+    ok(a.correio.length === avisos, 'o aviso do PDF não manda outro plano nem aviso interno');
+    ok(celula(a, 1, 'consentimento_texto') === antes[cab.indexOf('consentimento_texto')] && celula(a, 1, 'modo') === 'simulador' && celula(a, 1, 'baixou_pdf') === 'sim', 'cria a coluna baixou_pdf e não muda o texto do aceite nem o modo');
+    const primeira = a.chamadas[0].corpo.linhas[0], c = a.chamadas[a.chamadas.length - 1];
+    ok(!('baixou_pdf' in primeira) && a.chamadas.length === 2 && c.corpo.linhas[0].id === 'PD1' && c.corpo.linhas[0].baixou_pdf === 'sim' && c.corpo.linhas[0].vida_global_usd === '960176', 'a linha que vai ao OS leva baixou_pdf "sim" e mantém a simulação'); }
+
+  // OS de mentira com o teto real: 413 acima de 256 KB ou de 25 linhas. maior guarda o maior corpo que chegou.
+  const osComTeto = (estado) => { const o = (url, op) => {
+    const n = Buffer.byteLength(op.payload), qtd = JSON.parse(op.payload).linhas.length;
+    o.maior = Math.max(o.maior, n);
+    if (estado.fora) return { codigo: 500, corpo: 'erro' };
+    return n > 256 * 1024 || qtd > 25 ? { codigo: 413, corpo: 'grande' } : osOk(url, op);
+  }; o.maior = 0; return o; };
+  const anotada = (a, i) => mesmoInstante(celula(a, i, 'os_enviado_em'), celula(a, i, 'atualizado_em'));
+  const TEXTOS = ['nome', 'whatsapp', 'consentimento_texto', 'estado_brasil', 'destino', 'estado_eua', 'patrimonio_faixa', 'consultoria_mensagem', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'ref', 'indicado_por', 'referrer', 'dispositivo', 'instagram_app', 'interesse_jovem', 'interesse_consultoria'];
+
+  // lote por tamanho
+  { const estado = { fora: true }, os = osComTeto(estado), a = novo(PROPS_OS, os);
+    const cheio = '"\u0001'.repeat(250);   // 500 caracteres, 2000 bytes no JSON
+    for (let i = 1; i <= 10; i++) a.post(pessoa('B' + i, Object.assign({}, ...TEXTOS.map(t => ({ [t]: cheio })))));
+    estado.fora = false; a.avancarCache(121);
+    ok(a.post(pessoa('BN')).ok === true && ids(a.chamadas[a.chamadas.length - 1])[0] === 'BN' && anotada(a, 11), 'dez linhas pesadas pendentes: a pessoa normal é anotada como enviada naquele mesmo aviso');
+    ok(os.maior < 256 * 1024 && os.maior > 0, 'nenhuma chamada passa de 256 KB (maior: ' + os.maior + ' bytes)');
+    a.ctx.mandarTudo();
+    ok(a.dados.slice(1).every((_, i) => anotada(a, i + 1)) && os.maior < 256 * 1024 && a.erros.length === 0, 'depois de mandarTudo, todas as linhas estão anotadas, sem chamada acima do teto'); }
+  { const a = novo({}, osOk);
+    a.post(pessoa('G1')); a.post(pessoa('G2'));
+    a.dados[1][a.dados[0].indexOf('nome')] = '\u0001'.repeat(60000);   // 360 KB no JSON: sozinha passa do teto
+    Object.assign(a.props, PROPS_OS);
+    a.post(pessoa('G3'));
+    ok(a.chamadas.length === 1 && ids(a.chamadas[0]).join() === 'G3,G2', 'linha que sozinha passa do teto fica fora do lote e não trava as outras');
+    ok(celula(a, 1, 'os_erro') === 'grande demais' && anotada(a, 1) && anotada(a, 2) && anotada(a, 3), 'a grande demais é anotada com o motivo; as outras, como enviadas');
+    a.ctx.mandarTudo();
+    ok(a.chamadas.length === 1, 'e nenhuma chamada nova depois'); }
+
+  // pausa depois de falha
+  { let estado = 'falha';
+    const a = novo(PROPS_OS, (url, op) => estado === 'falha' ? { codigo: 500, corpo: 'erro' } : osOk(url, op));
+    a.post(pessoa('Z1'));
+    estado = 'ok';
+    ok(a.post(pessoa('Z2')).ok === true && a.post(pessoa('Z3')).ok === true && a.chamadas.length === 1, 'depois de uma falha, os dois envios seguintes não chamam o OS e respondem ok');
+    a.avancarCache(119);
+    a.post(pessoa('Z3b'));
+    ok(a.chamadas.length === 1, 'antes dos 120 segundos, a pausa segue');
+    a.avancarCache(2);
+    a.post(pessoa('Z4'));
+    ok(a.chamadas.length === 2 && ids(a.chamadas[1]).slice().sort().join() === 'Z1,Z2,Z3,Z3b,Z4' && a.dados.slice(1).every((_, i) => anotada(a, i + 1)), 'passada a pausa, o envio seguinte chama o OS e manda todas as pendentes'); }
+  { let estado = 'falha';
+    const a = novo(PROPS_OS, (url, op) => estado === 'falha' ? { codigo: 500, corpo: 'erro' } : osOk(url, op));
+    a.post(pessoa('Y1')); a.post(pessoa('Y2'));
+    estado = 'ok';
+    a.ctx.mandarTudo();
+    ok(a.chamadas.length === 2 && anotada(a, 1) && anotada(a, 2), 'mandarTudo ignora a pausa');
+    a.post(pessoa('Y3'));
+    ok(a.chamadas.length === 3 && anotada(a, 3), 'e um envio que dá certo apaga a pausa'); }
+
+  // leitura enxuta
+  { const a = novo({}, osOk);
+    for (let i = 1; i <= 60; i++) a.post(pessoa('L' + i));
+    Object.assign(a.props, PROPS_OS);
+    a.ctx.mandarTudo();
+    Object.keys(a.props).forEach(k => delete a.props[k]);
+    a.post(pessoa('L61'));
+    Object.assign(a.props, PROPS_OS);
+    a.leituras.length = 0;
+    const r = a.ctx.osPendentes(25, null, 0);
+    ok(r.length === 1 && r[0].id === 'L61', 'com 60 enviadas e uma pendente, osPendentes devolve só a pendente');
+    ok(a.leituras.every(l => l.nr === 1 || l.nc === 1) && a.leituras.filter(l => l.nc > 1).length <= 2, 'osPendentes não lê a aba inteira: colunas soltas, o cabeçalho e uma linha (' + a.leituras.length + ' leituras)'); }
+
+  // id repetido
+  { const a = novo({}, osOk);
+    a.post(pessoa('D1')); a.post(pessoa('D3'));
+    const cab = a.dados[0], velha = a.dados[1].slice();
+    const nova = velha.slice(); nova[cab.indexOf('atualizado_em')] = new Date(velha[cab.indexOf('atualizado_em')].getTime() + 5000);
+    a.dados.push(nova);
+    Object.assign(a.props, PROPS_OS);
+    a.post(pessoa('D2'));
+    a.ctx.mandarTudo();
+    const vezes = a.chamadas.flatMap(c => ids(c)).filter(i => i === 'D1').length;
+    ok(vezes === 1 && [1, 2, 3, 4].every(i => anotada(a, i)), 'duas linhas com o mesmo id: as duas ficam anotadas e o OS recebe o id uma vez só');
+    ok(celula(a, 1, 'os_erro') === 'id repetido' && celula(a, 3, 'os_erro') === '', 'a mais antiga leva "id repetido"; a mais nova segue como enviada');
+    const antes = a.chamadas.length;
+    a.ctx.mandarTudo();
+    ok(a.chamadas.length === antes, 'um segundo mandarTudo não faz nenhuma chamada'); }
+  { // a linha mudou de lugar durante o envio (outra foi apagada): a anotação segue o id
+    let apagou = false;
+    const a = novo(PROPS_OS, (url, op) => { if (!apagou) { apagou = true; a.dados.splice(1, 1); } return osOk(url, op); });
+    a.travaOcupada = true; a.post(pessoa('E1')); a.post(pessoa('E2')); a.travaOcupada = false;
+    a.post(pessoa('E3'));
+    ok(a.dados.length === 3 && anotada(a, 1) && anotada(a, 2), 'linha apagada durante o envio: as outras são anotadas pelo id, na posição nova'); }
+
+  // POST não escreve as colunas do OS
+  { let estado = 'ok';
+    const a = novo(PROPS_OS, (url, op) => estado === 'ok' ? osOk(url, op) : { codigo: 500, corpo: 'erro' });
+    a.post(pessoa('X1'));
+    const env = celula(a, 1, 'os_enviado_em');
+    estado = 'fora'; espera(3);
+    a.post(pessoa('X1', { os_enviado_em: 'x', os_erro: 'y' }));
+    ok(a.dados.length === 2 && celula(a, 1, 'os_enviado_em') === env && celula(a, 1, 'os_erro') === '', 'um POST mandando os_enviado_em e os_erro não muda as duas células'); }
+  { const a = novo({}, osOk);
+    a.post(pessoa('X2', { os_enviado_em: 'x', os_erro: 'y' }));
+    ok(!a.dados[0].includes('os_enviado_em') && !a.dados[0].includes('os_erro'), 'sem as colunas, um POST com esses campos não as cria'); }
+
+  // casos que não chamam o OS
+  { const a = novo(PROPS_OS, osOk);
+    ok(a.post(pessoa('V1', { empresa: 'ACME' })).ok === true && a.post(pessoa('V2', { email: 'semarroba' })).erro === 'email' && a.post(Object.assign(pessoa('V3'), { id: '' })).erro === 'id' && a.chamadas.length === 0, 'robô, e-mail inválido e id inválido: nenhuma chamada ao OS'); }
+
+  // exceção dentro do Os.gs
+  { const a = novo(PROPS_OS, osOk), original = a.ctx.garantirColunas;
+    let n = 0;
+    a.ctx.garantirColunas = (...x) => { if (++n === 2) throw new Error('quebrou'); return original(...x); };   // a 2ª chamada é a do Os.gs, com a trava presa
+    ok(a.post(pessoa('W1')).ok === true && a.erros.length === 1, 'exceção dentro do Os.gs: o doPost responde ok e a exceção vai para o registro');
+    ok(a.post(pessoa('W2')).ok === true && a.chamadas.length === 1 && a.erros.length === 1, 'e a trava não ficou presa: o envio seguinte funciona'); }
+
+  { const codigo = fs.readFileSync(osGs, 'utf8'), ignore = fs.readFileSync(path.join(pasta, '..', '.claspignore'), 'utf8');
+    ok(!/[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+\.[A-Za-z]{2,}/.test(codigo) && !/https:\/\//.test(codigo), 'Os.gs não tem endereço de e-mail nem endereço https (o repositório é público)');
+    ok(/^!Os\.gs$/m.test(ignore), 'o .claspignore libera o Os.gs'); }
+
+  const vazou = todos.flatMap(a => a.registro).filter(l => /@|Pessoa |Ana|segredo-de-mentira/.test(l));
+  ok(vazou.length === 0, 'o registro de todos esses casos não tem e-mail, nome nem segredo' + (vazou.length ? ': ' + vazou[0].slice(0, 120) : ''));
+}
+
+secao('aviso ao OS: linha trocada de lugar no meio da leitura');
+{ const chamadas = [], osGs = path.join(pasta, 'Os.gs');
+  const a = criar({ receptor, pdf, osGs, propriedades: Object.assign({}, PROPS, { OS_URL: 'https://os.exemplo.com/leads/projeto-2050', OS_SEGREDO: 'segredo-de-teste' }),
+    os: (url, o) => { chamadas.push(JSON.parse(o.payload)); return { codigo: 200, corpo: JSON.stringify({ gravadas: JSON.parse(o.payload).linhas.map(l => l.id), recusadas: [] }) }; } });
+  a.props.OS_URL = '';                                   // grava duas pessoas sem avisar o OS
+  a.post(simulador('T1')); a.post(simulador('T2', { consentimento: 'não', email: 'outra@exemplo.com' }));
+  a.props.OS_URL = 'https://os.exemplo.com/leads/projeto-2050';
+  // alguém apaga à mão a linha de T1 depois de as quatro colunas terem sido lidas: a posição passa a ser a de T2, que não tem aceite
+  const aba = a.abas.Leads, original = aba.getRange.bind(aba); let leiturasDeLinha = 0;
+  aba.getRange = (r, c, nr, nc) => { if (nr === 1 && nc > 4 && r > 1 && ++leiturasDeLinha === 1) aba.dados.splice(1, 1); return original(r, c, nr, nc); };
+  a.ctx.avisarOS('T1');
+  ok(chamadas.every(c => c.linhas.every(l => l.id !== 'T2' && l.consentimento === 'sim')), 'a linha de outra pessoa, sem aceite, não vai ao OS quando a planilha muda de lugar no meio da leitura'); }
 secao('linha só do dono (o id aparece no link de compartilhar)');
 const linhas = a => a.dados.slice(1).map(l => Object.fromEntries(a.dados[0].map((c, i) => [c, l[i]])));
 const CHAVE = 'a1b2c3d4e5f60718293a4b5c6d7e8f90', OUTRA = '00112233445566778899aabbccddeeff';
@@ -174,6 +403,16 @@ const ataque = (id, extra) => Object.assign(base(id, '', 'ana@exemplo.com'), { m
   a.post(Object.assign(vitima('D9'), { '=IMAGE("x")': 'a', 'Nome Com Espaço': 'b', campo_novo: 'c' }));
   ok(a.dados[0].indexOf('campo_novo') >= 0 && linhas(a)[0].campo_novo === 'c', 'campo novo com nome simples vira coluna');
   ok(a.dados[0].every(c => /^[a-z][a-z0-9_]*$/.test(c)), 'nome de campo fora do padrão não vira coluna (nada de fórmula no cabeçalho)'); }
+{ const chamadas = [], osGs = path.join(pasta, 'Os.gs');   // o ataque do link compartilhado, com o OS ligado
+  const a = criar({ receptor, pdf, osGs, propriedades: Object.assign({}, PROPS, { OS_URL: 'https://os.exemplo.com/leads/projeto-2050', OS_SEGREDO: 'segredo-de-teste' }),
+    os: (url, o) => { chamadas.push(JSON.parse(o.payload)); return { codigo: 200, corpo: JSON.stringify({ gravadas: JSON.parse(o.payload).linhas.map(l => l.id), recusadas: [] }) }; } });
+  a.post(vitima('D10', { chave: CHAVE }));
+  a.post(ataque('D10', { email: 'intruso@exemplo.com', interesse_consultoria: 'sim', whatsapp: '' }));
+  const idas = chamadas.flatMap(c => c.linhas), doIntruso = idas.filter(l => l.email === 'intruso@exemplo.com');
+  ok(doIntruso.length === 1 && doIntruso[0].id !== 'D10' && doIntruso[0].interesse_consultoria === 'sim', 'com o OS ligado, o envio de quem não é dono chega como outra pessoa, com outro id');
+  ok(!JSON.stringify(doIntruso).includes('Vitória') && !JSON.stringify(doIntruso).includes('48911112222'), 'e sem o nome nem o WhatsApp da vítima');
+  ok(idas.filter(l => l.id === 'D10').every(l => l.email === 'ana@exemplo.com' && l.interesse_consultoria !== 'sim'), 'a pessoa da vítima segue no OS com o e-mail dela e sem a marca da Consultoria');
+  ok(!JSON.stringify(chamadas).includes(CHAVE) && idas.every(l => !('chave' in l)), 'a chave nunca vai ao OS'); }
 
 secao('o que está no repositório');
 { const codigo = fs.readFileSync(receptor, 'utf8'), pacote = fs.readFileSync(pdf, 'utf8');
