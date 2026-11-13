@@ -60,7 +60,8 @@ function doPost(e) {
     // O id aparece no link de compartilhar, então não basta para escrever numa linha: só o dono escreve, e dono é quem manda a chave
     // que o navegador dele guarda (linha sem chave gravada: quem manda o mesmo e-mail). Chave fora do formato vale como ausente.
     const chave = /^[A-Za-z0-9]{16,64}$/.test(String(d.chave || '')) ? String(d.chave) : '';
-    const cab = garantirColunas(aba, Object.keys(d).filter(function (k) { return IGNORAR.indexOf(k) < 0; }).concat('chave'));
+    // Nome de campo vira cabeçalho de coluna: só passa nome simples, para um envio não escrever fórmula no cabeçalho.
+    const cab = garantirColunas(aba, Object.keys(d).filter(function (k) { return IGNORAR.indexOf(k) < 0 && /^[a-z][a-z0-9_]{0,39}$/.test(k); }).concat('chave'));
     const agora = new Date();
     const ultima = aba.getLastRow();
     const ids = ultima > 1 ? aba.getRange(2, 1, ultima - 1, 1).getValues().map(function (r) { return String(r[0]); }) : [];
@@ -75,7 +76,8 @@ function doPost(e) {
         d.id = idDerivado(d.id, chave || d.email);
         pos = ids.indexOf(d.id);
         valores = pos >= 0 ? ler(pos) : null;
-        if (valores && !ehDono(valores, col, d.email, chave)) return resposta({ ok: false, erro: 'id' });
+        // linha derivada já ocupada por outro: linha nova. A página não lê a resposta, então recusar perderia o envio em silêncio.
+        if (valores && !ehDono(valores, col, d.email, chave)) { d.id = idDerivado(d.id, (chave || d.email) + '|' + agora.getTime()); pos = -1; }
       }
     }
     if (pos >= 0) {

@@ -1512,7 +1512,8 @@ const leadSalvo = ler("p2050_lead") || {};
 let contato = leadSalvo.contato || {};
 let leadId = leadSalvo.id || null;
 // Chave secreta deste navegador: o receptor só deixa escrever na linha de quem a manda. O id vai no link de compartilhar; a chave nunca vai.
-const novaChave = () => Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, "0")).join("");
+// Começa com letra, para a planilha não ler como número. Sem crypto no navegador, vale o sorteio comum: a página não pode parar por isso.
+const novaChave = () => { try{ return "k" + Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, "0")).join(""); }catch(e){ return "k" + (Math.random().toString(36) + Math.random().toString(36) + Math.random().toString(36)).replace(/[^a-z0-9]/g, "").slice(0, 32); } };
 const leadChave = leadSalvo.chave || novaChave();
 if (leadId && !leadSalvo.chave) gravar("p2050_lead", Object.assign({}, leadSalvo, { chave: leadChave }));
 let envio = null, ultimaSimEnviada = "";

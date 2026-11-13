@@ -163,6 +163,17 @@ const ataque = (id, extra) => Object.assign(base(id, '', 'ana@exemplo.com'), { m
   a.post(vitima('D7', { chave: 'abc12' }));
   ok(linhas(a).length === 2 && linhas(a).every(l => l.chave === '') && !JSON.stringify(a.dados).includes('CMD') && !JSON.stringify(a.dados).includes('abc12'), 'chave fora do formato vale como ausente e não aparece em célula nenhuma');
   ok(a.erros.length === 0, 'sem erro no registro'); }
+{ const a = criar({ receptor, pdf, propriedades: PROPS });   // alguém ocupa de antemão a linha derivada de uma página antiga do dono
+  a.post(vitima('D8', { chave: CHAVE }));
+  const derivado = 'S' + require('crypto').createHash('sha256').update('D8|ana@exemplo.com').digest('hex').slice(0, 14).toUpperCase();
+  a.post(ataque(derivado, { chave: OUTRA, email: 'intruso@exemplo.com' }));
+  const antes = JSON.stringify(a.dados.slice(1, 3));
+  ok(a.post(vitima('D8', { nome: 'Vitória Página Antiga' })).ok === true, 'linha derivada já ocupada por outro: o envio é aceito');
+  ok(linhas(a).length === 3 && JSON.stringify(a.dados.slice(1, 3)) === antes && linhas(a)[2].nome === 'Vitória Página Antiga' && /^S[0-9A-F]{14}$/.test(linhas(a)[2].id), 'e vira uma linha nova, sem tocar nas outras duas: o lead não se perde'); }
+{ const a = criar({ receptor, pdf, propriedades: PROPS });
+  a.post(Object.assign(vitima('D9'), { '=IMAGE("x")': 'a', 'Nome Com Espaço': 'b', campo_novo: 'c' }));
+  ok(a.dados[0].indexOf('campo_novo') >= 0 && linhas(a)[0].campo_novo === 'c', 'campo novo com nome simples vira coluna');
+  ok(a.dados[0].every(c => /^[a-z][a-z0-9_]*$/.test(c)), 'nome de campo fora do padrão não vira coluna (nada de fórmula no cabeçalho)'); }
 
 secao('o que está no repositório');
 { const codigo = fs.readFileSync(receptor, 'utf8'), pacote = fs.readFileSync(pdf, 'utf8');
