@@ -1511,7 +1511,7 @@ if (s.pais && !PAISES[s.pais]) s.pais = "";
 const leadSalvo = ler("p2050_lead") || {};
 let contato = leadSalvo.contato || {};
 let leadId = leadSalvo.id || null;
-let envio = null, ultimaSimEnviada = "";
+let envio = null, ultimaSimEnviada = "", pdfAvisado = false;
 function salvar(){ gravar("p2050_sim", s, "sessao"); }
 
 /* ---------- origem do visitante ---------- */
@@ -1533,15 +1533,16 @@ function evento(nome, dados, custom){ try{ if (window.fbq) fbq(custom ? 'trackCu
 /* ---------- envio do lead (mesmo formato do apps-script.gs do simulador) ---------- */
 const urlBase = () => String(location.href).split(/[?#]/)[0];
 const novoId = () => "S" + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2,6).toUpperCase();
+const ESPERA_RECEPTOR_MS = 3000;   // o receptor grava, desenha o PDF e manda e-mail antes de responder: a tela não espera mais que isso
 async function enviar(p){
   if (!CONFIG.ENDPOINT){ try{ console.warn("Projeto 2050: ENDPOINT vazio em CONFIG. O contato não foi salvo."); }catch(e){} return "demo"; }
-  try{
-    await fetch(CONFIG.ENDPOINT, { method:"POST", mode:"no-cors", keepalive:true, headers:{ "Content-Type":"text/plain;charset=utf-8" }, body: JSON.stringify(p) });
-    return "ok";
-  }catch(e){
-    const fila = ler("p2050_pendentes") || []; fila.push(p); gravar("p2050_pendentes", fila.slice(-5));
-    return "pendente";
-  }
+  const req = fetch(CONFIG.ENDPOINT, { method:"POST", mode:"no-cors", keepalive:true, headers:{ "Content-Type":"text/plain;charset=utf-8" }, body: JSON.stringify(p) })
+    .then(() => "ok", () => {
+      const fila = ler("p2050_pendentes") || []; fila.push(p); gravar("p2050_pendentes", fila.slice(-5));
+      return "pendente";
+    });
+  // passou do prazo: segue como "ok" e o fetch continua por trás (se falhar, entra na fila do mesmo jeito)
+  return Promise.race([req, new Promise(ok => setTimeout(() => ok("ok"), ESPERA_RECEPTOR_MS))]);
 }
 (async function reenviar(){
   const fila = ler("p2050_pendentes"); if (!fila || !fila.length || !CONFIG.ENDPOINT) return;
@@ -2439,6 +2440,7 @@ async function baixarPDF(botao){
     doc.setProperties({ title:"Sua vida global · Projeto 2050", author:"Projeto 2050" });
     const nomeArq = "vida-global-projeto-2050.pdf", blob = doc.output("blob");
     evento("BaixarPDF", {}, true);
+    if (!pdfAvisado && leadId && contato.email){ pdfAvisado = true; enviar({ id: leadId, email: contato.email, baixou_pdf: "sim" }); }   // sem await: o PDF não espera
     // no celular, abre a folha de compartilhar (salvar em Arquivos, mandar por WhatsApp); no computador, baixa
     const arquivo = typeof File === "function" ? new File([blob], nomeArq, { type:"application/pdf" }) : null;
     if (/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) && arquivo && navigator.canShare && navigator.canShare({ files:[arquivo] })){
