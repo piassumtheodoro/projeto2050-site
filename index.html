@@ -1511,6 +1511,11 @@ if (s.pais && !PAISES[s.pais]) s.pais = "";
 const leadSalvo = ler("p2050_lead") || {};
 let contato = leadSalvo.contato || {};
 let leadId = leadSalvo.id || null;
+// Chave secreta deste navegador: o receptor só deixa escrever na linha de quem a manda. O id vai no link de compartilhar; a chave nunca vai.
+// Começa com letra, para a planilha não ler como número. Sem crypto no navegador, vale o sorteio comum: a página não pode parar por isso.
+const novaChave = () => { try{ return "k" + Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, "0")).join(""); }catch(e){ return "k" + (Math.random().toString(36) + Math.random().toString(36) + Math.random().toString(36)).replace(/[^a-z0-9]/g, "").slice(0, 32); } };
+const leadChave = leadSalvo.chave || novaChave();
+if (leadId && !leadSalvo.chave) gravar("p2050_lead", Object.assign({}, leadSalvo, { chave: leadChave }));
 let envio = null, ultimaSimEnviada = "", pdfAvisado = false;
 function salvar(){ gravar("p2050_sim", s, "sessao"); }
 
@@ -1536,7 +1541,7 @@ const novoId = () => "S" + Date.now().toString(36).toUpperCase() + Math.random()
 const ESPERA_RECEPTOR_MS = 3000;   // o receptor grava, desenha o PDF e manda e-mail antes de responder: a tela não espera mais que isso
 async function enviar(p){
   if (!CONFIG.ENDPOINT){ try{ console.warn("Projeto 2050: ENDPOINT vazio em CONFIG. O contato não foi salvo."); }catch(e){} return "demo"; }
-  const req = fetch(CONFIG.ENDPOINT, { method:"POST", mode:"no-cors", keepalive:true, headers:{ "Content-Type":"text/plain;charset=utf-8" }, body: JSON.stringify(p) })
+  const req = fetch(CONFIG.ENDPOINT, { method:"POST", mode:"no-cors", keepalive:true, headers:{ "Content-Type":"text/plain;charset=utf-8" }, body: JSON.stringify(Object.assign({ chave: leadChave }, p)) })
     .then(() => "ok", () => {
       const fila = ler("p2050_pendentes") || []; fila.push(p); gravar("p2050_pendentes", fila.slice(-5));
       return "pendente";
@@ -2494,7 +2499,7 @@ function ligarForm(pre, o, depois){
     if (primeiro){ primeiro.focus(); return; }
     contato = { nome: g("nome").value.trim(), email: g("email").value.trim().toLowerCase(), whatsapp: wd, aceite: true, empresa: g("empresa").value };
     if (!leadId) leadId = novoId();
-    gravar("p2050_lead", { id: leadId, contato: { nome: contato.nome, email: contato.email, whatsapp: contato.whatsapp, aceite: true } });
+    gravar("p2050_lead", { id: leadId, chave: leadChave, contato: { nome: contato.nome, email: contato.email, whatsapp: contato.whatsapp, aceite: true } });
     const b = document.getElementById(pre + "enviar"); if (b){ b.disabled = true; b.textContent = "Enviando…"; }
     await depois();
   });

@@ -1,6 +1,6 @@
 // Um Apps Script de mentira para os testes: planilha com várias abas, correio com anexos, propriedades do script e utilitários.
 // Os arquivos do receptor rodam aqui como rodam no Google: no mesmo escopo global, sem window, document nem atob.
-const fs = require('fs'), vm = require('vm');
+const fs = require('fs'), vm = require('vm'), crypto = require('crypto');
 
 // osGs: caminho do Os.gs, carregado depois do Código.gs. os: (url, opcoes) => ({ codigo, corpo }), o OS de mentira (pode lançar para simular queda).
 exports.criar = function ({ receptor, pdf, osGs, os, pdfPrimeiro = true, propriedades = {}, ajuste = s => s }) {
@@ -46,6 +46,8 @@ exports.criar = function ({ receptor, pdf, osGs, os, pdfPrimeiro = true, proprie
     Utilities: {
       formatDate(d, tz, f) { if (f !== 'dd/MM/yyyy') throw new Error('formato não simulado: ' + f); return new Intl.DateTimeFormat('pt-BR', { timeZone: tz, day: '2-digit', month: '2-digit', year: 'numeric' }).format(d); },
       base64Decode: b64 => Array.from(new Int8Array(Buffer.from(b64, 'base64'))),   // como no Apps Script: bytes com sinal
+      DigestAlgorithm: { SHA_256: 'sha256' }, Charset: { UTF_8: 'utf8' },
+      computeDigest: (alg, texto, cs) => Array.from(crypto.createHash(alg).update(texto, cs).digest(), b => (b > 127 ? b - 256 : b)),   // bytes com sinal
       newBlob: (bytes, tipo, nome) => ({ getBytes: () => bytes, getContentType: () => tipo, getName: () => nome })
     },
     MailApp: { sendEmail(a, b, c) {

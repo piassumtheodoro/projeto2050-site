@@ -40,9 +40,9 @@ const COLUNAS = [
   'cambio', 'retorno_real_pct', 'retirada_mes_pct',
   'consentimento', 'consentimento_texto', 'email_enviado',
   'utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'ref', 'indicado_por',
-  'referrer', 'pagina', 'dispositivo', 'instagram_app'
+  'referrer', 'pagina', 'dispositivo', 'instagram_app', 'chave'
 ];
-const IGNORAR = ['empresa', 'relatorio', 'os_enviado_em', 'os_erro'];   // "relatorio" são os números do PDF: servem ao anexo, não viram coluna; as duas do OS só o Os.gs escreve
+const IGNORAR = ['empresa', 'relatorio', 'chave', 'os_enviado_em', 'os_erro'];   // "relatorio" são os números do PDF: servem ao anexo, não viram coluna; a chave só o doPost escreve, e as duas do OS só o Os.gs
 // Origem do primeiro contato: um envio posterior sem esses campos não apaga o que já foi gravado.
 const PRIMEIRO_TOQUE = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'ref', 'indicado_por', 'referrer'];
 
@@ -58,17 +58,31 @@ function doPost(e) {
     if (!d.id || String(d.id).length > 40) return resposta({ ok: false, erro: 'id' });
 
     const aba = obterAba();
-    const cab = garantirColunas(aba, Object.keys(d).filter(function (k) { return IGNORAR.indexOf(k) < 0; }));
+    // O id aparece no link de compartilhar, então não basta para escrever numa linha: só o dono escreve, e dono é quem manda a chave
+    // que o navegador dele guarda (linha sem chave gravada: quem manda o mesmo e-mail). Chave fora do formato vale como ausente.
+    const chave = /^[A-Za-z0-9]{16,64}$/.test(String(d.chave || '')) ? String(d.chave) : '';
+    // Nome de campo vira cabeçalho de coluna: só passa nome simples, para um envio não escrever fórmula no cabeçalho.
+    const cab = garantirColunas(aba, Object.keys(d).filter(function (k) { return IGNORAR.indexOf(k) < 0 && /^[a-z][a-z0-9_]{0,39}$/.test(k); }).concat('chave'));
     const agora = new Date();
     const ultima = aba.getLastRow();
     const ids = ultima > 1 ? aba.getRange(2, 1, ultima - 1, 1).getValues().map(function (r) { return String(r[0]); }) : [];
-    const pos = ids.indexOf(String(d.id));
+    let pos = ids.indexOf(String(d.id));
     const col = function (nome) { return cab.indexOf(nome); };
+    const ler = function (p) { return aba.getRange(p + 2, 1, 1, cab.length).getValues()[0]; };
     let linha, valores, novo = false;
 
     if (pos >= 0) {
+      valores = ler(pos);
+      if (!ehDono(valores, col, d.email, chave)) {   // não é dono: a linha achada não é tocada, o envio vale para um id derivado
+        d.id = idDerivado(d.id, chave || d.email);
+        pos = ids.indexOf(d.id);
+        valores = pos >= 0 ? ler(pos) : null;
+        // linha derivada já ocupada por outro: linha nova. A página não lê a resposta, então recusar perderia o envio em silêncio.
+        if (valores && !ehDono(valores, col, d.email, chave)) { d.id = idDerivado(d.id, (chave || d.email) + '|' + agora.getTime()); pos = -1; }
+      }
+    }
+    if (pos >= 0) {
       linha = pos + 2;
-      valores = aba.getRange(linha, 1, 1, cab.length).getValues()[0];
     } else {
       novo = true;
       valores = cab.map(function () { return ''; });
@@ -76,7 +90,7 @@ function doPost(e) {
     }
     const tinhaPlano = !novo && !!valores[col('vida_global_usd')];   // esta pessoa já tinha feito a simulação antes deste envio
     cab.forEach(function (c, i) {
-      if (c === 'criado_em' || c === 'email_enviado' || c === 'os_enviado_em' || c === 'os_erro') return;
+      if (c === 'criado_em' || c === 'email_enviado' || c === 'chave' || c === 'os_enviado_em' || c === 'os_erro') return;
       if (c === 'atualizado_em') { valores[i] = agora; return; }
       if (!Object.prototype.hasOwnProperty.call(d, c)) return;   // campo ausente: mantém o que já estava
       const v = d[c];
@@ -84,6 +98,8 @@ function doPost(e) {
       if (v === '' && PRIMEIRO_TOQUE.indexOf(c) >= 0) return;      // não apaga a origem do primeiro contato
       valores[i] = limpar(v);                                      // string vazia limpa (ex.: estado_eua, whatsapp)
     });
+
+    if (chave && !valores[col('chave')]) valores[col('chave')] = chave;   // linha nova, ou antiga que adota a chave no primeiro uso
 
     const jaEnviado = valores[col('email_enviado')];
     if (ENVIAR_RESULTADO && d.vida_global_usd && d.consentimento === 'sim' && !jaEnviado) {
@@ -108,6 +124,21 @@ function doPost(e) {
   // Com a trava já solta: avisa o OS (Os.gs). Projeto sem o Os.gs funciona igual, como com o Pdf.gs. Nunca lança.
   if (idGravado && typeof avisarOS === 'function') avisarOS(idGravado);
   return saida;
+}
+
+// Dono da linha: com chave gravada, quem manda a mesma chave (o e-mail pode ser outro: é a pessoa corrigindo o e-mail);
+// sem chave gravada (linha antiga), quem manda o mesmo e-mail.
+function ehDono(valores, col, email, chave) {
+  const gravada = String(valores[col('chave')] || '');
+  if (gravada) return chave === gravada;
+  return String(valores[col('email')] || '').trim().toLowerCase() === email;
+}
+
+// Id de quem escreveu numa linha que não é dele: determinístico, para o mesmo envio cair sempre na mesma linha.
+// "S" + 14 hexadecimais maiúsculos cabe em ^[\w-]{1,40}$, que um sistema a jusante exige.
+function idDerivado(id, segredo) {
+  const bytes = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, String(id) + '|' + segredo, Utilities.Charset.UTF_8);
+  return 'S' + bytes.map(function (b) { return ('0' + ((b + 256) % 256).toString(16)).slice(-2); }).join('').slice(0, 14).toUpperCase();
 }
 
 // Abrir a URL /exec no navegador mostra "ok": serve para testar a implantação.
