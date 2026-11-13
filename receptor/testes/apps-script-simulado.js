@@ -2,8 +2,12 @@
 // Os arquivos do receptor rodam aqui como rodam no Google: no mesmo escopo global, sem window, document nem atob.
 const fs = require('fs'), vm = require('vm');
 
-exports.criar = function ({ receptor, pdf, pdfPrimeiro = true, propriedades = {}, ajuste = s => s }) {
-  const correio = [], registro = [], abas = {}, props = Object.assign({}, propriedades);
+// osGs: caminho do Os.gs, carregado depois do Código.gs. os: (url, opcoes) => ({ codigo, corpo }), o OS de mentira (pode lançar para simular queda).
+exports.criar = function ({ receptor, pdf, osGs, os, pdfPrimeiro = true, propriedades = {}, ajuste = s => s }) {
+  const correio = [], registro = [], abas = {}, props = Object.assign({}, propriedades), chamadas = [];
+  let api, travaPresa = false;
+  // A trava dá para observar: presa duas vezes sem soltar é erro de teste; api.travaOcupada = true faz o tryLock falhar.
+  const prender = () => { if (travaPresa) throw new Error('teste: trava do script presa duas vezes'); travaPresa = true; };
   const novaAba = () => {
     const dados = [];
     const faixa = (r, c, nr, nc) => ({
@@ -17,7 +21,17 @@ exports.criar = function ({ receptor, pdf, pdfPrimeiro = true, propriedades = {}
   const planilha = { getSheetByName: n => abas[n] || null, insertSheet: n => (abas[n] = novaAba()) };
   const ctx = {
     console: { log: m => registro.push('log: ' + m), error: e => registro.push('erro: ' + (e && e.stack || e)), warn() {}, info() {} },
-    LockService: { getScriptLock: () => ({ waitLock() {}, releaseLock() {} }) },
+    LockService: { getScriptLock: () => ({
+      waitLock() { prender(); },
+      tryLock() { if (api.travaOcupada) return false; prender(); return true; },
+      releaseLock() { travaPresa = false; }
+    }) },
+    UrlFetchApp: { fetch(url, opcoes) {
+      chamadas.push({ url, cabecalhos: opcoes.headers, corpo: JSON.parse(opcoes.payload), travaPresa });
+      if (!os) throw new Error('UrlFetchApp não simulado');
+      const r = os(url, opcoes);
+      return { getResponseCode: () => r.codigo, getContentText: () => (typeof r.corpo === 'string' ? r.corpo : JSON.stringify(r.corpo)) };
+    } },
     SpreadsheetApp: { getActiveSpreadsheet: () => planilha },
     PropertiesService: { getScriptProperties: () => ({ getProperty: k => (Object.prototype.hasOwnProperty.call(props, k) ? props[k] : null), setProperty(k, v) { props[k] = String(v); return this; } }) },
     ContentService: { MimeType: { JSON: 'json' }, createTextOutput: t => ({ t, setMimeType() { return this; } }) },
@@ -37,9 +51,10 @@ exports.criar = function ({ receptor, pdf, pdfPrimeiro = true, propriedades = {}
   if (pdf) arquivos.push(['Pdf.gs', fs.readFileSync(pdf, 'utf8')]);
   arquivos.push(['Código.gs', ajuste(fs.readFileSync(receptor, 'utf8'))]);
   if (!pdfPrimeiro) arquivos.reverse();
+  if (osGs) arquivos.push(['Os.gs', fs.readFileSync(osGs, 'utf8')]);
   arquivos.forEach(([nome, fonte]) => vm.runInContext(fonte, ctx, { filename: nome }));
-  return {
-    ctx, abas, correio, registro, props,
+  api = {
+    ctx, abas, correio, registro, props, chamadas, travaOcupada: false,
     get dados() { return (abas.Leads || { dados: [] }).dados; },
     get erros() { return registro.filter(l => l.startsWith('erro: ')); },
     definirConfig(chave, valor) {
@@ -49,4 +64,5 @@ exports.criar = function ({ receptor, pdf, pdfPrimeiro = true, propriedades = {}
     },
     post: d => JSON.parse(ctx.doPost({ postData: { contents: JSON.stringify(d) } }).t)
   };
+  return api;
 };

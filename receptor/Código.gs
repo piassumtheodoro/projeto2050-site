@@ -49,6 +49,7 @@ const PRIMEIRO_TOQUE = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content
 function doPost(e) {
   const lock = LockService.getScriptLock();
   lock.waitLock(15000);
+  let saida, idGravado = '';
   try {
     const d = JSON.parse((e && e.postData && e.postData.contents) || '{}');
     if (d.empresa) return resposta({ ok: true });                       // robô: campo escondido preenchido
@@ -91,18 +92,22 @@ function doPost(e) {
 
     if (novo) aba.appendRow(valores);
     else aba.getRange(linha, 1, 1, cab.length).setValues([valores]);
+    idGravado = String(d.id);
     // Avisa a cada contato novo, na primeira vez que a pessoa pede o plano (mesmo que já estivesse na lista de espera)
     // e a cada aplicação para a Consultoria Global. Refazer a simulação atualiza a linha, sem aviso novo.
     const pediuPlano = !!d.vida_global_usd && !tinhaPlano;
     const avisarEmail = propriedade('AVISAR_EMAIL', '');
     if (avisarEmail && (novo || pediuPlano || d.interesse_consultoria === 'sim')) avisarDono(d, pediuPlano, avisarEmail);
-    return resposta({ ok: true });
+    saida = resposta({ ok: true });
   } catch (err) {
     console.error(err);
-    return resposta({ ok: false, erro: 'interno' });
+    saida = resposta({ ok: false, erro: 'interno' });
   } finally {
     lock.releaseLock();
   }
+  // Com a trava já solta: avisa o OS (Os.gs). Projeto sem o Os.gs funciona igual, como com o Pdf.gs. Nunca lança.
+  if (idGravado && typeof avisarOS === 'function') avisarOS(idGravado);
+  return saida;
 }
 
 // Abrir a URL /exec no navegador mostra "ok": serve para testar a implantação.
@@ -313,6 +318,7 @@ function conferirConfiguracao() {
   console.log('AGENDA_CHAMADA: ' + (propriedade('AGENDA_CHAMADA', '') ? 'definida' : 'não definida (vale o texto padrão)'));
   console.log('Link da agenda (aba Config): ' + (urlSegura(config('agenda_url', AGENDA_URL)) ? 'definido' : 'não definido (e-mail sem o botão)'));
   console.log('Arquivo Pdf.gs: ' + (typeof jspdf !== 'undefined' && typeof desenharRelatorio === 'function' ? 'presente' : 'ausente (e-mail sem anexo)'));
+  console.log('Aviso ao OS: ' + (typeof osConfig !== 'function' ? 'arquivo Os.gs ausente' : osConfig() ? 'configurado' : 'não configurado (faltam OS_URL e OS_SEGREDO, ou o endereço não começa com https)'));
 }
 
 // ===== Aba "Config": o que muda sem mexer no código =====

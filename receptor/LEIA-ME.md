@@ -9,12 +9,13 @@ O endereço do receptor é o `ENDPOINT` do `index.html`. Ele não muda quando o 
 | Arquivo | O que é |
 | --- | --- |
 | `Código.gs` | O receptor: recebe o envio, grava a linha, manda os e-mails. |
+| `Os.gs` | O aviso ao Rivool OS: depois de gravar, manda a linha que mudou e as que o OS ainda não tem. Tem também `mandarTudo`, para rodar à mão. |
 | `Pdf.gs` | Gerado. O jsPDF, as fontes e o desenho do relatório, para o receptor montar o mesmo PDF da página. |
 | `appsscript.json` | O manifesto do projeto: fuso, permissões e a configuração do App da Web. |
 | `testes/` | Os testes, com planilha, correio e propriedades simulados. Não vão para o Apps Script. |
 | `ferramentas/montar-pdf.js` | Gera o `Pdf.gs` a partir do `index.html` e do `pdf-fontes.js`. Não vai para o Apps Script. |
 
-O `.clasp.json` e o `.claspignore`, na raiz do repositório, dizem ao clasp qual é o projeto e quais arquivos enviar (só os três primeiros da tabela).
+O `.clasp.json` e o `.claspignore`, na raiz do repositório, dizem ao clasp qual é o projeto e quais arquivos enviar (`Código.gs`, `Os.gs`, `Pdf.gs` e `appsscript.json`).
 
 ## Rodar os testes
 
@@ -77,9 +78,20 @@ Para revogar uma credencial antiga: myaccount.google.com → Segurança → Cone
 ## O que a automação não faz
 
 - **Permissão nova do Google.** Se o código passar a usar algo que pede autorização nova (chamar um endereço externo, ler o Drive, mexer em agenda), a publicação vai ao ar, mas o receptor só volta a funcionar depois que o dono da conta autorizar uma vez no editor do Apps Script: abrir o projeto, rodar qualquer função e aceitar a tela do Google.
+- **A permissão do `Os.gs`.** Chamar o OS é chamar um endereço externo, o que pede autorização nova do Google. Vale a regra do item acima: publicado sem a autorização, o receptor pode parar de gravar até o dono da conta autorizar. Por isso a autorização vem **antes** do merge que traz o `Os.gs`:
+  1. no editor do Apps Script, criar um arquivo qualquer com `function autorizar() { UrlFetchApp.fetch('https://www.google.com/generate_204'); }`, rodar `autorizar` e aceitar a tela do Google. Isso não muda o que está no ar: o endereço `/exec` continua na versão publicada;
+  2. fazer o merge em seguida. A publicação troca os arquivos do editor pelos do repositório (o arquivo do passo 1 some) e a versão nova já encontra a permissão dada;
+  3. abrir o endereço `/exec` e conferir o `ok`, e fazer um cadastro de teste na página.
+
+  Se algo sair errado, volte a implantação para a versão anterior (acima, em "Como a publicação funciona").
+- **Mandar as linhas antigas ao OS.** Com as duas propriedades preenchidas e a permissão aceita, rode `mandarTudo` uma vez no editor. Ela manda lote atrás de lote as linhas com aceite que o OS ainda não tem; se o registro disser que ainda há pendentes, rode de novo.
 - **Propriedades do script.** O que não pode ficar num repositório público mora em Configurações do projeto → Propriedades do script, no editor do Apps Script, e não vai pelo repositório:
   - `AVISAR_EMAIL`: endereços que recebem o aviso interno, separados por vírgula. Sem ela, não há aviso.
   - `AGENDA_CHAMADA`: frase do bloco "Agendar reunião com especialista" do e-mail do plano. Sem ela, vale um texto padrão sem nome.
+  - `OS_URL`: o endereço da rota do OS que recebe os leads (`/leads/projeto-2050`), começando com `https://`.
+  - `OS_SEGREDO`: o segredo que o OS espera no cabeçalho `Authorization`. É o mesmo valor da variável `PROJETO2050_SYNC_SECRET` do OS.
+
+  Sem uma das duas, o `Os.gs` não chama o OS e o receptor funciona como antes (o registro diz "OS não configurado").
 
   Para conferir sem mostrar valores, rode `conferirConfiguracao` no editor e leia o registro de execução.
 - **A planilha.** O link do botão de agenda fica na aba Config da planilha (linha `agenda_url`), e as colunas da aba Leads se ajustam sozinhas. Nada disso passa pelo repositório.
