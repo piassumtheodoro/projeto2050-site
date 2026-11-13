@@ -24,6 +24,10 @@ node receptor/testes/testa-receptor.js
 
 Precisa só do Node 22 ou mais novo. Os testes rodam o `Código.gs` e o `Pdf.gs` de verdade num Apps Script simulado: nenhuma planilha é tocada e nenhum e-mail sai. Para ver um e-mail e um PDF de amostra, passe uma pasta: `node receptor/testes/testa-receptor.js /tmp/amostras`.
 
+## Quem pode escrever numa linha
+
+O `id` de cada pessoa aparece no link de compartilhar, então saber o id não basta para escrever na linha dela. Escrever exige a chave que o navegador da pessoa guarda e manda em todo envio (coluna `chave` da aba Leads). Linha sem chave gravada (cadastro antigo) aceita só o mesmo e-mail, e adota a chave no primeiro envio que trouxer uma. Envio que não é do dono da linha não toca nela: vira outra linha, com outro id (`S` e 14 letras e números). Não apague nem edite a coluna `chave`: sem ela, a pessoa deixa de ser dona da própria linha e o próximo envio dela cria uma linha nova.
+
 ## Mudar o receptor
 
 1. Mude o código por PR, como a página, e rode os testes.
