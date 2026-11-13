@@ -3022,6 +3022,10 @@ document.addEventListener("click", e => {
     return [{ x: b.x0, y: b.y0 }, { x: meio, y: b.y0 - sobe }, { x: b.x1, y: b.y0 }, { x: b.x1, y: b.y1 }, { x: b.x0, y: b.y1 }];
   };
 
+  // retrato do que a física usa da página: largura, altura do mundo, raio, nitidez, as duas seções e os botões que viram obstáculo
+  let feito = "";
+  const retrato = () => [W, alturaMundo, raio, dpr].concat(telas.map(t => [t.y, t.h]), blocos().map(b => [b.x0, b.y0, b.x1, b.y1])).flat().map(v => Math.round(v * 2) / 2).join("|");
+
   const fazFixos = () => {
     if (fixos.length) M.Composite.remove(mundo, fixos);
     const g = 400, alto = alturaMundo + 4000, opc = { isStatic: true, friction: 0.2, restitution: 0.2, label: "fixo" };
@@ -3033,6 +3037,7 @@ document.addEventListener("click", e => {
     blocos().forEach(b => { const vs = telhado(b); fixos.push(M.Body.create(Object.assign({ position: M.Vertices.centre(vs), vertices: vs }, opc))); });
     M.Composite.add(mundo, fixos);
     topoNascer = Math.min(0, ...fixos.slice(3).map(f => f.bounds.min.y)) - 3 * raio;
+    feito = retrato();
   };
   const fazPeles = () => {
     const lado = Math.ceil(2 * raio * dpr); peles = {};
@@ -3146,6 +3151,9 @@ document.addEventListener("click", e => {
     if (!engine) return;
     const W0 = W, chao0 = alturaMundo, r0 = raio, dpr0 = dpr;
     medir();
+    // No celular o navegador avisa "resize" toda vez que a barra de endereço some ou volta, sem a abertura mudar de tamanho.
+    // Se nada do que a física usa mudou, a pilha fica como está: não acorda e, sem movimento, não é sorteada de novo.
+    if (retrato() === feito) return;
     if (raio !== r0) flags.forEach(b => M.Body.scale(b, raio / r0, raio / r0));
     if (flags.length > contagem()){ const sobram = flags.splice(contagem()); if (solto) M.Composite.remove(mundo, sobram); }   // a tela estreitou: sai o que não cabe no chão
     if (raio !== r0 || dpr !== dpr0) fazPeles();
