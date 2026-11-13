@@ -271,6 +271,20 @@ section{position:relative}
   .intro-txt{grid-column:2;grid-row:2 / span 2;max-width:60ch}
 }
 
+/* ---------- bandeiras que caem na abertura ----------
+   Um canvas em cada seção (a escura e a introdução), atrás do conteúdo: a seção vira um contexto de empilhamento próprio
+   e o canvas fica no nível -1, acima do fundo e abaixo de textos, fotos e botões. A física é uma só, do topo da abertura
+   ao chão reservado no fim da introdução. O raio das bandeiras sai daqui (o JS lê --r-bandeira). */
+:root{--r-bandeira:20px}
+@media (min-width:743px){ :root{--r-bandeira:30px} }
+@media (min-width:1280px){ :root{--r-bandeira:40px} }
+.hero,.intro{isolation:isolate}
+.bandeiras{position:absolute;inset:0;z-index:-1;display:block;width:100%;height:100%;pointer-events:none}
+.chao-bandeiras{display:none}
+.js .chao-bandeiras{display:block;grid-column:1 / -1;height:calc(var(--r-bandeira) * 5.4)}   /* duas fileiras, com espaço para uma terceira aqui e ali sem encostar no texto */
+.pega-bandeira .hero,.pega-bandeira .intro{cursor:grab}
+.arrasta-bandeira,.arrasta-bandeira *{cursor:grabbing !important;user-select:none}
+
 /* ---------- simulador (tinta, com a lâmina) ---------- */
 .sim-grid{display:grid;gap:var(--e5);grid-template-columns:minmax(0,1fr)}
 .sim-intro{display:contents}
@@ -859,7 +873,30 @@ section{position:relative}
 .mov .hero-def{animation:surge .38s var(--sai-suave) .55s backwards}
 .mov #cta-hero{animation:surge .38s var(--sai-suave) .61s backwards}
 .mov .hero-meta{animation:surge .38s var(--sai-suave) .67s backwards}
+/* herói, depois da entrada: a foto afunda de leve (28px) enquanto o topo sai da tela, como os papéis das colagens.
+   Onde o CSS tem linha do tempo de rolagem ele faz isso sozinho; nos outros navegadores o JS passa o avanço em --hp (0 a 1). */
+@keyframes foto-afunda{from{translate:0 0}to{translate:0 28px}}
+.mov .hero{overflow-y:clip}                                   /* a foto afunda por trás da borda de baixo, sem invadir a seção seguinte */
+.mov .hero-foto img{translate:0 calc(var(--hp,0) * 28px)}
+@supports (animation-timeline:scroll()){
+  .mov .hero-foto img{animation:cam .9s var(--camera) backwards,foto-afunda linear both;animation-timeline:auto,scroll(root block);animation-range:normal,0px 100vh}
+}
+/* menu: com movimento, o sublinhado do item ativo vira um traço só, criado pelo JS, que desliza de um item para o outro */
+.mov .menu{position:relative}
+.mov .menu a[aria-current] span,.mov .menu a[aria-current]:hover span,.mov .menu a[aria-current]:focus-visible span{text-decoration-line:none}
+.menu-traco{position:absolute;left:0;top:0;width:100px;height:2px;background:var(--fio);transform-origin:0 50%;opacity:0;pointer-events:none;transition:transform var(--d-virada) var(--virada),opacity var(--d-estado) var(--dado)}
+.menu-traco.on{opacity:1}
+/* barra fina de leitura, no alto da tela: cresce com a rolagem da página. Com linha do tempo de rolagem no CSS ela anda sozinha; senão o JS passa o avanço em --lido (0 a 1). */
+@keyframes leitura{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.mov .topo::after{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:var(--fio);transform-origin:0 50%;transform:scaleX(var(--lido,0));pointer-events:none}
+@supports (animation-timeline:scroll()){ .mov .topo::after{animation:leitura linear both;animation-timeline:scroll(root block)} }
+/* computador: uma luz de fundo acompanha o cursor dentro do topo. O elemento é criado pelo JS, só onde há mouse. */
+.hero-luz{position:absolute;left:0;top:0;z-index:0;width:640px;height:640px;margin:-320px 0 0 -320px;border-radius:50%;pointer-events:none;background:radial-gradient(circle,rgba(255,255,255,.07),transparent 62%);opacity:0;transition:opacity .4s var(--dado),transform .25s var(--sai-suave)}
+.hero-luz.on{opacity:1}
 
+/* números que contam fora do simulador (o JS conta; aqui só o tipo): os algarismos da contagem herdam a letra do número,
+   e não a das legendas ao lado, que também são span */
+.mov .fatos b .dg,.mov .preco b .dg{font-size:inherit;color:inherit}
 /* intro: a frase */
 .mov .frase.vis b{animation:vira var(--d-virada) var(--virada) .4s backwards}
 .mov .frase.vis b + b{animation-delay:.48s}
@@ -895,6 +932,52 @@ section{position:relative}
 .mov .primeira .pilha i:nth-child(3){animation-delay:.55s}
 .mov .ok.nova{animation:surge .3s ease backwards}
 .mov .ok-barra i{transition:width .5s var(--dado)}
+/* onda: do claro para o escuro (a resposta e o resultado), a tela nova aparece dentro de um círculo que cresce de onde a pessoa clicou.
+   --onda-x, --onda-y e --onda-r vêm do JS. O fantasma é a lâmina clara que fica por baixo enquanto a onda passa. */
+@keyframes onda{from{clip-path:circle(0 at var(--onda-x,50%) var(--onda-y,50%))}to{clip-path:circle(var(--onda-r,150%) at var(--onda-x,50%) var(--onda-y,50%))}}
+.sim.sim-fantasma{position:absolute;inset:0;z-index:0;min-height:0;padding:0;pointer-events:none}
+.mov .sim.onda{animation:onda var(--d-virada) var(--dado) both}
+/* com a onda, as barras, as linhas e o sublinhado da tela esperam a onda passar (.42s) */
+.mov .apos-onda .barra{animation-delay:.62s}
+.mov .apos-onda .barra.forte{animation-delay:.97s}
+.mov .revela.apos-onda > :nth-child(3){animation-delay:.97s}
+.mov .revela.apos-onda > :nth-child(4){animation-delay:1.12s}
+.mov .revela.apos-onda > :nth-child(5){animation-delay:1.27s}
+.mov .revela.apos-onda > :nth-child(6){animation-delay:1.42s}
+.mov .revela.apos-onda .vida-n .risco path{animation-delay:1.27s}
+
+/* ---------- troca de tela com a API de transição (View Transitions): melhoria progressiva ----------
+   O JS só chama a API com movimento ligado e quando o navegador a tem; sem ela vale tudo o que está acima.
+   A página fica viva (o html não entra na transição) e só as partes nomeadas viram imagem:
+   lamina = o cartão; tela = o conteúdo da pergunta; acao = a barra do botão; numero = o valor do resultado; cabecalho = o topo da página,
+   que entra só para continuar por cima da lâmina enquanto ela desliza. */
+.mov{view-transition-name:none}
+.mov #sim{view-transition-name:lamina}
+.mov #sim-corpo{view-transition-name:tela}
+.mov #sim-acao{view-transition-name:acao}
+.mov .topo{view-transition-name:cabecalho}
+.mov .vn{display:inline-block}
+.mov .vn,.mov .resumo b{view-transition-name:numero}                 /* o mesmo nome nas duas telas: o número viaja do resultado para o resumo do contato */
+.mov.onda #sim-corpo,.mov.onda #sim-acao,.mov.onda .vn,.mov.onda .resumo b{view-transition-name:none}   /* na onda a lâmina é uma imagem só */
+.mov::view-transition{pointer-events:none}                           /* as imagens não seguram o toque; o JS encerra a transição ao primeiro toque e refaz o clique na tela viva */
+.mov::view-transition-group(*){animation-duration:.32s;animation-timing-function:cubic-bezier(.2,.7,.2,1)}
+.mov::view-transition-old(lamina),.mov::view-transition-new(lamina),.mov::view-transition-old(acao),.mov::view-transition-new(acao){animation-duration:.32s}
+@keyframes tela-sai{to{opacity:0;transform:translateX(-24px)}}
+@keyframes tela-sai-volta{to{opacity:0;transform:translateX(24px)}}
+.mov::view-transition-old(tela){animation:tela-sai .12s var(--saida) both;mix-blend-mode:normal}             /* a antiga sai depressa... */
+.mov::view-transition-new(tela){animation:entra .28s var(--sai-suave) .1s both;mix-blend-mode:normal}        /* ...e a nova só entra quando ela já saiu, para as duas não se misturarem */
+.mov.volta::view-transition-old(tela){animation-name:tela-sai-volta}
+.mov.volta::view-transition-new(tela){animation-name:entra-volta}
+.mov::view-transition-group(numero){animation-duration:var(--d-virada);animation-timing-function:var(--virada)}
+.mov::view-transition-old(numero),.mov::view-transition-new(numero){animation-duration:var(--d-virada)}
+.mov .toast{view-transition-name:aviso}                              /* o aviso do pé da tela ("Link copiado") também segue por cima da lâmina */
+.mov::view-transition-old(cabecalho),.mov::view-transition-old(aviso){display:none}
+.mov::view-transition-new(cabecalho),.mov::view-transition-new(aviso){animation:none}
+.mov::view-transition-group(cabecalho),.mov::view-transition-group(aviso){z-index:1}   /* sempre acima das partes da lâmina, mesmo das que só existem na tela nova (a barra do botão) */
+/* a onda com a API: a tela antiga fica parada por baixo e a nova cresce no círculo */
+.mov.onda::view-transition-group(lamina){animation-duration:var(--d-virada)}
+.mov.onda::view-transition-old(lamina){animation:none;mix-blend-mode:normal}
+.mov.onda::view-transition-new(lamina){animation:onda var(--d-virada) var(--dado) both;mix-blend-mode:normal}
 /* resposta ao toque, aceite desenhado e erro */
 .mov .check input:checked + .cx svg path{transition:stroke-dashoffset .28s ease .05s}
 .mov .alav button.recem[aria-pressed="true"] .cx svg path{animation:desenha .28s ease .05s backwards}
@@ -912,8 +995,25 @@ section{position:relative}
 }
 .mov .toast:not([hidden]){animation:aviso-entra .22s var(--sai-suave)}
 
-/* perguntas frequentes */
-.mov .faq details[open] p{animation:resposta-abre .25s var(--sai-suave)}
+/* perguntas frequentes: abrir e fechar sem salto. A altura da página muda de uma vez só (uma conta); quem vem depois desliza até o lugar
+   com transform, pelo JS, e a resposta se revela com clip-path. Nada anima altura. */
+@keyframes faq-revela{from{clip-path:inset(0 0 100% 0)}to{clip-path:inset(0 0 0 0)}}
+@keyframes faq-esconde{to{clip-path:inset(0 0 100% 0);opacity:0}}
+.mov .faq details[open] p{animation:resposta-abre .28s var(--sai-suave),faq-revela .28s var(--sai-suave)}
+.mov .faq details.fechando p{animation:faq-esconde .28s var(--sai-suave) forwards}   /* mesma duração e curva do deslize das perguntas de baixo: a borda do recorte anda junto com elas */
+.mov .faq{border-bottom:0}                                    /* o fio de baixo da lista vira um elemento (.faq-fim, posto pelo JS) para deslizar junto com as perguntas */
+.faq-fim{display:block;height:1px;background:var(--filete)}
+/* o sinal: o traço em pé do "+" passa a ser um ::before, que gira até deitar sobre o outro e formar o "−" */
+.mov .faq summary{position:relative}
+.mov .faq summary::after{background:linear-gradient(var(--texto),var(--texto)) center/14px 2px no-repeat}
+.mov .faq summary::before{content:"";position:absolute;right:15px;top:50%;width:2px;height:14px;margin-top:-7px;background:var(--texto);transition:rotate var(--d-saida) var(--sai-suave),background-color var(--d-estado) var(--dado)}
+.mov .faq details[open]:not(.fechando) summary::before{rotate:90deg}
+.mov .faq details.fechando summary::after{border-color:var(--filete)}
+@media (hover:hover){
+  .mov .faq summary:hover::after{background:linear-gradient(var(--fundo),var(--fundo)) center/14px 2px no-repeat var(--texto)}
+  .mov .faq details.fechando summary:hover::after{border-color:var(--texto)}
+  .mov .faq summary:hover::before{background:var(--fundo)}
+}
 
 /* página: degraus, método 20/50, cartões, rodapé */
 .mov .degraus i{transform-origin:bottom;transform:scaleY(clamp(0,calc(var(--p,1) * 1.5 - var(--d,0)),1))}
@@ -940,6 +1040,21 @@ section{position:relative}
   .cartao:hover .link span[aria-hidden]{transform:translateX(4px)}
   .link:hover span[aria-hidden]{transform:translateX(4px)}
 }
+/* cartões de produto: a palavra grande ("US$", "20/50", "Global.", "12–25") entra com a mesma virada dos títulos */
+.mov .cartao:not(.vis) .cartao-v b{visibility:hidden}
+.mov .cartao.vis .cartao-v b{transform-origin:0 60%;animation:vira var(--d-virada) var(--virada) .22s backwards}
+/* computador: o quadro do cartão inclina de leve na direção do cursor. O JS põe .inclina e passa --ix e --iy (de -1 a 1), só onde há mouse. */
+.mov .cartao-v{transition:transform .35s var(--dado)}
+.mov .cartao.inclina .cartao-v{transform:perspective(900px) rotateX(calc(var(--iy,0) * -3deg)) rotateY(calc(var(--ix,0) * 4deg));transition-duration:.12s}
+/* botões: a seta dos botões principais avança 4px com o mouse em cima, como já acontece nos links de texto */
+.mov .btn .seta,.mov .fixo a .seta{transition:transform .2s var(--dado)}
+@media (hover:hover){ .mov .btn:hover .seta,.mov .fixo a:hover .seta{transform:translateX(4px)} }
+/* degraus: quando o último termina de crescer, o "2050" entra com a virada dos títulos e o degrau azul pulsa uma vez (o JS põe .completo) */
+@keyframes pulso{from{opacity:.5;transform:scale(1)}to{opacity:0;transform:scale(1.9,1.1)}}
+.mov .degraus:not(.completo) b{visibility:hidden}
+.mov .degraus.completo b{transform-origin:100% 60%;animation:vira var(--d-virada) var(--virada) backwards}
+.mov .degraus i:nth-child(5)::after{content:"";position:absolute;inset:0;border-radius:inherit;background:#2716E9;opacity:0;transform-origin:50% 100%;pointer-events:none}
+.mov .degraus.completo i:nth-child(5)::after{animation:pulso var(--d-barra) var(--dado) .12s}
 </style>
 </head>
 <body>
@@ -966,6 +1081,7 @@ d.classList.add("js");if(!r)d.classList.add("mov");})();
 <main>
   <!-- HERÓI (tinta) -->
   <section class="hero" id="inicio" data-fundo="tinta">
+    <canvas class="bandeiras" aria-hidden="true"></canvas>
     <!-- Fotos: ficam na pasta img/, junto da página. Para trocar uma foto, substitua o arquivo mantendo o nome. -->
     <div class="hero-foto"><img src="img/tiago-heroi-1040.webp" srcset="img/tiago-heroi-560.webp 560w, img/tiago-heroi-1040.webp 820w" sizes="(min-width:980px) 480px, 62vw" width="820" height="1075" alt="Tiago Piassum, de óculos e suéter claro, olhando para a câmera" fetchpriority="high" decoding="async" onerror="this.remove()"></div>
     <h1 class="hero-t"><span class="l"><span>Planeje sua</span></span><span class="l virada"><span>vida global</span><svg class="risco" viewBox="0 0 300 12" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M2,8 C60,2 140,3 298,6"/></svg></span></h1>
@@ -980,6 +1096,7 @@ d.classList.add("js");if(!r)d.classList.add("mov");})();
 
   <!-- INTRO (papel) -->
   <section class="bloco intro" data-fundo="papel">
+    <canvas class="bandeiras" aria-hidden="true"></canvas>
     <p class="frase rev">A vida que custa <span class="num" data-ex="custo">R$&nbsp;20.000</span> por mês no Brasil custa <b class="num" data-ex="ppcPT">US$&nbsp;4.486</b> em Portugal e <b class="num" data-ex="ppcEUA">US$&nbsp;8.032</b> nos Estados Unidos. O câmbio diria <s class="num" data-ex="cambio">US$&nbsp;3.704</s> nos dois.</p>
     <p class="tag rev">O dólar de verdade</p>
     <figure class="colagem intro-col rev" style="--giro:-1.5deg;--pr:-7deg;--px:-6%;--py:18%;--ps:60%">
@@ -993,6 +1110,7 @@ d.classList.add("js");if(!r)d.classList.add("mov");})();
       <a class="btn" href="#sim" id="cta-intro"><span>Fazer meu planejamento global</span><svg class="seta" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
       <p class="legal">Poder de compra: Banco Mundial, Programa de Comparação Internacional, 2024, via Our World in Data. Média nacional de cada país; capitais costumam custar mais. Câmbio de referência: <span data-ex="fx">R$&nbsp;5,40</span>.</p>
     </div>
+    <div class="chao-bandeiras" aria-hidden="true"></div>
     <div class="fio rev" data-fio="corre" data-onda="b" aria-hidden="true"><svg viewBox="0 0 1000 40" preserveAspectRatio="none"><path pathLength="1" d="M0,20 C333,36 667,4 1000,20"/></svg></div>
   </section>
 
@@ -1487,16 +1605,17 @@ const ORDEM = ["onde","custo","chute","resposta","destino","estrada","partida","
 let animarVida = false, animarPlano = false, tAltura = null, alavRecente = null, combAnterior = null;
 // Faz um número subir de um valor a outro; sem movimento, mostra o valor final direto.
 const celulas = t => String(t).replace(/\d/g, '<span class="dg">$&</span>');   // cada algarismo numa célula de largura fixa: o número não treme
-function contar(el, de, ate, ms, formato){
+function contar(el, de, ate, ms, formato, atraso){
   if (!el) return;
   if (reduz){ el.textContent = formato(ate); return; }
-  const ini = performance.now();
+  const ini = performance.now() + (atraso || 0);   // com atraso, o número espera parado no valor de partida
+  let ultimo = null;
   (function passo(t){
     if (!el.isConnected) return;
     const p = Math.min(1, Math.max(0, (t - ini) / ms)), suave = 1 - Math.pow(1 - p, 3);
-    if (p < 1){ el.innerHTML = celulas(formato(de + (ate - de) * suave)); requestAnimationFrame(passo); }
+    if (p < 1){ const txt = formato(de + (ate - de) * suave); if (txt !== ultimo){ ultimo = txt; el.innerHTML = celulas(txt); } requestAnimationFrame(passo); }   // só mexe na página quando o texto muda
     else el.textContent = formato(ate);   // no último quadro, texto puro
-  })(ini);
+  })(performance.now());
 }
 
 function ir(passo){
@@ -1506,12 +1625,79 @@ function ir(passo){
   salvar();
   render(true, ORDEM.indexOf(atual) < ORDEM.indexOf(de) ? -1 : 1);
 }
+/* onda: quando a lâmina passa do claro para o escuro (a resposta e o resultado), a cor nova inunda o cartão a partir de onde a pessoa clicou.
+   Só existe com movimento ligado. O número da tela só começa a contar depois que a onda passa (ATRASO_ONDA). */
+const ATRASO_ONDA = 420;
+let toque = null, tOnda = null, ondaAgora = false, animarResposta = false;
+raiz.addEventListener("click", e => { toque = { x:e.clientX, y:e.clientY, alvo:e.target, t:performance.now() }; }, true);
+function origemOnda(){
+  const r = raiz.getBoundingClientRect();
+  const centro = el => { const b = el.getBoundingClientRect(); return { x: b.left + b.width / 2 - r.left, y: b.top + b.height / 2 - r.top }; };
+  if (toque && performance.now() - toque.t < 600){
+    if (toque.x || toque.y) return { x: toque.x - r.left, y: toque.y - r.top };
+    if (toque.alvo && toque.alvo.isConnected) return centro(toque.alvo);   // pelo teclado o clique chega sem coordenadas: vale o centro do botão
+  }
+  const n = $("#calc-n");                                                   // o resultado chega sozinho, depois do cálculo: a onda sai do "100%"
+  return n ? centro(n) : { x: r.width / 2, y: Math.min(r.height, window.innerHeight) / 2 };
+}
+function fimOnda(){ clearTimeout(tOnda); raiz.classList.remove("onda"); const f = $(".sim-fantasma"); if (f) f.remove(); }
+
+/* troca de tela: com a API de transição do navegador (View Transitions) ele guarda a tela antiga e a nova como imagens.
+   A antiga sai, a nova entra, a lâmina muda de altura sem corte, a onda passa por cima da tela antiga (e não de uma lâmina vazia)
+   e o número do resultado viaja até o resumo do contato. É melhoria progressiva: sem a API, ou com movimento reduzido,
+   vale o caminho de sempre, em pinta(..., false). As regras das imagens ficam no CSS, em "troca de tela com a API de transição". */
+const podeVT = !reduz && typeof document.startViewTransition === "function";
+let transicao = null;
 function render(mover, sentido){
-  const hAntes = raiz.getBoundingClientRect().height, nAntes = Number(raiz.dataset.n || 0);
+  // com uma janela aberta por cima (o resultado pode chegar sozinho enquanto a pessoa preenche a lista de espera), vale o caminho sem a API:
+  // as imagens da transição são desenhadas acima de tudo, inclusive da janela
+  if (!mover || !podeVT || $("dialog[open]")){ pinta(mover, sentido, false); return; }
+  const doc = document.documentElement, origem = origemOnda();   // medida antes de a tela antiga sair
+  doc.classList.toggle("volta", sentido < 0);                     // voltando, as telas correm para o outro lado
+  doc.classList.toggle("onda", raiz.dataset.tom === "papel" && !!AZUL[atual]);   // do claro para o escuro, a lâmina inteira vira uma imagem só, revelada pela onda
+  let t;
+  try { t = document.startViewTransition(() => pinta(true, sentido, true, origem)); }
+  catch (e) { doc.classList.remove("volta", "onda"); pinta(true, sentido, false); return; }
+  transicao = t;
+  const fim = () => { if (transicao === t){ transicao = null; doc.classList.remove("volta", "onda"); } };   // uma troca nova no meio desta herda as classes dela
+  t.finished.then(fim, fim); if (t.ready) t.ready.catch(() => {});
+}
+/* Enquanto a transição dura (até 0,45 s), a API tira do teste de acerto as partes fotografadas, e a onda sem a API esconde o que ainda
+   não foi coberto pelo círculo: um toque nesse intervalo cairia no vazio. Por isso qualquer toque encerra a troca na hora
+   (a tela nova já está pronta por baixo), e o clique que começou durante ela é refeito no elemento que está sob o dedo.
+   Nenhum clique espera a animação. O giro da roda e as teclas também encerram a transição, para a imagem não ficar parada com a página rolando. */
+if (!reduz){
+  let toqueNaTroca = false;
+  document.addEventListener("pointerdown", () => {
+    const naOnda = raiz.classList.contains("onda");
+    toqueNaTroca = !!transicao || naOnda;
+    if (transicao) transicao.skipTransition();
+    if (naOnda) fimOnda();
+  }, true);
+  document.addEventListener("pointercancel", () => { toqueNaTroca = false; }, true);   // o toque virou rolagem: não há clique para refazer
+  window.addEventListener("wheel", () => { if (transicao) transicao.skipTransition(); }, { passive:true });
+  document.addEventListener("keydown", () => { if (transicao) transicao.skipTransition(); }, true);
+  document.addEventListener("click", e => {
+    const refaz = toqueNaTroca; toqueNaTroca = false;
+    if (!refaz || !e.isTrusted || !e.detail) return;                      // só o clique de ponteiro: o do teclado (detail 0) já chega ao elemento certo
+    const alvo = document.elementFromPoint(e.clientX, e.clientY);
+    if (!alvo || alvo === e.target || alvo.contains(e.target)) return;   // o clique já acertou o elemento certo
+    e.stopPropagation(); e.preventDefault();
+    const foco = alvo.closest("input,select,textarea,button,a[href],summary,[tabindex]"); if (foco) foco.focus({ preventScroll:true });
+    alvo.dispatchEvent(new MouseEvent("click", { bubbles:true, cancelable:true, composed:true, view:window, clientX:e.clientX, clientY:e.clientY }));
+    if (foco && foco.tagName === "SELECT" && foco.showPicker){ try { foco.showPicker(); } catch (err) {} }   // a lista do <select> não abre com clique refeito: pede-se ao navegador
+  }, true);
+}
+function pinta(mover, sentido, comVT, origemVT){
+  fimOnda();
+  const hAntes = raiz.getBoundingClientRect().height, nAntes = Number(raiz.dataset.n || 0), tomAntes = raiz.dataset.tom;
+  const origem = comVT ? origemVT : (!reduz && mover ? origemOnda() : null);   // medida antes de a tela antiga sair
   clearTimeout(tAltura); raiz.classList.remove("ajusta"); raiz.style.height = "";
   corpo.className = "sim-corpo"; acao.className = "sim-acao";
   const tela = TELAS[atual]();
   raiz.dataset.tom = AZUL[atual] ? "azul" : "papel";
+  ondaAgora = !!origem && tomAntes === "papel" && raiz.dataset.tom === "azul";
+  if (ondaAgora) corpo.classList.add("apos-onda");        // atrasa as barras e as linhas da tela até a onda passar
   const n = PROG[atual];
   raiz.dataset.n = n || 0;
   topo.innerHTML =
@@ -1522,7 +1708,26 @@ function render(mover, sentido){
   acao.innerHTML = tela.acao || "";
   acao.hidden = !tela.acao;
   if (tela.montar) tela.montar();
-  if (!reduz){
+  if (mover){
+    const r = raiz.getBoundingClientRect();
+    const alturaTopo = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--topo"), 10) || 60;
+    // no celular a lâmina tem a altura da tela: ela é posta logo abaixo do cabeçalho a cada troca, para a pergunta inteira ficar à vista.
+    // Com a API de transição o salto é na hora: quem desliza é a imagem da lâmina, da posição antiga para a nova.
+    const celular = window.innerWidth < 980;
+    if (celular ? Math.abs(r.top - alturaTopo) > 6 : (r.top < alturaTopo || r.top > window.innerHeight * 0.45 || r.bottom > window.innerHeight)) window.scrollTo({ top: window.scrollY + r.top - alturaTopo - (celular ? 0 : 12), behavior: comVT ? "instant" : (reduz ? "auto" : "smooth") });
+  }
+  if (ondaAgora){
+    // a tela nova aparece dentro de um círculo que cresce do ponto clicado até o canto mais distante da parte visível da lâmina
+    const r = raiz.getBoundingClientRect(), doc = document.documentElement;
+    const cima = Math.max(0, -r.top), baixo = Math.min(r.height, window.innerHeight - r.top);
+    const raio = Math.hypot(Math.max(origem.x, r.width - origem.x), Math.max(origem.y - cima, baixo - origem.y, 0));
+    doc.style.setProperty("--onda-x", origem.x.toFixed(1) + "px"); doc.style.setProperty("--onda-y", origem.y.toFixed(1) + "px"); doc.style.setProperty("--onda-r", Math.ceil(raio + 2) + "px");
+    if (!comVT){
+      // sem a API não há imagem da tela antiga: por baixo da onda fica um fantasma claro, do tamanho da lâmina, que some quando ela termina
+      const f = document.createElement("i"); f.className = "sim sim-fantasma"; f.dataset.tom = "papel"; f.setAttribute("aria-hidden", "true"); raiz.before(f);
+      raiz.classList.add("onda"); tOnda = setTimeout(fimOnda, 480);
+    }
+  } else if (!reduz && !comVT){
     // o cartão muda de altura aos poucos, e a pergunta nova entra pelo lado para onde a pessoa está indo
     const hDepois = raiz.getBoundingClientRect().height;
     if (hAntes > 0 && Math.abs(hDepois - hAntes) > 6){
@@ -1531,14 +1736,7 @@ function render(mover, sentido){
     }
     if (mover){ const cls = sentido < 0 ? "entra-volta" : "entra"; corpo.classList.add(cls); acao.classList.add(cls); }
   }
-  if (mover){
-    const r = raiz.getBoundingClientRect();
-    const alturaTopo = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--topo"), 10) || 60;
-    // no celular a lâmina tem a altura da tela: ela é posta logo abaixo do cabeçalho a cada troca, para a pergunta inteira ficar à vista
-    const celular = window.innerWidth < 980;
-    if (celular ? Math.abs(r.top - alturaTopo) > 6 : (r.top < alturaTopo || r.top > window.innerHeight * 0.45 || r.bottom > window.innerHeight)) window.scrollTo({ top: window.scrollY + r.top - alturaTopo - (celular ? 0 : 12), behavior: reduz ? "auto" : "smooth" });
-    const h = $(".sim-t", corpo); if (h) h.focus({ preventScroll:true });
-  }
+  if (mover){ const h = $(".sim-t", corpo); if (h) h.focus({ preventScroll:true }); }
 }
 const btnSeguir = (ok, rotulo, destino) => `<button type="button" class="sim-btn" id="btn-seguir" data-ir="${destino}" ${ok ? "" : "disabled"}>${rotulo || "Continuar"}</button>`;
 function chips(opcoes, valor, outro, extra){
@@ -1621,7 +1819,7 @@ const TELAS = {
         <p class="sim-s q"><span class="num">${brl(s.custo)}</span> por mês ${esc(emBR(s.uf))} compram o mesmo padrão de vida que quantos dólares na Flórida?</p>
         <div class="opcoes">${op.map((o, i) => `<button type="button" class="opcao" data-chute="${i}"><span><b class="num">${usd(o.v)}</b><span>${o.t}</span></span>${SETA}</button>`).join("")}</div>
         <p class="sim-s">Não vale nota. O chute serve para a resposta fazer sentido.</p>`,
-      montar(){ $$("[data-chute]", corpo).forEach(b => b.addEventListener("click", () => { s.chute = Number(b.dataset.chute); evento("Chute", {}, true); ir("resposta"); })); }
+      montar(){ $$("[data-chute]", corpo).forEach(b => b.addEventListener("click", () => { s.chute = Number(b.dataset.chute); evento("Chute", {}, true); animarResposta = true; ir("resposta"); })); }
     };
   },
 
@@ -1633,7 +1831,7 @@ const TELAS = {
     return {
       html: `
         <span class="olho">A resposta</span>
-        <h3 class="sim-t num" tabindex="-1"><span class="resp-n">${usd(ppc)}</span><span class="resp-por"> por mês,</span> <span class="resp-nao">não ${usd(cambio)}.</span></h3>
+        <h3 class="sim-t num" tabindex="-1" aria-label="${usd(ppc)} por mês, não ${usd(cambio)}."><span class="resp-n">${usd(ppc)}</span><span class="resp-por"> por mês,</span> <span class="resp-nao">não ${usd(cambio)}.</span></h3>
         <p class="sim-s">Seu chute: <span class="num">${usd(op[s.chute].v)}</span>. ${s.chute === 2 ? "Você acertou, e pouca gente acerta." : "A maioria chuta perto do câmbio."}</p>
         <div class="barras">
           <div><div class="barra-l"><span>Pelo câmbio</span><b class="num">${usd(cambio)}</b></div><div class="barra" style="width:${(cambio/ppc*100).toFixed(1)}%"></div></div>
@@ -1642,7 +1840,13 @@ const TELAS = {
         <p class="sim-s c">O câmbio diz quanto o real vale no mercado de moedas. O poder de compra diz quanto custa viver. Morar, comer e se cuidar na Flórida custa mais do que a cotação sugere: ${vezTxt}.</p>
         <p class="sim-s dest">Para planejar aposentadoria, a régua certa é a segunda.</p>
         <p class="legal">Paridade de poder de compra ajustada pelo custo de vida de cada estado. Câmbio de referência: ${cambioTxt()}.${fontes}</p>`,
-      acao: btnSeguir(true, "Continuar", "destino")
+      acao: btnSeguir(true, "Continuar", "destino"),
+      montar(){
+        if (!animarResposta) return;      // só quando a pessoa acabou de chutar: o número sobe do valor do câmbio até a resposta
+        animarResposta = false;
+        if (reduz) return;
+        contar($(".resp-n", corpo), cambio, ppc, 700, usd, ondaAgora ? ATRASO_ONDA : 0);
+      }
     };
   },
 
@@ -1849,7 +2053,7 @@ const TELAS = {
         animarVida = false;
         if (reduz) return;
         corpo.classList.add("revela");
-        contar($(".vn", corpo), 0, k.numero, 850, usd);
+        contar($(".vn", corpo), 0, k.numero, 850, usd, ondaAgora ? ATRASO_ONDA : 0);
       }
     };
   },
@@ -2456,13 +2660,61 @@ document.addEventListener("click", e => {
   }
 
   if (!reduz){
-    const deg = $(".degraus"), raizDoc = document.documentElement;
-    let ultimoY = Math.max(0, window.scrollY), marcado = false;
+    const deg = $(".degraus"), raizDoc = document.documentElement, heroi = $(".hero"), cabecalho = $(".topo");
+    const cssRola = !!(window.CSS && CSS.supports && CSS.supports("animation-timeline: scroll()"));   // o CSS acompanha a rolagem sozinho: o JS não precisa
+    let ultimoY = Math.max(0, window.scrollY), marcado = false, hpPosto = -1, alturaPagina = 1, tPagina = -1e9, degCompleto = false;
+
+    // computador: o quadro dos cartões de produto inclina de leve na direção do cursor. Só com mouse; a caixa é medida uma vez, ao entrar.
+    if (window.matchMedia("(hover:hover) and (pointer:fine)").matches){
+      $$(".cartao").forEach(c => {
+        const v = $(".cartao-v", c); if (!v) return;
+        let cx = 0, cy = 0, lw = 1, lh = 1, ix = 0, iy = 0, dentro = false, pedido = false;
+        const poe = () => { pedido = false; v.style.setProperty("--ix", ix.toFixed(3)); v.style.setProperty("--iy", iy.toFixed(3)); };
+        const mede = e => { ix = Math.max(-1, Math.min(1, (e.pageX - cx) / lw * 2 - 1)); iy = Math.max(-1, Math.min(1, (e.pageY - cy) / lh * 2 - 1)); if (!pedido){ pedido = true; requestAnimationFrame(poe); } };
+        c.addEventListener("pointerenter", e => {
+          if (e.pointerType !== "mouse") return;
+          const r = v.getBoundingClientRect(); cx = r.left + window.scrollX; cy = r.top + window.scrollY; lw = r.width || 1; lh = r.height || 1;
+          dentro = true; mede(e); c.classList.add("inclina");
+        });
+        c.addEventListener("pointermove", e => { if (dentro) mede(e); }, { passive:true });
+        c.addEventListener("pointerleave", () => { dentro = false; c.classList.remove("inclina"); });
+      });
+    }
+
+    // computador: luz de fundo que acompanha o cursor no topo. Só com mouse, e só enquanto o cursor está sobre o topo (um quadro por movimento, sem laço).
+    if (heroi && window.matchMedia("(hover:hover) and (pointer:fine)").matches){
+      const luz = document.createElement("i"); luz.className = "hero-luz"; luz.setAttribute("aria-hidden", "true"); heroi.prepend(luz);
+      let ox = 0, oy = 0, px = 0, py = 0, pedido = false;
+      const poe = () => { pedido = false; luz.style.transform = `translate3d(${px}px,${py}px,0)`; };
+      heroi.addEventListener("pointerenter", e => {
+        if (e.pointerType !== "mouse") return;
+        const r = heroi.getBoundingClientRect(); ox = r.left + window.scrollX; oy = r.top + window.scrollY;
+        px = e.pageX - ox; py = e.pageY - oy;
+        luz.style.transition = "none"; poe(); void luz.offsetWidth; luz.style.transition = "";   // nasce já debaixo do cursor, sem vir deslizando do canto
+        luz.classList.add("on");
+      });
+      heroi.addEventListener("pointermove", e => { if (e.pointerType !== "mouse") return; px = e.pageX - ox; py = e.pageY - oy; if (!pedido){ pedido = true; requestAnimationFrame(poe); } }, { passive:true });
+      heroi.addEventListener("pointerleave", () => luz.classList.remove("on"));
+    }
+
     const aoRolar = () => {
       marcado = false;
       const y = Math.max(0, window.scrollY), vh = window.innerHeight;
-      // degraus: crescem conforme a faixa sobe pela tela
-      if (deg){ const r = deg.getBoundingClientRect(); if (r.top < vh + 60 && r.bottom > -60) deg.style.setProperty("--p", Math.min(1, Math.max(0, (vh - r.top) / (vh * 0.55))).toFixed(3)); }
+      // topo: a foto afunda de leve enquanto o topo sai da tela (só onde o CSS não faz isso sozinho; depois que o topo saiu, não mexe mais)
+      if (!cssRola && heroi){ const hp = Math.min(1, y / vh); if (hp !== hpPosto){ hpPosto = hp; heroi.style.setProperty("--hp", hp.toFixed(3)); } }
+      // barra de leitura no alto da tela (de novo, só onde o CSS não acompanha a rolagem sozinho). A altura da página é relida no máximo duas vezes por segundo.
+      if (!cssRola && cabecalho){
+        const agora = performance.now(); if (agora - tPagina > 500){ alturaPagina = Math.max(1, raizDoc.scrollHeight - vh); tPagina = agora; }
+        cabecalho.style.setProperty("--lido", Math.min(1, y / alturaPagina).toFixed(4));
+      }
+      // degraus: crescem conforme a faixa sobe pela tela. Quando o último termina (ou a faixa já ficou para cima), marca .completo uma vez:
+      // o "2050" entra e o degrau azul pulsa (CSS)
+      if (deg){
+        const r = deg.getBoundingClientRect(); let p = -1;
+        if (r.bottom <= -60) p = 1;
+        else if (r.top < vh + 60){ p = Math.min(1, Math.max(0, (vh - r.top) / (vh * 0.55))); deg.style.setProperty("--p", p.toFixed(3)); }
+        if (p >= 1 && !degCompleto){ degCompleto = true; deg.classList.add("completo"); }
+      }
       // cabeçalho: some ao rolar para baixo e volta ao rolar para cima (o CSS só aplica isso no celular)
       if (y <= 160 || y < ultimoY - 6) raizDoc.classList.remove("sem-topo");
       else if (y > ultimoY + 6) raizDoc.classList.add("sem-topo");
@@ -2472,8 +2724,64 @@ document.addEventListener("click", e => {
     aoRolar();
   }
 
+  // perguntas frequentes: com movimento, abrir e fechar sem salto. A altura muda de uma vez só; o que vem depois na página volta ao lugar antigo
+  // e desliza até o novo com transform, enquanto a resposta se revela (CSS). Sem movimento vale o <details> do navegador, sem este código.
+  const faq = $(".faq");
+  if (!reduz && faq){
+    const DUR = 280, secaoFaq = faq.closest("section");
+    const fimLista = document.createElement("i"); fimLista.className = "faq-fim"; fimLista.setAttribute("aria-hidden", "true"); faq.append(fimLista);
+    const irmaos = el => { const l = []; for (let x = el && el.nextElementSibling; x; x = x.nextElementSibling) l.push(x); return l; };
+    let terminar = null;
+    faq.addEventListener("click", e => {
+      const sum = e.target.closest("summary"), d = sum && sum.parentElement;
+      if (!d || d.parentElement !== faq) return;
+      e.preventDefault();
+      if (terminar) terminar();                                     // uma troca no meio da outra: a anterior termina na hora
+      const resp = $("p", d), depois = irmaos(d).concat(irmaos(faq), irmaos(secaoFaq), $$("footer.rodape"));   // tudo o que muda de lugar
+      const poe = (t, tr) => depois.forEach(el => { el.style.transition = tr; el.style.transform = t; });
+      let t0;
+      if (!d.open){
+        const antes = depois[0].getBoundingClientRect().top;
+        d.open = true;
+        const h = depois[0].getBoundingClientRect().top - antes;   // quanto a página cresceu
+        poe(`translateY(${-h}px)`, "none"); void faq.offsetHeight;    // todos de volta ao lugar antigo...
+        poe("", `transform ${DUR}ms var(--sai-suave)`);               // ...e deslizam até o novo
+        terminar = () => { clearTimeout(t0); terminar = null; poe("", ""); };
+      } else {
+        const h = resp ? resp.getBoundingClientRect().height : 0;     // quanto a página vai encolher
+        d.classList.add("fechando");
+        poe(`translateY(${-h}px)`, `transform ${DUR}ms var(--sai-suave)`);
+        terminar = () => { clearTimeout(t0); terminar = null; d.open = false; d.classList.remove("fechando"); poe("", "none"); void faq.offsetHeight; poe("", ""); };
+      }
+      t0 = setTimeout(() => { if (terminar) terminar(); }, DUR + 30);
+    });
+  }
+
+  // números que contam quando entram na tela, com a mesma contagem do simulador (só com movimento):
+  // na frase de abertura os dois valores sobem a partir do câmbio enquanto ele é riscado; no Sobre, do zero ao bilhão; no Projeto 2050, o preço.
+  // A largura do número fica presa no tamanho final enquanto ele conta, para o texto em volta não andar.
+  const contaAoEntrar = el => {
+    if (reduz) return;
+    const conta = (b, de, ate, ms, formato, atraso, prende) => {
+      if (!b) return;
+      if (prende){ b.style.width = b.offsetWidth + "px"; setTimeout(() => { b.style.width = ""; }, atraso + ms + 120); }
+      contar(b, de, ate, ms, formato, atraso);
+    };
+    if (el.classList.contains("frase")){
+      const cambio = ex.custo / CONFIG.CAMBIO;
+      conta($('b[data-ex="ppcPT"]', el), cambio, ex.custo / CONFIG.PPC * PAISES.PRT[2], 850, usd, 400, true);    // 400 e 480 ms: o instante em que cada número vira azul
+      conta($('b[data-ex="ppcEUA"]', el), cambio, ex.custo / CONFIG.PPC, 850, usd, 480, true);
+    } else if (el.classList.contains("fatos")){
+      const b = $("li b", el), fim = b ? b.textContent : "";   // termina sempre no texto que está na página
+      conta(b, 0, 1e9, 900, v => { const m = Math.round(v / 1e6); return v >= 999.5e6 ? fim : "R$ " + m + (m === 1 ? " milhão" : " milhões"); }, 150, false);
+    } else if (el.classList.contains("preco")){
+      const b = $("b", el), fim = b ? b.textContent : "", ate = Number(digitos(fim)) || 0;
+      conta(b, 0, ate, 700, v => v >= ate ? fim : "R$ " + Math.round(v), 150, true);
+    }
+  };
+
   if ("IntersectionObserver" in window){
-    const io = new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting){ en.target.classList.add("vis"); io.unobserve(en.target); } }), { rootMargin:"0px 0px -8% 0px" });
+    const io = new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting){ en.target.classList.add("vis"); io.unobserve(en.target); contaAoEntrar(en.target); } }), { rootMargin:"0px 0px -8% 0px" });
     $$(".rev").forEach(el => io.observe(el));
     // barra fixa (celular): só aparece quando nenhum outro botão com a mesma ação está na tela
     const fixo = $("#fixo"); let heroVisivel = true, introVisivel = false, simVisivel = false, fimVisivel = false, fechoVisivel = false;
@@ -2491,13 +2799,311 @@ document.addEventListener("click", e => {
     $$("main > [data-fundo], footer[data-fundo]").forEach(s => ioCab.observe(s));
     // menu: marca o item da seção que cruza a linha a 30% da altura da tela (data-menu). Seção sem data-menu não marca nenhum.
     // A linha fica abaixo do cabeçalho de propósito: ao clicar num item, a seção para a 12px do cabeçalho e já conta como a atual.
-    const itensMenu = $$(".menu a");
-    const marcaMenu = alvo => itensMenu.forEach(a => { if (alvo && a.getAttribute("href") === "#" + alvo) a.setAttribute("aria-current", "location"); else a.removeAttribute("aria-current"); });
+    const itensMenu = $$(".menu a"), menu = $(".menu");
+    // com movimento, um traço só marca o item ativo e desliza de um para o outro; sem movimento vale o sublinhado do próprio item.
+    // A posição é lida só quando o item ativo muda ou a janela muda de tamanho, nunca a cada quadro.
+    let traco = null;
+    if (!reduz && menu){ traco = document.createElement("i"); traco.className = "menu-traco"; traco.setAttribute("aria-hidden", "true"); menu.append(traco); }
+    const poeTraco = desliza => {
+      if (!traco) return;
+      const a = itensMenu.find(x => x.hasAttribute("aria-current")), palavra = a && $("span", a);
+      if (!palavra || !menu.offsetWidth){ traco.classList.remove("on"); return; }
+      const m = menu.getBoundingClientRect(), p = palavra.getBoundingClientRect();
+      const direto = !desliza || !traco.classList.contains("on");          // quando nasce, ou quando a janela muda de tamanho, aparece no lugar, sem vir deslizando
+      if (direto) traco.style.transition = "opacity var(--d-estado) var(--dado)";
+      traco.style.transform = `translate3d(${(p.left - m.left).toFixed(1)}px,${Math.round(p.bottom - m.top - 0.7)}px,0) scaleX(${(p.width / 100).toFixed(4)})`;   // na altura em que o sublinhado parado fica
+      if (direto){ void traco.offsetWidth; traco.style.transition = ""; }
+      traco.classList.add("on");
+    };
+    const marcaMenu = alvo => { itensMenu.forEach(a => { if (alvo && a.getAttribute("href") === "#" + alvo) a.setAttribute("aria-current", "location"); else a.removeAttribute("aria-current"); }); poeTraco(true); };
+    if (traco){ window.addEventListener("resize", () => poeTraco(false)); if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => poeTraco(false)); }
     const ioMenu = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) marcaMenu(e.target.dataset.menu); }), { rootMargin:"-30% 0px -69% 0px" });
     $$("main > [data-fundo], footer[data-fundo]").forEach(s => ioMenu.observe(s));
   } else {
     $$(".rev").forEach(el => el.classList.add("vis"));
   }
+})();
+
+/* ---------- bandeiras que caem na abertura ----------
+   Física 2D (Matter.js, licença MIT) com o desenho num canvas próprio em cada seção da abertura. As bandeiras caem do topo,
+   batem nos textos e botões e se acomodam no chão reservado no fim da introdução (.chao-bandeiras).
+   - Na queda, as bandeiras passam por trás de títulos, textos e da foto, e só param no chão reservado: nada fica parado
+     atrás de texto. Os dois botões "Fazer meu planejamento global" são obstáculos, com uma cumeeira por cima para nenhuma
+     bandeira parar em cima deles, mas só onde cabe uma bandeira dos dois lados do botão (no celular ele ocupa a largura toda).
+     Títulos e blocos de texto como obstáculos foram testados e saíram: os telhados por cima deles viravam rampas invisíveis
+     no alto da tela, por onde as bandeiras rolavam devagar por segundos, e afunilavam a pilha num canto do chão.
+   - Com movimento: a queda acontece uma vez por visita; dá para pegar e arremessar com o mouse; rolar rápido dá um tranco.
+     Fora da tela, com a aba oculta ou com a pilha parada, nada é calculado.
+   - Sem movimento: a queda é calculada sem desenhar, e a pilha aparece já parada.
+   - Bandeiras: circle-flags (HatScripts, MIT), em img/bandeiras/. São os 65 países do simulador e o Brasil. */
+(function bandeiras(){
+  const heroi = $(".hero"), intro = $(".intro"), chao = $(".chao-bandeiras");
+  if (!heroi || !intro || !chao || !window.IntersectionObserver || !window.requestAnimationFrame) return;
+  const telas = [heroi, intro].map((sec, i) => {
+    const cv = $("canvas.bandeiras", sec), ctx = cv && cv.getContext && cv.getContext("2d");
+    return ctx ? { sec, cv, ctx, anel: i ? "rgba(11,13,14,.14)" : "rgba(255,255,255,.16)", y: 0, h: 0, tinha: false } : null;
+  });
+  if (telas.some(t => !t)) return;
+
+  const MATTER = { src: "https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.20.0/matter.min.js", sri: "sha384-ZRKYEXtLBVeqs9z1WxyeKutCqnkqolS/r1EUWuoUpG4ZKbnRAIXnHhHdnNuiB6CL" };
+  const SEMPRE = ["br","us","pt","es","it","ca","uy"];   // o Brasil e os destinos rápidos do simulador entram sempre
+  const OUTRAS = ["mx","pa","cr","do","ar","cl","py","co","pe","ec","bo","fr","de","gb","ie","nl","be","ch","at","se","no","dk","fi","gr","pl","cz","hu","hr","ro","lu","is","ee","si","mt","jp","kr","cn","sg","th","vn","id","my","ph","in","ae","il","tr","qa","sa","au","nz","za","ma","eg","ke","ao","mz","cv","mu"];
+  // A queda aqui é longa (do topo ao fim da introdução, uns 2.000 px): com o quique 0,8 da referência as bandeiras chegavam
+  // ao chão muito rápido e quicavam centenas de pixels de volta, levando mais de 10 s para parar. A velocidade de queda tem
+  // um teto (22 px por passo, ~1.300 px/s) e o quique é 0,7: a pilha se acomoda em uns 2 a 3 s depois de chegar.
+  const FISICA = { gravidade: 0.003, restituicao: 0.7, atrito: 0.05, quedaMax: 22, rigidez: 0.2 };
+  const PASSO = 1000 / 60, INCLINACAO = Math.tan(22 * Math.PI / 180);
+  const vivo = !reduz;
+  const comMouse = window.matchMedia("(hover:hover) and (pointer:fine)").matches;
+
+  let M = null, engine = null, mundo = null, flags = [], fixos = [], imagens = [], peles = {};
+  let W = 0, alturaMundo = 0, raio = 0, dpr = 1, topoNascer = 0;
+  let solto = false, visivel = false, raf = 0, ultimo = 0, acum = 0, arrasto = null, carregando = null, quietos = 0;
+
+  /* ---- carregamento (só quando a abertura está perto da tela, depois que a página terminou de carregar) ---- */
+  const carregaMotor = () => new Promise((ok, falha) => {
+    if (window.Matter) return ok();
+    const sc = document.createElement("script");
+    sc.src = MATTER.src; sc.integrity = MATTER.sri; sc.crossOrigin = "anonymous"; sc.async = true;
+    sc.onload = () => ok(); sc.onerror = () => falha(new Error("o motor de física não carregou"));
+    document.head.appendChild(sc);
+  });
+  const carregaImagem = c => new Promise(ok => { const img = new Image(); img.onload = () => ok(img); img.onerror = () => ok(null); img.src = "img/bandeiras/" + c + ".svg"; });
+  const contagem = () => Math.max(14, Math.min(48, Math.round(1.6 * W / (2 * raio))));   // umas duas fileiras no chão, em qualquer largura
+  const embaralha = a => { for (let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+  /* ---- medidas: o mundo começa no topo da abertura e termina no chão reservado ---- */
+  const medir = () => {
+    const h = heroi.getBoundingClientRect(), i = intro.getBoundingClientRect(), c = chao.getBoundingClientRect();
+    W = h.width; alturaMundo = c.bottom - h.top;
+    telas[0].y = 0; telas[0].h = h.height; telas[1].y = i.top - h.top; telas[1].h = i.height;
+    raio = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--r-bandeira")) || 20;
+    dpr = Math.min(2, window.devicePixelRatio || 1);
+    telas.forEach(t => { const w = Math.round(W * dpr), a = Math.round(t.h * dpr); if (t.cv.width !== w || t.cv.height !== a){ t.cv.width = w; t.cv.height = a; t.tinha = true; } });
+  };
+  // posição de um elemento no mundo, pela caixa de layout (sem as translações das animações de entrada)
+  const caixa = el => {
+    if (!el || !el.offsetWidth) return null;
+    let x = 0, y = 0, n = el;
+    while (n && n !== heroi && n !== intro){ x += n.offsetLeft; y += n.offsetTop; n = n.offsetParent; }
+    if (!n) return null;
+    const base = n === heroi ? telas[0].y : telas[1].y;
+    return { x0: x, y0: base + y, x1: x + el.offsetWidth, y1: base + y + el.offsetHeight };
+  };
+  // os botões viram obstáculo só quando cabe uma bandeira entre cada lado do botão e a parede (senão ela ficaria presa ali)
+  const blocos = () => {
+    const folga = 2 * raio + 16;
+    return ["#cta-hero", "#cta-intro"].map(q => caixa($(q))).filter(b => b && b.x0 >= folga && W - b.x1 >= folga);
+  };
+  // cumeeira baixa por cima do botão: o que cai em cima escorre para os lados
+  const telhado = b => {
+    const meio = (b.x0 + b.x1) / 2, sobe = Math.min(64, (b.x1 - b.x0) / 2 * INCLINACAO);
+    return [{ x: b.x0, y: b.y0 }, { x: meio, y: b.y0 - sobe }, { x: b.x1, y: b.y0 }, { x: b.x1, y: b.y1 }, { x: b.x0, y: b.y1 }];
+  };
+
+  const fazFixos = () => {
+    if (fixos.length) M.Composite.remove(mundo, fixos);
+    const g = 400, alto = alturaMundo + 4000, opc = { isStatic: true, friction: 0.2, restitution: 0.2, label: "fixo" };
+    fixos = [
+      M.Bodies.rectangle(-g / 2, alturaMundo - alto / 2, g, alto, opc),
+      M.Bodies.rectangle(W + g / 2, alturaMundo - alto / 2, g, alto, opc),
+      M.Bodies.rectangle(W / 2, alturaMundo + g / 2, W + 2 * g, g, opc)
+    ];
+    blocos().forEach(b => { const vs = telhado(b); fixos.push(M.Body.create(Object.assign({ position: M.Vertices.centre(vs), vertices: vs }, opc))); });
+    M.Composite.add(mundo, fixos);
+    topoNascer = Math.min(0, ...fixos.slice(3).map(f => f.bounds.min.y)) - 3 * raio;
+  };
+  const fazPeles = () => {
+    const lado = Math.ceil(2 * raio * dpr); peles = {};
+    imagens.forEach(([c, img]) => {
+      const cv = document.createElement("canvas"); cv.width = cv.height = lado;
+      const x = cv.getContext("2d");
+      if (img) x.drawImage(img, 0, 0, lado, lado); else { x.fillStyle = "#8D939B"; x.beginPath(); x.arc(lado / 2, lado / 2, lado / 2, 0, Math.PI * 2); x.fill(); }
+      peles[c] = cv;
+    });
+  };
+  const nasce = (b, i, x) => {
+    M.Body.setPosition(b, { x: x === undefined ? raio + Math.random() * (W - 2 * raio) : x, y: topoNascer - i * raio * 0.5 - Math.random() * raio * 3 });
+    M.Body.setVelocity(b, { x: (Math.random() - 0.5) * 2, y: 0 });
+    M.Body.setAngle(b, Math.random() * Math.PI * 2); M.Body.setAngularVelocity(b, (Math.random() - 0.5) * 0.12);
+    M.Sleeping.set(b, false);
+  };
+
+  /* ---- desenho: cada canvas desenha as bandeiras que estão na sua seção ---- */
+  const desenha = () => {
+    for (const t of telas){
+      const topo = t.y, base = t.y + t.h, dentro = flags.filter(b => b.position.y + raio > topo && b.position.y - raio < base);
+      if (!dentro.length && !t.tinha) continue;
+      const ctx = t.ctx; ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, t.cv.width, t.cv.height);
+      t.tinha = dentro.length > 0; if (!t.tinha) continue;
+      for (const b of dentro){
+        const c = Math.cos(b.angle) * dpr, s = Math.sin(b.angle) * dpr;
+        ctx.setTransform(c, s, -s, c, b.position.x * dpr, (b.position.y - topo) * dpr);
+        ctx.drawImage(peles[b.codigo], -raio, -raio, 2 * raio, 2 * raio);
+      }
+      ctx.setTransform(dpr, 0, 0, dpr, 0, -topo * dpr); ctx.lineWidth = 1; ctx.strokeStyle = t.anel; ctx.beginPath();
+      for (const b of dentro){ ctx.moveTo(b.position.x + raio - 0.5, b.position.y); ctx.arc(b.position.x, b.position.y, raio - 0.5, 0, Math.PI * 2); }
+      ctx.stroke();
+    }
+  };
+
+  /* ---- passo a passo: passo fixo de 1/60 s, só enquanto há bandeira acordada ---- */
+  const soltaArrasto = () => {
+    if (!arrasto) return;
+    M.Composite.remove(mundo, arrasto); arrasto = null;
+    document.documentElement.classList.remove("arrasta-bandeira"); acorda();
+  };
+  // bandeira que escapou (arremesso forte, atravessou a parede) volta ao topo e cai de novo
+  const resgata = () => {
+    for (const b of flags){
+      const p = b.position;
+      if (p.y > alturaMundo + 4 * raio || p.x < -4 * raio || p.x > W + 4 * raio || p.y < topoNascer - 6000){ if (arrasto && arrasto.bodyB === b) soltaArrasto(); nasce(b, 0); }
+    }
+  };
+  const rodando = () => vivo && solto && visivel && !document.hidden;
+  const quadro = t => {
+    raf = 0;
+    if (!rodando()) return;
+    acum += Math.min(100, t - ultimo); ultimo = t;
+    let n = 0;
+    while (acum >= PASSO && n < 4){ M.Engine.update(engine, PASSO); acum -= PASSO; n++; }
+    if (n === 4) acum = 0;
+    resgata(); desenha();
+    // pilha que só treme (nenhuma bandeira passa de um décimo de pixel por passo) dorme de uma vez, e o laço para
+    quietos = !arrasto && flags.every(b => b.isSleeping || (b.speed < 0.1 && Math.abs(b.angularVelocity) < 0.004)) ? quietos + n : 0;
+    if (quietos > 45) flags.forEach(b => M.Sleeping.set(b, true));
+    if (arrasto || flags.some(b => !b.isSleeping)) raf = requestAnimationFrame(quadro);
+  };
+  function acorda(){ if (!raf && rodando()){ ultimo = performance.now(); acum = 0; quietos = 0; raf = requestAnimationFrame(quadro); } }
+
+  // sem movimento: a queda é calculada aos poucos, sem desenhar, até a pilha parar; aí ela é desenhada uma vez
+  const assenta = () => new Promise(ok => {
+    let passos = 0, calmos = 0;   // calma por 45 passos seguidos: uma bandeira no alto de um quique também fica parada por um instante
+    const lote = () => {
+      for (let i = 0; i < 90 && passos < 1500 && calmos <= 45; i++, passos++){
+        M.Engine.update(engine, PASSO);
+        calmos = flags.every(b => b.isSleeping || (b.speed < 0.1 && Math.abs(b.angularVelocity) < 0.004)) ? calmos + 1 : 0;
+      }
+      resgata();
+      if (passos < 1500 && calmos <= 45) setTimeout(lote, 0); else { flags.forEach(b => M.Sleeping.set(b, true)); ok(); }
+    };
+    lote();
+  });
+  // cada bandeira nasce numa faixa da largura (em ordem embaralhada): elas chegam ao chão espalhadas e a pilha fica por igual,
+  // sem morro que suba atrás do texto
+  const faixas = () => embaralha(flags.map((b, i) => raio + (i + 0.15 + Math.random() * 0.7) / flags.length * (W - 2 * raio)));
+  const derruba = async () => {
+    const xs = faixas(); flags.forEach((b, i) => nasce(b, i, xs[i]));
+    M.Composite.add(mundo, flags); solto = true;
+    if (vivo) acorda(); else { await assenta(); desenha(); }
+  };
+
+  const prepara = () => {
+    if (carregando) return carregando;
+    carregando = (async () => {
+      if (document.readyState !== "complete") await new Promise(ok => window.addEventListener("load", ok, { once: true }));
+      await new Promise(ok => window.requestIdleCallback ? requestIdleCallback(() => ok(), { timeout: 1200 }) : setTimeout(ok, 200));
+      medir();
+      const codigos = embaralha(SEMPRE.concat(embaralha(OUTRAS.slice())).slice(0, contagem()));
+      const r = await Promise.all([carregaMotor(), Promise.all(codigos.map(async c => [c, await carregaImagem(c)]))]);
+      imagens = r[1]; M = window.Matter;
+      engine = M.Engine.create({ enableSleeping: true }); engine.gravity.scale = FISICA.gravidade; mundo = engine.world;
+      medir(); fazPeles(); fazFixos();
+      flags = codigos.map(c => { const b = M.Bodies.circle(0, 0, raio, { restitution: FISICA.restituicao, friction: FISICA.atrito, label: "bandeira" }); b.codigo = c; return b; });
+      // teto para a velocidade de queda (o arremesso com o mouse não tem teto para cima nem para os lados)
+      M.Events.on(engine, "beforeUpdate", () => { for (const b of flags) if (b.velocity.y > FISICA.quedaMax) M.Body.setVelocity(b, { x: b.velocity.x, y: FISICA.quedaMax }); });
+      const espera = 1100 - performance.now();   // a queda começa depois da entrada do topo
+      if (vivo && espera > 0) await new Promise(ok => setTimeout(ok, espera));
+      await derruba();
+    })().catch(() => {});
+    return carregando;
+  };
+
+  /* ---- janela mudou de tamanho (ou as fontes chegaram e o texto quebrou diferente) ---- */
+  let tRefaz = 0;
+  const reconstroi = () => {
+    if (!engine) return;
+    const W0 = W, chao0 = alturaMundo, r0 = raio, dpr0 = dpr;
+    medir();
+    if (raio !== r0) flags.forEach(b => M.Body.scale(b, raio / r0, raio / r0));
+    if (flags.length > contagem()){ const sobram = flags.splice(contagem()); if (solto) M.Composite.remove(mundo, sobram); }   // a tela estreitou: sai o que não cabe no chão
+    if (raio !== r0 || dpr !== dpr0) fazPeles();
+    fazFixos();
+    if (solto){
+      if (vivo){
+        flags.forEach(b => {
+          const p = b.position, noChao = chao0 - p.y < 8 * Math.max(raio, r0);
+          M.Body.setPosition(b, { x: Math.min(W - raio, Math.max(raio, p.x * W / (W0 || W))), y: noChao ? alturaMundo - (chao0 - p.y) * raio / r0 : p.y });
+          M.Sleeping.set(b, false);
+        });
+        acorda();
+      } else { const xs = faixas(); flags.forEach((b, i) => nasce(b, i, xs[i])); assenta().then(desenha); }
+    }
+    telas.forEach(t => { t.tinha = true; }); desenha();
+  };
+  const pedeRefazer = () => { clearTimeout(tRefaz); tRefaz = setTimeout(reconstroi, 150); };
+  if (window.ResizeObserver){ const ro = new ResizeObserver(pedeRefazer); ro.observe(heroi); ro.observe(intro); }
+  window.addEventListener("resize", pedeRefazer);
+
+  /* ---- só calcula com a abertura na tela e a aba à vista ---- */
+  const vistas = new Set();
+  const io = new IntersectionObserver(es => {
+    es.forEach(e => { if (e.isIntersecting) vistas.add(e.target); else vistas.delete(e.target); });
+    visivel = vistas.size > 0;
+    if (visivel){ prepara(); acorda(); }
+  }, { rootMargin: "300px 0px" });
+  io.observe(heroi); io.observe(intro);
+  document.addEventListener("visibilitychange", acorda);
+
+  if (!vivo) return;   // sem movimento: nada de tranco nem de arrastar
+
+  /* ---- rolar rápido dá um tranco para cima; rolar devagar quase não mexe ---- */
+  let yAnt = window.scrollY, tAnt = performance.now(), tTranco = 0;
+  window.addEventListener("scroll", () => {
+    const agora = performance.now(), y = window.scrollY, v = agora > tAnt ? (y - yAnt) / (agora - tAnt) : 0;
+    yAnt = y; tAnt = agora;
+    if (!engine || !solto || !visivel || agora - tTranco < 90) return;
+    const forca = Math.abs(v) - 0.5; if (forca <= 0) return;
+    tTranco = agora;
+    const sobe = Math.min(16, forca * 9);
+    flags.forEach(b => {
+      M.Sleeping.set(b, false);
+      M.Body.setVelocity(b, { x: b.velocity.x + (Math.random() - 0.5) * sobe * 0.5, y: b.velocity.y - sobe * (0.6 + Math.random() * 0.4) });
+      M.Body.setAngularVelocity(b, b.angularVelocity + (Math.random() - 0.5) * 0.2);
+    });
+    acorda();
+  }, { passive: true });
+
+  /* ---- mouse: pegar, arrastar e arremessar (no toque o dedo continua rolando a página) ---- */
+  if (!comMouse) return;
+  const interativo = el => !!(el && el.closest && el.closest("a,button,input,select,textarea,label,summary,dialog,[role=button],[tabindex]"));
+  const naAbertura = el => heroi.contains(el) || intro.contains(el);
+  const ponto = e => { const h = heroi.getBoundingClientRect(); return { x: e.clientX - h.left, y: e.clientY - h.top }; };
+  const acha = p => { const r = M.Query.point(flags, p); return r.length ? r[r.length - 1] : null; };
+  let mao = false;
+  document.addEventListener("pointerdown", e => {
+    if (!engine || !solto || arrasto || e.pointerType !== "mouse" || e.button !== 0 || !naAbertura(e.target) || interativo(e.target)) return;
+    const p = ponto(e), b = acha(p); if (!b) return;
+    e.preventDefault();   // não seleciona texto
+    arrasto = M.Constraint.create({ pointA: p, bodyB: b, pointB: { x: 0, y: 0 }, stiffness: FISICA.rigidez, length: 0 });
+    M.Composite.add(mundo, arrasto); M.Sleeping.set(b, false);
+    document.documentElement.classList.add("arrasta-bandeira"); acorda();
+  });
+  window.addEventListener("pointermove", e => {
+    if (!engine || !solto || e.pointerType !== "mouse") return;
+    const p = ponto(e);
+    if (arrasto){
+      if (p.x < 0 || p.x > W || p.y < 0 || p.y > alturaMundo) soltaArrasto();   // o cursor saiu da abertura: solta
+      else arrasto.pointA = p;
+      return;
+    }
+    const sobre = naAbertura(e.target) && !interativo(e.target) && !!acha(p);
+    if (sobre !== mao){ mao = sobre; document.documentElement.classList.toggle("pega-bandeira", sobre); }
+  }, { passive: true });
+  window.addEventListener("pointerup", soltaArrasto);
+  window.addEventListener("pointercancel", soltaArrasto);
+  window.addEventListener("blur", soltaArrasto);
+  document.documentElement.addEventListener("mouseleave", soltaArrasto);
 })();
 
 /* ---------- início: retoma de onde a pessoa parou ---------- */
