@@ -271,6 +271,20 @@ section{position:relative}
   .intro-txt{grid-column:2;grid-row:2 / span 2;max-width:60ch}
 }
 
+/* ---------- bandeiras que caem na abertura ----------
+   Um canvas em cada seção (a escura e a introdução), atrás do conteúdo: a seção vira um contexto de empilhamento próprio
+   e o canvas fica no nível -1, acima do fundo e abaixo de textos, fotos e botões. A física é uma só, do topo da abertura
+   ao chão reservado no fim da introdução. O raio das bandeiras sai daqui (o JS lê --r-bandeira). */
+:root{--r-bandeira:20px}
+@media (min-width:743px){ :root{--r-bandeira:30px} }
+@media (min-width:1280px){ :root{--r-bandeira:40px} }
+.hero,.intro{isolation:isolate}
+.bandeiras{position:absolute;inset:0;z-index:-1;display:block;width:100%;height:100%;pointer-events:none}
+.chao-bandeiras{display:none}
+.js .chao-bandeiras{display:block;grid-column:1 / -1;height:calc(var(--r-bandeira) * 5.4)}   /* duas fileiras, com espaço para uma terceira aqui e ali sem encostar no texto */
+.pega-bandeira .hero,.pega-bandeira .intro{cursor:grab}
+.arrasta-bandeira,.arrasta-bandeira *{cursor:grabbing !important;user-select:none}
+
 /* ---------- simulador (tinta, com a lâmina) ---------- */
 .sim-grid{display:grid;gap:var(--e5);grid-template-columns:minmax(0,1fr)}
 .sim-intro{display:contents}
@@ -1067,6 +1081,7 @@ d.classList.add("js");if(!r)d.classList.add("mov");})();
 <main>
   <!-- HERÓI (tinta) -->
   <section class="hero" id="inicio" data-fundo="tinta">
+    <canvas class="bandeiras" aria-hidden="true"></canvas>
     <!-- Fotos: ficam na pasta img/, junto da página. Para trocar uma foto, substitua o arquivo mantendo o nome. -->
     <div class="hero-foto"><img src="img/tiago-heroi-1040.webp" srcset="img/tiago-heroi-560.webp 560w, img/tiago-heroi-1040.webp 820w" sizes="(min-width:980px) 480px, 62vw" width="820" height="1075" alt="Tiago Piassum, de óculos e suéter claro, olhando para a câmera" fetchpriority="high" decoding="async" onerror="this.remove()"></div>
     <h1 class="hero-t"><span class="l"><span>Planeje sua</span></span><span class="l virada"><span>vida global</span><svg class="risco" viewBox="0 0 300 12" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M2,8 C60,2 140,3 298,6"/></svg></span></h1>
@@ -1081,6 +1096,7 @@ d.classList.add("js");if(!r)d.classList.add("mov");})();
 
   <!-- INTRO (papel) -->
   <section class="bloco intro" data-fundo="papel">
+    <canvas class="bandeiras" aria-hidden="true"></canvas>
     <p class="frase rev">A vida que custa <span class="num" data-ex="custo">R$&nbsp;20.000</span> por mês no Brasil custa <b class="num" data-ex="ppcPT">US$&nbsp;4.486</b> em Portugal e <b class="num" data-ex="ppcEUA">US$&nbsp;8.032</b> nos Estados Unidos. O câmbio diria <s class="num" data-ex="cambio">US$&nbsp;3.704</s> nos dois.</p>
     <p class="tag rev">O dólar de verdade</p>
     <figure class="colagem intro-col rev" style="--giro:-1.5deg;--pr:-7deg;--px:-6%;--py:18%;--ps:60%">
@@ -1094,6 +1110,7 @@ d.classList.add("js");if(!r)d.classList.add("mov");})();
       <a class="btn" href="#sim" id="cta-intro"><span>Fazer meu planejamento global</span><svg class="seta" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
       <p class="legal">Poder de compra: Banco Mundial, Programa de Comparação Internacional, 2024, via Our World in Data. Média nacional de cada país; capitais costumam custar mais. Câmbio de referência: <span data-ex="fx">R$&nbsp;5,40</span>.</p>
     </div>
+    <div class="chao-bandeiras" aria-hidden="true"></div>
     <div class="fio rev" data-fio="corre" data-onda="b" aria-hidden="true"><svg viewBox="0 0 1000 40" preserveAspectRatio="none"><path pathLength="1" d="M0,20 C333,36 667,4 1000,20"/></svg></div>
   </section>
 
@@ -2805,6 +2822,288 @@ document.addEventListener("click", e => {
   } else {
     $$(".rev").forEach(el => el.classList.add("vis"));
   }
+})();
+
+/* ---------- bandeiras que caem na abertura ----------
+   Física 2D (Matter.js, licença MIT) com o desenho num canvas próprio em cada seção da abertura. As bandeiras caem do topo,
+   batem nos textos e botões e se acomodam no chão reservado no fim da introdução (.chao-bandeiras).
+   - Na queda, as bandeiras passam por trás de títulos, textos e da foto, e só param no chão reservado: nada fica parado
+     atrás de texto. Os dois botões "Fazer meu planejamento global" são obstáculos, com uma cumeeira por cima para nenhuma
+     bandeira parar em cima deles, mas só onde cabe uma bandeira dos dois lados do botão (no celular ele ocupa a largura toda).
+     Títulos e blocos de texto como obstáculos foram testados e saíram: os telhados por cima deles viravam rampas invisíveis
+     no alto da tela, por onde as bandeiras rolavam devagar por segundos, e afunilavam a pilha num canto do chão.
+   - Com movimento: a queda acontece uma vez por visita; dá para pegar e arremessar com o mouse; rolar rápido dá um tranco.
+     Fora da tela, com a aba oculta ou com a pilha parada, nada é calculado.
+   - Sem movimento: a queda é calculada sem desenhar, e a pilha aparece já parada.
+   - Bandeiras: circle-flags (HatScripts, MIT), em img/bandeiras/. São os 65 países do simulador e o Brasil. */
+(function bandeiras(){
+  const heroi = $(".hero"), intro = $(".intro"), chao = $(".chao-bandeiras");
+  if (!heroi || !intro || !chao || !window.IntersectionObserver || !window.requestAnimationFrame) return;
+  const telas = [heroi, intro].map((sec, i) => {
+    const cv = $("canvas.bandeiras", sec), ctx = cv && cv.getContext && cv.getContext("2d");
+    return ctx ? { sec, cv, ctx, anel: i ? "rgba(11,13,14,.14)" : "rgba(255,255,255,.16)", y: 0, h: 0, tinha: false } : null;
+  });
+  if (telas.some(t => !t)) return;
+
+  const MATTER = { src: "https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.20.0/matter.min.js", sri: "sha384-ZRKYEXtLBVeqs9z1WxyeKutCqnkqolS/r1EUWuoUpG4ZKbnRAIXnHhHdnNuiB6CL" };
+  const SEMPRE = ["br","us","pt","es","it","ca","uy"];   // o Brasil e os destinos rápidos do simulador entram sempre
+  const OUTRAS = ["mx","pa","cr","do","ar","cl","py","co","pe","ec","bo","fr","de","gb","ie","nl","be","ch","at","se","no","dk","fi","gr","pl","cz","hu","hr","ro","lu","is","ee","si","mt","jp","kr","cn","sg","th","vn","id","my","ph","in","ae","il","tr","qa","sa","au","nz","za","ma","eg","ke","ao","mz","cv","mu"];
+  // A queda aqui é longa (do topo ao fim da introdução, uns 2.000 px): com o quique 0,8 da referência as bandeiras chegavam
+  // ao chão muito rápido e quicavam centenas de pixels de volta, levando mais de 10 s para parar. A velocidade de queda tem
+  // um teto (22 px por passo, ~1.300 px/s) e o quique é 0,7: a pilha se acomoda em uns 2 a 3 s depois de chegar.
+  const FISICA = { gravidade: 0.003, restituicao: 0.7, atrito: 0.05, quedaMax: 22, rigidez: 0.2 };
+  const PASSO = 1000 / 60, INCLINACAO = Math.tan(22 * Math.PI / 180);
+  const vivo = !reduz;
+  const comMouse = window.matchMedia("(hover:hover) and (pointer:fine)").matches;
+
+  let M = null, engine = null, mundo = null, flags = [], fixos = [], imagens = [], peles = {};
+  let W = 0, alturaMundo = 0, raio = 0, dpr = 1, topoNascer = 0;
+  let solto = false, visivel = false, raf = 0, ultimo = 0, acum = 0, arrasto = null, carregando = null, quietos = 0;
+
+  /* ---- carregamento (só quando a abertura está perto da tela, depois que a página terminou de carregar) ---- */
+  const carregaMotor = () => new Promise((ok, falha) => {
+    if (window.Matter) return ok();
+    const sc = document.createElement("script");
+    sc.src = MATTER.src; sc.integrity = MATTER.sri; sc.crossOrigin = "anonymous"; sc.async = true;
+    sc.onload = () => ok(); sc.onerror = () => falha(new Error("o motor de física não carregou"));
+    document.head.appendChild(sc);
+  });
+  const carregaImagem = c => new Promise(ok => { const img = new Image(); img.onload = () => ok(img); img.onerror = () => ok(null); img.src = "img/bandeiras/" + c + ".svg"; });
+  const contagem = () => Math.max(14, Math.min(48, Math.round(1.6 * W / (2 * raio))));   // umas duas fileiras no chão, em qualquer largura
+  const embaralha = a => { for (let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+  /* ---- medidas: o mundo começa no topo da abertura e termina no chão reservado ---- */
+  const medir = () => {
+    const h = heroi.getBoundingClientRect(), i = intro.getBoundingClientRect(), c = chao.getBoundingClientRect();
+    W = h.width; alturaMundo = c.bottom - h.top;
+    telas[0].y = 0; telas[0].h = h.height; telas[1].y = i.top - h.top; telas[1].h = i.height;
+    raio = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--r-bandeira")) || 20;
+    dpr = Math.min(2, window.devicePixelRatio || 1);
+    telas.forEach(t => { const w = Math.round(W * dpr), a = Math.round(t.h * dpr); if (t.cv.width !== w || t.cv.height !== a){ t.cv.width = w; t.cv.height = a; t.tinha = true; } });
+  };
+  // posição de um elemento no mundo, pela caixa de layout (sem as translações das animações de entrada)
+  const caixa = el => {
+    if (!el || !el.offsetWidth) return null;
+    let x = 0, y = 0, n = el;
+    while (n && n !== heroi && n !== intro){ x += n.offsetLeft; y += n.offsetTop; n = n.offsetParent; }
+    if (!n) return null;
+    const base = n === heroi ? telas[0].y : telas[1].y;
+    return { x0: x, y0: base + y, x1: x + el.offsetWidth, y1: base + y + el.offsetHeight };
+  };
+  // os botões viram obstáculo só quando cabe uma bandeira entre cada lado do botão e a parede (senão ela ficaria presa ali)
+  const blocos = () => {
+    const folga = 2 * raio + 16;
+    return ["#cta-hero", "#cta-intro"].map(q => caixa($(q))).filter(b => b && b.x0 >= folga && W - b.x1 >= folga);
+  };
+  // cumeeira baixa por cima do botão: o que cai em cima escorre para os lados
+  const telhado = b => {
+    const meio = (b.x0 + b.x1) / 2, sobe = Math.min(64, (b.x1 - b.x0) / 2 * INCLINACAO);
+    return [{ x: b.x0, y: b.y0 }, { x: meio, y: b.y0 - sobe }, { x: b.x1, y: b.y0 }, { x: b.x1, y: b.y1 }, { x: b.x0, y: b.y1 }];
+  };
+
+  const fazFixos = () => {
+    if (fixos.length) M.Composite.remove(mundo, fixos);
+    const g = 400, alto = alturaMundo + 4000, opc = { isStatic: true, friction: 0.2, restitution: 0.2, label: "fixo" };
+    fixos = [
+      M.Bodies.rectangle(-g / 2, alturaMundo - alto / 2, g, alto, opc),
+      M.Bodies.rectangle(W + g / 2, alturaMundo - alto / 2, g, alto, opc),
+      M.Bodies.rectangle(W / 2, alturaMundo + g / 2, W + 2 * g, g, opc)
+    ];
+    blocos().forEach(b => { const vs = telhado(b); fixos.push(M.Body.create(Object.assign({ position: M.Vertices.centre(vs), vertices: vs }, opc))); });
+    M.Composite.add(mundo, fixos);
+    topoNascer = Math.min(0, ...fixos.slice(3).map(f => f.bounds.min.y)) - 3 * raio;
+  };
+  const fazPeles = () => {
+    const lado = Math.ceil(2 * raio * dpr); peles = {};
+    imagens.forEach(([c, img]) => {
+      const cv = document.createElement("canvas"); cv.width = cv.height = lado;
+      const x = cv.getContext("2d");
+      if (img) x.drawImage(img, 0, 0, lado, lado); else { x.fillStyle = "#8D939B"; x.beginPath(); x.arc(lado / 2, lado / 2, lado / 2, 0, Math.PI * 2); x.fill(); }
+      peles[c] = cv;
+    });
+  };
+  const nasce = (b, i, x) => {
+    M.Body.setPosition(b, { x: x === undefined ? raio + Math.random() * (W - 2 * raio) : x, y: topoNascer - i * raio * 0.5 - Math.random() * raio * 3 });
+    M.Body.setVelocity(b, { x: (Math.random() - 0.5) * 2, y: 0 });
+    M.Body.setAngle(b, Math.random() * Math.PI * 2); M.Body.setAngularVelocity(b, (Math.random() - 0.5) * 0.12);
+    M.Sleeping.set(b, false);
+  };
+
+  /* ---- desenho: cada canvas desenha as bandeiras que estão na sua seção ---- */
+  const desenha = () => {
+    for (const t of telas){
+      const topo = t.y, base = t.y + t.h, dentro = flags.filter(b => b.position.y + raio > topo && b.position.y - raio < base);
+      if (!dentro.length && !t.tinha) continue;
+      const ctx = t.ctx; ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, t.cv.width, t.cv.height);
+      t.tinha = dentro.length > 0; if (!t.tinha) continue;
+      for (const b of dentro){
+        const c = Math.cos(b.angle) * dpr, s = Math.sin(b.angle) * dpr;
+        ctx.setTransform(c, s, -s, c, b.position.x * dpr, (b.position.y - topo) * dpr);
+        ctx.drawImage(peles[b.codigo], -raio, -raio, 2 * raio, 2 * raio);
+      }
+      ctx.setTransform(dpr, 0, 0, dpr, 0, -topo * dpr); ctx.lineWidth = 1; ctx.strokeStyle = t.anel; ctx.beginPath();
+      for (const b of dentro){ ctx.moveTo(b.position.x + raio - 0.5, b.position.y); ctx.arc(b.position.x, b.position.y, raio - 0.5, 0, Math.PI * 2); }
+      ctx.stroke();
+    }
+  };
+
+  /* ---- passo a passo: passo fixo de 1/60 s, só enquanto há bandeira acordada ---- */
+  const soltaArrasto = () => {
+    if (!arrasto) return;
+    M.Composite.remove(mundo, arrasto); arrasto = null;
+    document.documentElement.classList.remove("arrasta-bandeira"); acorda();
+  };
+  // bandeira que escapou (arremesso forte, atravessou a parede) volta ao topo e cai de novo
+  const resgata = () => {
+    for (const b of flags){
+      const p = b.position;
+      if (p.y > alturaMundo + 4 * raio || p.x < -4 * raio || p.x > W + 4 * raio || p.y < topoNascer - 6000){ if (arrasto && arrasto.bodyB === b) soltaArrasto(); nasce(b, 0); }
+    }
+  };
+  const rodando = () => vivo && solto && visivel && !document.hidden;
+  const quadro = t => {
+    raf = 0;
+    if (!rodando()) return;
+    acum += Math.min(100, t - ultimo); ultimo = t;
+    let n = 0;
+    while (acum >= PASSO && n < 4){ M.Engine.update(engine, PASSO); acum -= PASSO; n++; }
+    if (n === 4) acum = 0;
+    resgata(); desenha();
+    // pilha que só treme (nenhuma bandeira passa de um décimo de pixel por passo) dorme de uma vez, e o laço para
+    quietos = !arrasto && flags.every(b => b.isSleeping || (b.speed < 0.1 && Math.abs(b.angularVelocity) < 0.004)) ? quietos + n : 0;
+    if (quietos > 45) flags.forEach(b => M.Sleeping.set(b, true));
+    if (arrasto || flags.some(b => !b.isSleeping)) raf = requestAnimationFrame(quadro);
+  };
+  function acorda(){ if (!raf && rodando()){ ultimo = performance.now(); acum = 0; quietos = 0; raf = requestAnimationFrame(quadro); } }
+
+  // sem movimento: a queda é calculada aos poucos, sem desenhar, até a pilha parar; aí ela é desenhada uma vez
+  const assenta = () => new Promise(ok => {
+    let passos = 0, calmos = 0;   // calma por 45 passos seguidos: uma bandeira no alto de um quique também fica parada por um instante
+    const lote = () => {
+      for (let i = 0; i < 90 && passos < 1500 && calmos <= 45; i++, passos++){
+        M.Engine.update(engine, PASSO);
+        calmos = flags.every(b => b.isSleeping || (b.speed < 0.1 && Math.abs(b.angularVelocity) < 0.004)) ? calmos + 1 : 0;
+      }
+      resgata();
+      if (passos < 1500 && calmos <= 45) setTimeout(lote, 0); else { flags.forEach(b => M.Sleeping.set(b, true)); ok(); }
+    };
+    lote();
+  });
+  // cada bandeira nasce numa faixa da largura (em ordem embaralhada): elas chegam ao chão espalhadas e a pilha fica por igual,
+  // sem morro que suba atrás do texto
+  const faixas = () => embaralha(flags.map((b, i) => raio + (i + 0.15 + Math.random() * 0.7) / flags.length * (W - 2 * raio)));
+  const derruba = async () => {
+    const xs = faixas(); flags.forEach((b, i) => nasce(b, i, xs[i]));
+    M.Composite.add(mundo, flags); solto = true;
+    if (vivo) acorda(); else { await assenta(); desenha(); }
+  };
+
+  const prepara = () => {
+    if (carregando) return carregando;
+    carregando = (async () => {
+      if (document.readyState !== "complete") await new Promise(ok => window.addEventListener("load", ok, { once: true }));
+      await new Promise(ok => window.requestIdleCallback ? requestIdleCallback(() => ok(), { timeout: 1200 }) : setTimeout(ok, 200));
+      medir();
+      const codigos = embaralha(SEMPRE.concat(embaralha(OUTRAS.slice())).slice(0, contagem()));
+      const r = await Promise.all([carregaMotor(), Promise.all(codigos.map(async c => [c, await carregaImagem(c)]))]);
+      imagens = r[1]; M = window.Matter;
+      engine = M.Engine.create({ enableSleeping: true }); engine.gravity.scale = FISICA.gravidade; mundo = engine.world;
+      medir(); fazPeles(); fazFixos();
+      flags = codigos.map(c => { const b = M.Bodies.circle(0, 0, raio, { restitution: FISICA.restituicao, friction: FISICA.atrito, label: "bandeira" }); b.codigo = c; return b; });
+      // teto para a velocidade de queda (o arremesso com o mouse não tem teto para cima nem para os lados)
+      M.Events.on(engine, "beforeUpdate", () => { for (const b of flags) if (b.velocity.y > FISICA.quedaMax) M.Body.setVelocity(b, { x: b.velocity.x, y: FISICA.quedaMax }); });
+      const espera = 1100 - performance.now();   // a queda começa depois da entrada do topo
+      if (vivo && espera > 0) await new Promise(ok => setTimeout(ok, espera));
+      await derruba();
+    })().catch(() => {});
+    return carregando;
+  };
+
+  /* ---- janela mudou de tamanho (ou as fontes chegaram e o texto quebrou diferente) ---- */
+  let tRefaz = 0;
+  const reconstroi = () => {
+    if (!engine) return;
+    const W0 = W, chao0 = alturaMundo, r0 = raio, dpr0 = dpr;
+    medir();
+    if (raio !== r0) flags.forEach(b => M.Body.scale(b, raio / r0, raio / r0));
+    if (flags.length > contagem()){ const sobram = flags.splice(contagem()); if (solto) M.Composite.remove(mundo, sobram); }   // a tela estreitou: sai o que não cabe no chão
+    if (raio !== r0 || dpr !== dpr0) fazPeles();
+    fazFixos();
+    if (solto){
+      if (vivo){
+        flags.forEach(b => {
+          const p = b.position, noChao = chao0 - p.y < 8 * Math.max(raio, r0);
+          M.Body.setPosition(b, { x: Math.min(W - raio, Math.max(raio, p.x * W / (W0 || W))), y: noChao ? alturaMundo - (chao0 - p.y) * raio / r0 : p.y });
+          M.Sleeping.set(b, false);
+        });
+        acorda();
+      } else { const xs = faixas(); flags.forEach((b, i) => nasce(b, i, xs[i])); assenta().then(desenha); }
+    }
+    telas.forEach(t => { t.tinha = true; }); desenha();
+  };
+  const pedeRefazer = () => { clearTimeout(tRefaz); tRefaz = setTimeout(reconstroi, 150); };
+  if (window.ResizeObserver){ const ro = new ResizeObserver(pedeRefazer); ro.observe(heroi); ro.observe(intro); }
+  window.addEventListener("resize", pedeRefazer);
+
+  /* ---- só calcula com a abertura na tela e a aba à vista ---- */
+  const vistas = new Set();
+  const io = new IntersectionObserver(es => {
+    es.forEach(e => { if (e.isIntersecting) vistas.add(e.target); else vistas.delete(e.target); });
+    visivel = vistas.size > 0;
+    if (visivel){ prepara(); acorda(); }
+  }, { rootMargin: "300px 0px" });
+  io.observe(heroi); io.observe(intro);
+  document.addEventListener("visibilitychange", acorda);
+
+  if (!vivo) return;   // sem movimento: nada de tranco nem de arrastar
+
+  /* ---- rolar rápido dá um tranco para cima; rolar devagar quase não mexe ---- */
+  let yAnt = window.scrollY, tAnt = performance.now(), tTranco = 0;
+  window.addEventListener("scroll", () => {
+    const agora = performance.now(), y = window.scrollY, v = agora > tAnt ? (y - yAnt) / (agora - tAnt) : 0;
+    yAnt = y; tAnt = agora;
+    if (!engine || !solto || !visivel || agora - tTranco < 90) return;
+    const forca = Math.abs(v) - 0.5; if (forca <= 0) return;
+    tTranco = agora;
+    const sobe = Math.min(16, forca * 9);
+    flags.forEach(b => {
+      M.Sleeping.set(b, false);
+      M.Body.setVelocity(b, { x: b.velocity.x + (Math.random() - 0.5) * sobe * 0.5, y: b.velocity.y - sobe * (0.6 + Math.random() * 0.4) });
+      M.Body.setAngularVelocity(b, b.angularVelocity + (Math.random() - 0.5) * 0.2);
+    });
+    acorda();
+  }, { passive: true });
+
+  /* ---- mouse: pegar, arrastar e arremessar (no toque o dedo continua rolando a página) ---- */
+  if (!comMouse) return;
+  const interativo = el => !!(el && el.closest && el.closest("a,button,input,select,textarea,label,summary,dialog,[role=button],[tabindex]"));
+  const naAbertura = el => heroi.contains(el) || intro.contains(el);
+  const ponto = e => { const h = heroi.getBoundingClientRect(); return { x: e.clientX - h.left, y: e.clientY - h.top }; };
+  const acha = p => { const r = M.Query.point(flags, p); return r.length ? r[r.length - 1] : null; };
+  let mao = false;
+  document.addEventListener("pointerdown", e => {
+    if (!engine || !solto || arrasto || e.pointerType !== "mouse" || e.button !== 0 || !naAbertura(e.target) || interativo(e.target)) return;
+    const p = ponto(e), b = acha(p); if (!b) return;
+    e.preventDefault();   // não seleciona texto
+    arrasto = M.Constraint.create({ pointA: p, bodyB: b, pointB: { x: 0, y: 0 }, stiffness: FISICA.rigidez, length: 0 });
+    M.Composite.add(mundo, arrasto); M.Sleeping.set(b, false);
+    document.documentElement.classList.add("arrasta-bandeira"); acorda();
+  });
+  window.addEventListener("pointermove", e => {
+    if (!engine || !solto || e.pointerType !== "mouse") return;
+    const p = ponto(e);
+    if (arrasto){
+      if (p.x < 0 || p.x > W || p.y < 0 || p.y > alturaMundo) soltaArrasto();   // o cursor saiu da abertura: solta
+      else arrasto.pointA = p;
+      return;
+    }
+    const sobre = naAbertura(e.target) && !interativo(e.target) && !!acha(p);
+    if (sobre !== mao){ mao = sobre; document.documentElement.classList.toggle("pega-bandeira", sobre); }
+  }, { passive: true });
+  window.addEventListener("pointerup", soltaArrasto);
+  window.addEventListener("pointercancel", soltaArrasto);
+  window.addEventListener("blur", soltaArrasto);
+  document.documentElement.addEventListener("mouseleave", soltaArrasto);
 })();
 
 /* ---------- início: retoma de onde a pessoa parou ---------- */
