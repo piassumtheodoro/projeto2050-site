@@ -40,8 +40,8 @@ function osDiferente(a, b) {
 
 function osMaisNova(a, b) { return osData(a) && osData(b) ? a.getTime() > b.getTime() : String(a) > String(b); }
 
-// Tamanho em bytes (UTF-8) de um texto: o JSON já escapa o que não é par de substitutos, então encodeURIComponent não lança.
-function osBytes(s) { return encodeURIComponent(s).replace(/%[0-9A-F]{2}/g, 'x').length; }
+// Tamanho em bytes (UTF-8) de um texto. Se encodeURIComponent lançar (caractere partido ao meio), vale o pior caso, três bytes por caractere.
+function osBytes(s) { try { return encodeURIComponent(s).replace(/%[0-9A-F]{2}/g, 'x').length; } catch (e) { return s.length * 3; } }
 
 // As duas colunas do OS de uma linha da aba: de uma vez só quando são vizinhas (é o normal).
 function osEscrever(aba, cab, linha, versao, erro) {
@@ -79,6 +79,8 @@ function osPendentes(limite, idPrimeiro, esperaMs) {
     for (let k = 0; k < cand.length && itens.length < limite; k++) {
       const i = cand[k], pos = i + 2;
       const r = aba.getRange(pos, 1, 1, cab.length).getValues()[0];
+      // a edição à mão na planilha não respeita a trava: se a linha desta posição já é outra, ou perdeu o aceite, não vai
+      if (String(r[cab.indexOf('id')]) !== String(ids[i]) || r[cab.indexOf('consentimento')] !== 'sim') continue;
       const linha = {};
       OS_CAMPOS.forEach(function (c) { const x = cab.indexOf(c); if (x >= 0) linha[c] = osTexto(r[x]); });
       const tam = osBytes(JSON.stringify(linha));

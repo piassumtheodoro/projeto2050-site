@@ -338,6 +338,19 @@ secao('aviso ao OS');
   ok(vazou.length === 0, 'o registro de todos esses casos não tem e-mail, nome nem segredo' + (vazou.length ? ': ' + vazou[0].slice(0, 120) : ''));
 }
 
+secao('aviso ao OS: linha trocada de lugar no meio da leitura');
+{ const chamadas = [], osGs = path.join(pasta, 'Os.gs');
+  const a = criar({ receptor, pdf, osGs, propriedades: Object.assign({}, PROPS, { OS_URL: 'https://os.exemplo.com/leads/projeto-2050', OS_SEGREDO: 'segredo-de-teste' }),
+    os: (url, o) => { chamadas.push(JSON.parse(o.payload)); return { codigo: 200, corpo: JSON.stringify({ gravadas: JSON.parse(o.payload).linhas.map(l => l.id), recusadas: [] }) }; } });
+  a.props.OS_URL = '';                                   // grava duas pessoas sem avisar o OS
+  a.post(simulador('T1')); a.post(simulador('T2', { consentimento: 'não', email: 'outra@exemplo.com' }));
+  a.props.OS_URL = 'https://os.exemplo.com/leads/projeto-2050';
+  // alguém apaga à mão a linha de T1 depois de as quatro colunas terem sido lidas: a posição passa a ser a de T2, que não tem aceite
+  const aba = a.abas.Leads, original = aba.getRange.bind(aba); let leiturasDeLinha = 0;
+  aba.getRange = (r, c, nr, nc) => { if (nr === 1 && nc > 4 && r > 1 && ++leiturasDeLinha === 1) aba.dados.splice(1, 1); return original(r, c, nr, nc); };
+  a.ctx.avisarOS('T1');
+  ok(chamadas.every(c => c.linhas.every(l => l.id !== 'T2' && l.consentimento === 'sim')), 'a linha de outra pessoa, sem aceite, não vai ao OS quando a planilha muda de lugar no meio da leitura'); }
+
 secao('o que está no repositório');
 { const codigo = fs.readFileSync(receptor, 'utf8'), pacote = fs.readFileSync(pdf, 'utf8');
   ok(!/[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+\.[A-Za-z]{2,}/.test(codigo), 'Código.gs não tem endereço de e-mail (o repositório é público)');
